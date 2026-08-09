@@ -2,7 +2,7 @@ const MODEL_CACHE_NAME = "timeline-studio-model-cache-v4";
 const APP_CACHE_NAME = "timeline-studio-app-shell-v3";
 const APP_SHELL_URLS = [
   "/",
-  "/manifest.webmanifest",
+  "/manifest.json",
   "/icons/timeline-studio-icon.svg",
   "/icons/timeline-studio-icon-192.png",
   "/icons/timeline-studio-icon-512.png",
