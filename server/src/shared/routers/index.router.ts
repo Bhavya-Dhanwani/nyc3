@@ -1,4 +1,4 @@
-// Importing modules
+﻿// Importing modules
 import express from "express";
 import authRouter from "../../modules/public/auth/auth.router.js";
 import projectsRouter from "../../modules/private/projects/projects.router.js";
@@ -22,3 +22,5 @@ router.use("/ollama", authMiddleware, ollamaRouter);
 
 // exporting the router
 export default router;
+
+
