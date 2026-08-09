@@ -8,9 +8,15 @@ import applyMiddlewares from "./shared/middlewares/index.middleware.js";
 import notFoundHandler from "./shared/middlewares/NotFound.middleware.js";
 import errorHandler from "./shared/middlewares/error.middleware.js";
 
-const serverDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const publicDirectory = path.join(serverDirectory, "public");
-const frontendIndex = path.join(publicDirectory, "index.html");
+const moduleDirectory = path.dirname(fileURLToPath(import.meta.url));
+const publicDirectory = [
+    // Production images run from /app, where the Dockerfile copies the client build.
+    path.resolve(process.cwd(), "public"),
+    // Local development runs this file from server/src.
+    path.resolve(moduleDirectory, "..", "public"),
+    // Compiled local builds run it from server/dist/src.
+    path.resolve(moduleDirectory, "..", "..", "public")
+].find((directory) => existsSync(path.join(directory, "index.html")));
 
 // function to make the app
 function createApp() {
@@ -56,12 +62,12 @@ function createApp() {
     app.use("/api", notFoundHandler);
 
     // Serve a built frontend copied into server/public, when present.
-    if (existsSync(frontendIndex)) {
+    if (publicDirectory) {
 
         app.use(express.static(publicDirectory));
 
         // Express 5 requires a named wildcard. This lets client-side routes reload correctly.
-        app.get("/*path", (req, res) => res.sendFile(frontendIndex));
+        app.get("/*path", (req, res) => res.sendFile(path.join(publicDirectory, "index.html")));
 
     }
 
