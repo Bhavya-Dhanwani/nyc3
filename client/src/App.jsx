@@ -1,13 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams, useLocation } from "react-router";
+import { Navigate, useNavigate, useParams, useLocation } from "react-router";
 import { setGoogleToken } from "./lib/googleDriveClient.js";
 
-import { AuthScreen } from "./components/AuthScreen.jsx";
 import { ApiKeySetupGate } from "./components/ApiKeySetupGate.jsx";
 import { ProjectsDashboard } from "./components/ProjectsDashboard.jsx";
 import { SettingsModal } from "./components/SettingsModal.jsx";
 import { AiClipGeneratorPanel } from "./components/AiClipGeneratorPanel.jsx";
-import api, { getAccessToken, setAccessToken } from "./lib/api.js";
+import api, { setAccessToken } from "./lib/api.js";
 
 import { LanguageIntro } from "./components/panels.jsx";
 import { PreviewStage } from "./components/PreviewStage.jsx";
@@ -107,7 +106,8 @@ export function App() {
 
   const [user, setUser] = useState(null);
   const [authChecking, setAuthChecking] = useState(true);
-  const [currentProject, setCurrentProject] = useState(null);
+  // Preserve the dashboard selection while the editor route is mounting.
+  const [currentProject, setCurrentProject] = useState(() => location.state?.project ?? null);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isSavingToBackend, setIsSavingToBackend] = useState(false);
 
@@ -158,13 +158,10 @@ export function App() {
   // Sync project when navigating directly to /editor/:projectId
   useEffect(() => {
     if (isEditorRoute) {
-      if (!projectId || projectId === "undefined") {
-        navigate("/dashboard");
-        return;
-      }
+      if (!projectId || projectId === "undefined") return;
       if (user) {
         const currentId = currentProject?._id || currentProject?.id;
-        if (currentId !== projectId) {
+        if (String(currentId || "") !== String(projectId)) {
           api.get(`/api/projects/${projectId}`)
             .then((res) => {
               if (res.data?.data) {
@@ -172,13 +169,24 @@ export function App() {
               }
             })
             .catch((err) => {
+              // Keep the editor route active. A temporary detail-request failure
+              // must not send a project the user just opened back to the dashboard.
               console.error("Failed to load project from URL:", err);
-              navigate("/dashboard");
             });
         }
       }
     }
   }, [isEditorRoute, projectId, user, navigate, currentProject]);
+
+  // A dashboard-to-editor navigation may remount this component. Restore the
+  // selected project from route state instead of falling back to the dashboard.
+  useEffect(() => {
+    const routeProject = location.state?.project;
+    const routeProjectId = routeProject?._id || routeProject?.id;
+    if (isEditorRoute && routeProjectId && String(routeProjectId) === String(projectId)) {
+      setCurrentProject(routeProject);
+    }
+  }, [isEditorRoute, location.state, projectId]);
 
   const [uiLanguage, setUiLanguage] = useState(() => getStoredLanguage());
   const [mobilePanel, setMobilePanel] = useState("");
@@ -473,7 +481,7 @@ export function App() {
     currentTime - (selectedVisualRange?.start ?? 0),
   ));
   const updateSelectedVisualEffects = (change) => {
-    if (!selectedVisualSegment?.id || trackLocks.image) return notify("请先选择未锁定的 Visuals 片段");
+    if (!selectedVisualSegment?.id || trackLocks.image) return notify("ÃƒÆ’Ã‚Â¨Ãƒâ€šÃ‚Â¯Ãƒâ€šÃ‚Â·ÃƒÆ’Ã‚Â¥ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â©ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°ÃƒÆ’Ã‚Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹Ãƒâ€šÃ‚Â©ÃƒÆ’Ã‚Â¦Ãƒâ€¦Ã¢â‚¬Å“Ãƒâ€šÃ‚ÂªÃƒÆ’Ã‚Â©ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â®Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã‚Â§Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ Visuals ÃƒÆ’Ã‚Â§ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‚Â¦Ãƒâ€šÃ‚Â®Ãƒâ€šÃ‚Âµ");
     setVisualSegments((items) => {
       const nextItems = items.map((item) => {
       if (item.id !== selectedVisualSegment.id) return item;
@@ -789,7 +797,7 @@ export function App() {
   };
   const deleteSelectedStickerSegment = () => {
     if (!selectedStickerSegment?.id) return;
-    commitStickerSegments(stickerSegments.filter((segment) => segment.id !== selectedStickerSegment.id), "已删除贴纸片段");
+    commitStickerSegments(stickerSegments.filter((segment) => segment.id !== selectedStickerSegment.id), "ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â·Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â¥Ãƒâ€¹Ã¢â‚¬Â Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â©ÃƒÂ¢Ã¢â‚¬Å¾Ã‚Â¢Ãƒâ€šÃ‚Â¤ÃƒÆ’Ã‚Â¨Ãƒâ€šÃ‚Â´Ãƒâ€šÃ‚Â´ÃƒÆ’Ã‚Â§Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â¸ÃƒÆ’Ã‚Â§ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‚Â¦Ãƒâ€šÃ‚Â®Ãƒâ€šÃ‚Âµ");
   };
 
   const { generateAvatarAcceptanceFrame, openAvatarPanel } = useAvatarGeneration({
@@ -823,11 +831,11 @@ export function App() {
   });
   const handleVoiceColorAssetReady = async ({ blob, decoded, profileName, sourceName }) => {
     const id = crypto.randomUUID(); const src = URL.createObjectURL(blob); imageUrlRefs.current.add(src);
-    const asset = { id, type: "audio", kind: "voiceover", name: `${sourceName || t("audioClip")} · ${profileName}`,
-      meta: `${t("voiceColorTab", "音色")} · ${decoded.duration.toFixed(1)}s`, src, previewSrc: src, blob,
-      duration: decoded.duration, peaks: decoded.peaks, generated: true, provider: "OpenVoice V2 · ONNX" };
+    const asset = { id, type: "audio", kind: "voiceover", name: `${sourceName || t("audioClip")} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${profileName}`,
+      meta: `${t("voiceColorTab", "ÃƒÆ’Ã‚Â©Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â¨ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°Ãƒâ€šÃ‚Â²")} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${decoded.duration.toFixed(1)}s`, src, previewSrc: src, blob,
+      duration: decoded.duration, peaks: decoded.peaks, generated: true, provider: "OpenVoice V2 ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ONNX" };
     setUserAssets((items) => [asset, ...items]); setSelectedLibraryAssetId(id);
-    notify(t("voiceColorSavedToAssets", "音色迁移结果已保存到我的素材")); return asset;
+    notify(t("voiceColorSavedToAssets", "ÃƒÆ’Ã‚Â©Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â¨ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â¨Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â§Ãƒâ€šÃ‚Â§Ãƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â§Ãƒâ€šÃ‚Â»ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¦Ãƒâ€¦Ã‚Â¾Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â·Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â¤Ãƒâ€šÃ‚Â¿Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â­Ãƒâ€¹Ã…â€œÃƒÆ’Ã‚Â¥Ãƒâ€¹Ã¢â‚¬Â Ãƒâ€šÃ‚Â°ÃƒÆ’Ã‚Â¦Ãƒâ€¹Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã‹Å“ÃƒÆ’Ã‚Â§Ãƒâ€¦Ã‚Â¡ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â§Ãƒâ€šÃ‚Â´Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¦Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â")); return asset;
   };
   const applyVoiceColorToSelectedAudio = ({ blob, decoded, profileName, segment }) => {
     const url = URL.createObjectURL(blob); imageUrlRefs.current.add(url);
@@ -846,7 +854,7 @@ export function App() {
         voiceColorOriginalPeaks: item.voiceColorOriginalPeaks || item.peaks,
         voiceColorOriginalName: item.voiceColorOriginalName || item.name,
         voiceColorOriginalSourceKind: item.voiceColorOriginalSourceKind || item.sourceKind,
-        blob, url, peaks: decoded.peaks, name: `${item.voiceColorOriginalName || item.name} · ${profileName}`,
+        blob, url, peaks: decoded.peaks, name: `${item.voiceColorOriginalName || item.name} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${profileName}`,
         voiceName: profileName, sourceKind: "cloned-voiceover", cloneVoiceProfileName: profileName,
       } : item));
     } else if (targetTrack === "source") {
@@ -858,9 +866,9 @@ export function App() {
         URL.revokeObjectURL(sourceAudioUrl); imageUrlRefs.current.delete(sourceAudioUrl);
       }
       sourceAudioUrlRef.current = url; setSourceAudioBlob(blob); setSourceAudioUrl(url); setSourceAudioPeaks(decoded.peaks);
-      setSourceAudioName(`${sourceVoiceColorOriginalRef.current.name || t("sourceTrack")} · ${profileName}`);
+      setSourceAudioName(`${sourceVoiceColorOriginalRef.current.name || t("sourceTrack")} ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· ${profileName}`);
     } else { URL.revokeObjectURL(url); imageUrlRefs.current.delete(url); return false; }
-    notify(t("voiceColorClipReplaced", "已替换当前片段，可随时恢复原始声音"));
+    notify(t("voiceColorClipReplaced", "ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â·Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂºÃƒâ€šÃ‚Â¿ÃƒÆ’Ã‚Â¦Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â½ÃƒÂ¢Ã¢â€šÂ¬Ã…â€œÃƒÆ’Ã‚Â¥ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â§ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡ÃƒÆ’Ã‚Â¦Ãƒâ€šÃ‚Â®Ãƒâ€šÃ‚ÂµÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¼Ãƒâ€¦Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¯ÃƒÆ’Ã‚Â©Ãƒâ€¦Ã‚Â¡Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â¶ÃƒÆ’Ã‚Â¦Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â¤Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¥Ãƒâ€¦Ã‚Â½Ãƒâ€¦Ã‚Â¸ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â§ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â£Ãƒâ€šÃ‚Â°ÃƒÆ’Ã‚Â©Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â³"));
     return true;
   };
   const restoreSelectedAudioVoiceColor = (segment) => {
@@ -885,7 +893,7 @@ export function App() {
       setSourceAudioBlob(original.blob); setSourceAudioUrl(original.url); setSourceAudioPeaks(original.peaks);
       setSourceAudioName(original.name); setSourceAudioDuration(original.duration); sourceVoiceColorOriginalRef.current = null;
     } else return false;
-    notify(t("voiceColorOriginalRestored", "已恢复原始声音"));
+    notify(t("voiceColorOriginalRestored", "ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â·Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â¦Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â¤Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â¥Ãƒâ€¦Ã‚Â½Ãƒâ€¦Ã‚Â¸ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â§ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â£Ãƒâ€šÃ‚Â°ÃƒÆ’Ã‚Â©Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â³"));
     return true;
   };
   const updateSelectedTrackAudioSegment = (id, patch) => {
@@ -1076,7 +1084,7 @@ export function App() {
     setSelectedVisualOverlayId(overlay.id);
     setSelectedVisualSegmentId("");
     setSelectedTrack("overlay");
-    notify("已添加为画中画，可在预览中拖动、缩放和旋转");
+    notify("ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â·Ãƒâ€šÃ‚Â²ÃƒÆ’Ã‚Â¦Ãƒâ€šÃ‚Â·Ãƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¥Ãƒâ€¦Ã‚Â Ãƒâ€šÃ‚Â ÃƒÆ’Ã‚Â¤Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚ÂºÃƒÆ’Ã‚Â§ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¤Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‚Â§ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¯Ãƒâ€šÃ‚Â¼Ãƒâ€¦Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚ÂÃƒâ€šÃ‚Â¯ÃƒÆ’Ã‚Â¥Ãƒâ€¦Ã¢â‚¬Å“Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‚Â©Ãƒâ€šÃ‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾ÃƒÆ’Ã‚Â¨Ãƒâ€šÃ‚Â§Ãƒâ€¹Ã¢â‚¬Â ÃƒÆ’Ã‚Â¤Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‚Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Å“ÃƒÆ’Ã‚Â¥Ãƒâ€¦Ã‚Â Ãƒâ€šÃ‚Â¨ÃƒÆ’Ã‚Â£ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚ÂÃƒÆ’Ã‚Â§Ãƒâ€šÃ‚Â¼Ãƒâ€šÃ‚Â©ÃƒÆ’Ã‚Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â¾ÃƒÆ’Ã‚Â¥ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢Ãƒâ€¦Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¹ÃƒÆ’Ã‚Â¨Ãƒâ€šÃ‚Â½Ãƒâ€šÃ‚Â¬");
   };
   const updateVisualOverlayById = (overlayId, transform) => {
     if (!overlayId || trackLocks.overlay) return;
@@ -1435,18 +1443,13 @@ export function App() {
   if (authChecking) {
     return (
       <div style={{ display: "flex", height: "100vh", width: "100vw", alignItems: "center", justifyContent: "center", background: "#07080d", color: "#a1a1aa", fontFamily: "sans-serif" }}>
-        <span>Loading Duevora Studio...</span>
+        <span>Loading Katitor Studio...</span>
       </div>
     );
   }
 
   if (!user) {
-    return <AuthScreen onAuthSuccess={(userData) => {
-      setUser(userData);
-      if (userData?.googleAccessToken) {
-        setGoogleToken(userData.googleAccessToken);
-      }
-    }} />;
+    return <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />;
   }
 
   if (!hasConfiguredKeys) {
@@ -1464,25 +1467,20 @@ export function App() {
     );
   }
 
-  // If user is on /dashboard or editor project not loaded
-  if (!isEditorRoute || !currentProject) {
-    if (isEditorRoute && projectId && !currentProject) {
-      return (
-        <div style={{ minHeight: "100vh", background: "#07080d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px", color: "white" }}>
-          <div style={{ width: "42px", height: "42px", border: "3px solid rgba(85,70,255,0.2)", borderTopColor: "#5546ff", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-          <p style={{ fontSize: "13px", textTransform: "uppercase", letterSpacing: "1px", color: "rgba(255,255,255,0.7)" }}>Loading Studio Editor...</p>
-        </div>
-      );
-    }
-
+  // If user is on /dashboard, render ProjectsDashboard
+  if (!isEditorRoute) {
     return (
       <>
         <ProjectsDashboard
           user={user}
           onOpenProject={(proj) => {
             setCurrentProject(proj);
-            const pId = proj._id || proj.id;
-            navigate(`/editor/${pId}`);
+            const pId = proj?._id || proj?.id;
+            if (pId) {
+              navigate(`/editor/${pId}`, { state: { project: proj } });
+            } else {
+              navigate("/editor");
+            }
           }}
           onOpenSettings={() => setIsSettingsModalOpen(true)}
           onLogout={() => { setAccessToken(null); setUser(null); }}
@@ -1494,6 +1492,16 @@ export function App() {
           onLogout={() => { setAccessToken(null); setUser(null); setIsSettingsModalOpen(false); }}
         />
       </>
+    );
+  }
+
+  // If on /editor but project is still loading from URL
+  if (!currentProject) {
+    return (
+      <div style={{ minHeight: "100vh", background: "#07080d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px", color: "white" }}>
+        <div style={{ width: "42px", height: "42px", border: "3px solid rgba(85,70,255,0.2)", borderTopColor: "#5546ff", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <p style={{ fontSize: "13px", textTransform: "uppercase", letterSpacing: "1px", color: "rgba(255,255,255,0.7)" }}>Loading Studio Editor...</p>
+      </div>
     );
   }
 
@@ -1997,15 +2005,15 @@ export function App() {
             filters: t("visualTabEffects"),
             animation: t("visualTabAnimation"),
             speed: t("visualTabSpeed"),
-            vector: t("vectorProperties", "矢量"),
-            timing: t("overlayTiming", "层级与时长"),
+            vector: t("vectorProperties", "ÃƒÆ’Ã‚Â§Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â©ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¡Ãƒâ€šÃ‚Â"),
+            timing: t("overlayTiming", "ÃƒÆ’Ã‚Â¥Ãƒâ€šÃ‚Â±ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã‚Â§Ãƒâ€šÃ‚ÂºÃƒâ€šÃ‚Â§ÃƒÆ’Ã‚Â¤Ãƒâ€šÃ‚Â¸Ãƒâ€¦Ã‚Â½ÃƒÆ’Ã‚Â¦ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â¶ÃƒÆ’Ã‚Â©ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¢Ãƒâ€šÃ‚Â¿"),
             repair: t("repairTab"),
             effects: t("effects"),
             caption: t("caption"),
             voice: t("aiVoice"),
             audio: t("mobileClipAudio"),
             fade: t("mobileClipFade"),
-            "voice-color": t("voiceColorTab", "音色"),
+            "voice-color": t("voiceColorTab", "ÃƒÆ’Ã‚Â©Ãƒâ€¦Ã‚Â¸Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â¨ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â°Ãƒâ€šÃ‚Â²"),
             sticker: t("stickerProperties"),
           }[mobileInspectorSection]) || (mobilePanelOrigin === "audio-clip"
             ? t("audioClipProperties")
@@ -2014,7 +2022,7 @@ export function App() {
               : mobilePanelOrigin === "visual-clip"
                 ? t("visualPanelTitle")
                 : mobilePanelOrigin === "overlay-clip"
-                  ? t("pictureInPicture", "画中画")
+                  ? t("pictureInPicture", "ÃƒÆ’Ã‚Â§ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â»ÃƒÆ’Ã‚Â¤Ãƒâ€šÃ‚Â¸Ãƒâ€šÃ‚Â­ÃƒÆ’Ã‚Â§ÃƒÂ¢Ã¢â€šÂ¬Ã‚ÂÃƒâ€šÃ‚Â»")
                   : mobilePanelOrigin === "caption-clip"
                     ? t("caption")
                     : t(activeTool))}</strong>
@@ -2023,11 +2031,11 @@ export function App() {
               <button className={mobilePanel === "tools" ? "is-active" : ""} type="button" role="tab" aria-selected={mobilePanel === "tools"} onClick={() => changeMobilePanel("tools")}>{t("mobileDrawerTools")}</button>
               <button className={mobilePanel === "inspector" ? "is-active" : ""} type="button" role="tab" aria-selected={mobilePanel === "inspector"} onClick={() => changeMobilePanel("inspector")}>{t("properties")}</button>
             </> : null}
-            <button className="mobile-sheet-close" type="button" aria-label={t("close", "关闭")} onClick={() => changeMobilePanel("")}>×</button>
+            <button className="mobile-sheet-close" type="button" aria-label={t("close", "ÃƒÆ’Ã‚Â¥ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â©ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â­")} onClick={() => changeMobilePanel("")}>ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â</button>
           </div>
         </header>
       ) : null}
-      {mobilePanel ? <button className="mobile-sheet-backdrop" type="button" aria-label={t("close", "关闭")} onClick={() => changeMobilePanel("")} /> : null}
+      {mobilePanel ? <button className="mobile-sheet-backdrop" type="button" aria-label={t("close", "ÃƒÆ’Ã‚Â¥ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦Ãƒâ€šÃ‚Â³ÃƒÆ’Ã‚Â©ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬ÂÃƒâ€šÃ‚Â­")} onClick={() => changeMobilePanel("")} /> : null}
 
       <AssetDragPreview preview={assetDragPreview} t={t} />
       <MiganRepairDialog

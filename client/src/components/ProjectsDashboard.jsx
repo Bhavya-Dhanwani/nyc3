@@ -114,7 +114,7 @@ export function ProjectsDashboard({
       <header className="dashboard-nav">
         <div className="dashboard-brand">
           <div className="dashboard-logo">
-            <img src="https://ik.imagekit.io/iwuj3a7is/katitor%20logo%20HD.png" alt="Katitor Logo" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
+            <img src="/katitor-logo-hd.png" alt="Katitor Logo" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
           </div>
           <div>
             <div style={{ fontWeight: 700, fontSize: "15px", color: "#ffffff", lineHeight: 1.2 }}>Katitor Studio</div>
@@ -254,10 +254,32 @@ export function ProjectsDashboard({
                   <div className="project-card-thumb">
                     <Film size={32} />
                     <div className="project-card-thumb-overlay">
-                      <span style={{ padding: "6px 14px", background: "var(--as-accent-primary)", color: "#ffffff", borderRadius: "6px", fontSize: "12px", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onOpenProject(project);
+                        }}
+                        style={{
+                          padding: "8px 18px",
+                          background: "var(--as-accent-primary)",
+                          color: "#ffffff",
+                          border: "none",
+                          borderRadius: "8px",
+                          fontSize: "12px",
+                          fontWeight: 700,
+                          display: "flex",
+                          alignItems: "center",
+                          gap: "6px",
+                          cursor: "pointer",
+                          pointerEvents: "auto",
+                          zIndex: 10,
+                          boxShadow: "0 4px 14px rgba(0,0,0,0.4)"
+                        }}
+                      >
                         <span>Open in Editor</span>
                         <ArrowRight size={14} />
-                      </span>
+                      </button>
                     </div>
                   </div>
 

@@ -1,4 +1,4 @@
-export const logo = "/duevora/logo.png";
+export const logo = "/katitor-logo-hd.png";
 export const menuDrop = "/duevora/menuDrop.svg";
 export const discord = "/duevora/discord.svg";
 export const insta = "/duevora/insta.svg";

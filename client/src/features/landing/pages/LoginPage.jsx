@@ -85,14 +85,14 @@ export default function LoginPage() {
         <Link to="/" className="flex items-center gap-3 group">
           <img
             src={logo}
-            alt="Duevora Logo"
+            alt="Katitor Logo"
             width={46}
             height={46}
-            className="brightness-125 transition-transform duration-300 group-hover:scale-105"
+            className="object-contain max-h-[46px] brightness-125 transition-transform duration-300 group-hover:scale-105"
           />
           <div className="flex flex-col">
             <span className="font-humaneMedium text-3xl sm:text-4xl leading-none tracking-tight text-white">
-              DUEVORA
+              KATITOR
             </span>
             <span className="text-[10px] uppercase tracking-widest text-white/70">
               AI Video & Business Copilot
@@ -137,7 +137,7 @@ export default function LoginPage() {
         } transition-all duration-500 overflow-hidden`}
       >
         {/* ======================================================== */}
-        {/* PART 1: Crazy Vibrant Duevora UI Side                   */}
+        {/* PART 1: Crazy Vibrant Katitor UI Side                   */}
         {/* ======================================================== */}
         <div className="w-full lg:w-1/2 h-full bg-heroColor relative flex flex-col items-center justify-center p-6 sm:p-12 overflow-hidden z-10">
           {/* Hand-drawn Background Doodles */}
@@ -160,10 +160,10 @@ export default function LoginPage() {
           </div>
 
           <div className="w-full flex flex-col items-center text-center relative z-10 max-w-xl mx-auto">
-            {/* Colossal DUEVORA Title */}
+            {/* Colossal KATITOR Title */}
             <div className="w-full text-center">
               <h1 className="font-humaneMedium text-[26vw] lg:text-[15vw] uppercase leading-[0.78] tracking-[-3px] sm:tracking-[-6px] text-white drop-shadow-[0_20px_40px_rgba(0,0,0,0.35)] select-none">
-                DUEVORA
+                KATITOR
               </h1>
             </div>
 
@@ -317,7 +317,7 @@ export default function LoginPage() {
           {/* Floating Live Badge & Feature Tags */}
           <div className="absolute top-24 left-10 z-20 flex items-center gap-2 px-4 py-1.5 bg-black/60 backdrop-blur-md rounded-full border border-white/20 text-xs font-bold uppercase tracking-wider text-white shadow-xl">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span>Duevora Video Intelligence</span>
+            <span>Katitor Video Intelligence</span>
           </div>
 
           {/* Bottom Overlay Title & Subtitle */}

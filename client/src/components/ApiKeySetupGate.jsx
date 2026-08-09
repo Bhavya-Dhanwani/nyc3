@@ -175,7 +175,7 @@ export function ApiKeySetupGate({ user, onSetupComplete, onLogout }) {
           </div>
           <div>
             <h2 className="font-humaneMedium text-3xl sm:text-4xl uppercase leading-none tracking-tight text-white">
-              DUEVORA STUDIO SETUP
+              KATITOR STUDIO SETUP
             </h2>
             <p className="text-xs text-white/60 uppercase tracking-wider">
               Configure Your Environment to Unlock Video AI Features
@@ -377,7 +377,7 @@ export function ApiKeySetupGate({ user, onSetupComplete, onLogout }) {
 
       {/* Footer */}
       <footer className="text-xs text-white/40 uppercase tracking-widest py-2 text-center">
-        Duevora Video Intelligence • Step 2 of 2 Required Onboarding
+        Katitor Video Intelligence • Step 2 of 2 Required Onboarding
       </footer>
     </div>
   );

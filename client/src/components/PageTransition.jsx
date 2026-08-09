@@ -71,8 +71,8 @@ export default function PageTransition() {
                 <div className="absolute w-20 h-20 rounded-full bg-[#5546ff]/30 blur-xl animate-pulse" />
                 <img
                   src={logo}
-                  alt="Duevora"
-                  className="w-12 h-12 relative z-10 brightness-125 drop-shadow-[0_0_20px_rgba(85,70,255,0.7)]"
+                  alt="Katitor Logo"
+                  className="w-12 h-12 relative z-10 object-contain brightness-125 drop-shadow-[0_0_20px_rgba(85,70,255,0.7)]"
                 />
               </div>
             </motion.div>

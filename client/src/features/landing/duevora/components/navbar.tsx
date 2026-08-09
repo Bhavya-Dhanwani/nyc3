@@ -1,5 +1,4 @@
-"use client";
-
+import { Link } from "react-router";
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { logo } from "../assets";
@@ -38,16 +37,16 @@ export default function Navbar() {
 				duration: 0.4,
 				ease: [0.25, 1, 0.5, 1],
 			}}
-			className="fixed top-0 left-0 z-[100] w-full px-10 py-5 backdrop-blur-sm"
+			className="fixed top-0 left-0 z-[100] w-full px-6 sm:px-10 py-5 backdrop-blur-sm"
 		>
 			<div className="relative flex items-center justify-between">
-				<div className="flex items-center gap-3">
+				<Link to="/" className="flex items-center gap-3 cursor-pointer group">
 					<img
 						src={logo}
 						alt="Katitor Logo"
 						width={46}
 						height={46}
-						className="object-contain max-h-[46px]"
+						className="object-contain max-h-[46px] transition-transform duration-300 group-hover:scale-105"
 					/>
 
 					<div className="flex flex-col">
@@ -55,10 +54,10 @@ export default function Navbar() {
 							Katitor
 						</span>
 						<span className="font-helveticaNeue text-[10px] uppercase tracking-tight text-white/70">
-							Your AI Business Copilot
+							Your AI Video Copilot
 						</span>
 					</div>
-				</div>
+				</Link>
 
 				<div className="absolute left-1/2 -translate-x-1/2">
 					<Menu />
