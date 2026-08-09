@@ -1,4 +1,4 @@
-import { AbsoluteFill, Video, useCurrentFrame, useVideoConfig } from "remotion";
+﻿import { AbsoluteFill, Video, useCurrentFrame, useVideoConfig } from "remotion";
 import React from "react";
 import { loadFont } from "@remotion/google-fonts/Anton";
 
@@ -332,3 +332,5 @@ export const VideoClipComposition = ({
     );
 
 };
+
+
