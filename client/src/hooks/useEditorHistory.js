@@ -245,21 +245,21 @@ export function useEditorHistory(d) {
   const undo = useCallback(() => {
     commitPending();
     const transition = undoEditorHistory(historyRef.current);
-    if (!transition.changed) return void d.notify("没有可撤销的编辑操作");
+    if (!transition.changed) return void d.notify(d.t?.("noUndoActions") || "Nothing to undo");
     historyRef.current = transition.history;
     restoredSignatureRef.current = createEditorSnapshotSignature(transition.value);
     restoreSnapshot(transition.value, d);
-    d.notify("已撤销上一步编辑");
+    d.notify(d.t?.("undone") || "Undo successful");
   }, [commitPending, d]);
 
   const redo = useCallback(() => {
     commitPending();
     const transition = redoEditorHistory(historyRef.current);
-    if (!transition.changed) return void d.notify("没有可重做的编辑操作");
+    if (!transition.changed) return void d.notify(d.t?.("noRedoActions") || "Nothing to redo");
     historyRef.current = transition.history;
     restoredSignatureRef.current = createEditorSnapshotSignature(transition.value);
     restoreSnapshot(transition.value, d);
-    d.notify("已重做编辑");
+    d.notify(d.t?.("redone") || "Redo successful");
   }, [commitPending, d]);
 
   useEffect(() => {
