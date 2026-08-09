@@ -1,4 +1,4 @@
-// Importing module
+﻿// Importing module
 import mongoose from "mongoose";
 
 // defining the schema for the project model
@@ -116,3 +116,5 @@ const Project = mongoose.model("Project", projectSchema);
 
 // exporting the project model
 export default Project;
+
+
