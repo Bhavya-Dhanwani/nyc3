@@ -45,6 +45,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     dumb-init \
     wget \
     ca-certificates \
+    python3 \
+    python3-pip \
+    && pip3 install --no-cache-dir --break-system-packages openai-whisper \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -54,7 +57,9 @@ ENV NODE_ENV=production \
     PORT=5000 \
     PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
     PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium \
-    CHROMIUM_PATH=/usr/bin/chromium
+    CHROMIUM_PATH=/usr/bin/chromium \
+    XDG_CACHE_HOME=/app/.cache \
+    WHISPER_MODEL=base
 
 # Install production node dependencies only
 COPY server/package*.json ./

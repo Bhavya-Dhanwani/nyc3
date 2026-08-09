@@ -7,7 +7,7 @@ export default function ProductShowcase({
 	scrollYProgress: MotionValue<number>;
 }) {
 	const scale = useTransform(scrollYProgress, [0, 0.3], [0.8, 1]);
-	const rotate = useTransform(scrollYProgress, [0, 0.3], [-5, 0]);
+	const rotate = useTransform(scrollYProgress, [0, 0.3], [0, 0]);
 
 	return (
 		<>
@@ -50,7 +50,7 @@ export default function ProductShowcase({
 			>
 				<div className="w-full h-full">
 					<video
-						src="/duevora/Duevora.mp4"
+						src="/assets/home.mp4"
 						autoPlay
 						loop
 						muted

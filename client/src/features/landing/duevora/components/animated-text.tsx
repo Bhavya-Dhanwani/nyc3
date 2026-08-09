@@ -11,7 +11,7 @@ export default function AnimatedText({
 	const displayText = typeof text === "string" ? text : "";
 	return (
 		<span
-			className={`flex uppercase font-humaneMedium overflow-hidden ${className}`}>
+			className={`flex flex-wrap uppercase font-humaneMedium overflow-hidden ${className}`}>
 			{displayText.split(" ").map((word, index) => (
 				<motion.p
 					initial={{ y: "100%" }}

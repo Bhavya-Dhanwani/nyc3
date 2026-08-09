@@ -16,10 +16,12 @@ services:
     restart: unless-stopped
     
   server:
-    image: node:22-alpine
+    build:
+      context: .
+      dockerfile: server/Dockerfile.dev
     container_name: nyc2-server
     working_dir: /app/server
-    command: sh -c "apk add --no-cache ffmpeg chromium fontconfig udev ttf-freefont && node ../scripts/watcher.js npm run dev"
+    command: node ../scripts/watcher.js npm run dev
     volumes:
       - .:/app
       - server_node_modules:/app/server/node_modules
@@ -32,6 +34,8 @@ services:
       - MONGO_URI=mongodb://mongodb:27017/nyc2
       - CHROMIUM_PATH=/usr/bin/chromium
       - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+      - XDG_CACHE_HOME=/app/.cache
+      - WHISPER_MODEL=base
     depends_on:
       mongodb:
         condition: service_healthy

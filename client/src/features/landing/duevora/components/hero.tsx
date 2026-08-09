@@ -7,7 +7,7 @@ export default function Hero({
 	scrollYProgress: MotionValue<number>;
 }) {
 	const scale = useTransform(scrollYProgress, [0, 1], [1, 0.8]);
-	const rotate = useTransform(scrollYProgress, [0, 1], [0, -5]);
+	const rotate = useTransform(scrollYProgress, [0, 1], [0, 0]);
 
 	return (
 		<motion.div
@@ -15,18 +15,18 @@ export default function Hero({
 			className="w-full h-screen bg-heroColor sticky top-0 left-0 pb-[10vh] overflow-hidden"
 		>
 			<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-				<h1 className="text-[45vw] uppercase leading-none tracking-[-5] font-humaneMedium text-white relative">
+				<h1 className="text-[45vw] uppercase leading-none tracking-[0.03em] font-humaneMedium text-white relative">
 					katitor
 					<div className="absolute -bottom-10 md:bottom-28 -right-5 md:-right-16 w-[120px] h-[120px] md:w-[250px] md:h-[250px]">
 						<div className="relative w-full h-full flex items-center justify-center">
 							<motion.img
 								animate={{
-									rotate: [0, 360],
-									transition: {
-										duration: 6,
-										ease: "linear",
-										repeat: Infinity,
-									},
+									rotate: 360,
+								}}
+								transition={{
+									duration: 6,
+									ease: "linear",
+									repeat: Infinity,
 								}}
 								src={"/duevora/circlerotation.svg"}
 								alt="Katitor"

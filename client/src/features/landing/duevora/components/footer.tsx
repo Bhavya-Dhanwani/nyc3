@@ -1,11 +1,19 @@
 import Button from "./button";
 import { motion } from "framer-motion";
 import { flowCurveTextWhite } from "../assets";
+import { useEffect, useState } from "react";
+import { getAccessToken } from "../../../../lib/api.js";
 
 export default function Footer() {
+	const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+	useEffect(() => {
+		setIsLoggedIn(Boolean(getAccessToken()));
+	}, []);
+
 	return (
 		<div className="w-full pt-40 px-10">
-			<h1 className="text-[25vw] uppercase leading-none text-center tracking-[-5] font-humaneMedium text-white">
+			<h1 className="text-[25vw] uppercase leading-none text-center tracking-[0.03em] font-humaneMedium text-white">
 				Switch To
 			</h1>
 
@@ -22,12 +30,12 @@ export default function Footer() {
 					<div className="relative">
 						<motion.img
 							animate={{
-								rotate: [0, 360],
-								transition: {
-									duration: 8,
-									ease: "linear",
-									repeat: Infinity,
-								},
+								rotate: 360,
+							}}
+							transition={{
+								duration: 8,
+								ease: "linear",
+								repeat: Infinity,
 							}}
 							src={"/duevora/circlerotation.svg"}
 							alt=""
@@ -48,10 +56,17 @@ export default function Footer() {
 					Turn 2-hour streams and long videos into viral 9:16 Shorts with AI voices and auto-captions.
 				</p>
 
-				<Button
-					title="Get Started"
-					to="/register"
-				/>
+				{isLoggedIn ? (
+					<Button
+						title="Go to Dashboard"
+						to="/dashboard"
+					/>
+				) : (
+					<Button
+						title="Get Started"
+						to="/register"
+					/>
+				)}
 			</div>
 
 			<div className="w-full border-t border-white/10 py-8 flex items-center justify-between">

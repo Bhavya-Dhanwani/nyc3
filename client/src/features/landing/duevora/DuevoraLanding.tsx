@@ -11,6 +11,7 @@ import {
 	TheTutors,
 	WhatWeDo,
 	WhoWeAre,
+	Sticky,
 } from "./components";
 
 export default function DuevoraLanding() {
@@ -39,6 +40,7 @@ export default function DuevoraLanding() {
 	return (
 		<div className="duevora-page relative">
 			<Navbar />
+			<Sticky />
 			<div
 				ref={container}
 				className="relative">
