@@ -74,7 +74,7 @@ export function LanguageIntro({ t, closing, onChoose }) {
             href="https://toolindex.net/tools/timeline-studio?ref=badge"
             target="_blank"
             rel="noopener noreferrer"
-            aria-label="Timeline Studio — Top 10 Video on Tool Index (opens in a new tab)"
+            aria-label="Timeline Studio â€” Top 10 Video on Tool Index (opens in a new tab)"
           >
             <img
               src="https://toolindex.net/badge/timeline-studio/score.svg"
@@ -348,7 +348,7 @@ export function MediaPanel({
             <input value={libraryQuery} onChange={(event) => setLibraryQuery(event.target.value)} placeholder={t(libraryType === "vector" ? "librarySearchVectorPlaceholder" : libraryType === "audio" ? "librarySearchMusicPlaceholder" : "librarySearchPlaceholder")} aria-label={t(libraryType === "vector" ? "librarySearchVectorPlaceholder" : libraryType === "audio" ? "librarySearchMusicPlaceholder" : "librarySearchPlaceholder")} />
           </form>
           {libraryType === "vector" ? (
-            <div className="vector-category-row" role="group" aria-label={t("vectorCategories", "矢量素材分类")}>
+            <div className="vector-category-row" role="group" aria-label={t("vectorCategories", "çŸ¢é‡ç´ æåˆ†ç±»")}>
               {VECTOR_CATEGORIES.map((category) => (
                 <button
                   type="button"
@@ -420,38 +420,38 @@ export function MediaPanel({
 
 const AI_VECTOR_COPY = {
   zh: {
-    cardTitle: "AI 设计",
-    cardHint: "Gemini Nano · 浏览器本地生成",
-    cardMeta: "描述需求，生成可编辑 SVG",
-    kicker: "本地 AI 矢量设计",
-    title: "用 Gemini Nano 设计矢量图",
-    intro: "描述你需要的图形。提示词与生成过程都留在浏览器中。",
-    prompt: "设计需求",
-    placeholder: "例如：青绿色科技感纸飞机图标，线条简洁，透明背景",
-    checking: "正在检测浏览器与模型…",
-    detecting: "正在识别设计需求的输入语言",
-    translating: "正在将设计需求翻译成英文",
-    translationDownloading: "正在下载本地翻译语言包",
-    translationUnsupported: "当前浏览器无法将此界面语言翻译成英文",
-    ready: "模型已就绪，可以本地生成",
-    downloadable: "支持本地生成，首次使用会准备英文翻译包和 Gemini Nano 模型",
-    downloading: "正在下载并准备模型",
-    generating: "Gemini Nano 正在设计 SVG",
-    validating: "正在解析并安全校验矢量图",
-    unsupported: "当前浏览器不支持内置 Gemini Nano",
-    unsupportedHint: "请使用支持 Prompt API 的桌面版 Chrome 或 Edge，并确认设备满足本地模型要求。",
-    localNote: "首次模型下载需要网络，之后可从浏览器本地使用。",
-    generate: "生成矢量图",
-    downloadGenerate: "下载模型并生成",
-    cancel: "取消",
-    close: "关闭",
-    failed: "这次没有生成可用的 SVG，请修改描述后重试。",
+    cardTitle: "AI è®¾è®¡",
+    cardHint: "Gemini Nano Â· æµè§ˆå™¨æœ¬åœ°ç”Ÿæˆ",
+    cardMeta: "æè¿°éœ€æ±‚ï¼Œç”Ÿæˆå¯ç¼–è¾‘ SVG",
+    kicker: "æœ¬åœ° AI çŸ¢é‡è®¾è®¡",
+    title: "ç”¨ Gemini Nano è®¾è®¡çŸ¢é‡å›¾",
+    intro: "æè¿°ä½ éœ€è¦çš„å›¾å½¢ã€‚æç¤ºè¯ä¸Žç”Ÿæˆè¿‡ç¨‹éƒ½ç•™åœ¨æµè§ˆå™¨ä¸­ã€‚",
+    prompt: "è®¾è®¡éœ€æ±‚",
+    placeholder: "ä¾‹å¦‚ï¼šé’ç»¿è‰²ç§‘æŠ€æ„Ÿçº¸é£žæœºå›¾æ ‡ï¼Œçº¿æ¡ç®€æ´ï¼Œé€æ˜ŽèƒŒæ™¯",
+    checking: "æ­£åœ¨æ£€æµ‹æµè§ˆå™¨ä¸Žæ¨¡åž‹â€¦",
+    detecting: "æ­£åœ¨è¯†åˆ«è®¾è®¡éœ€æ±‚çš„è¾“å…¥è¯­è¨€",
+    translating: "æ­£åœ¨å°†è®¾è®¡éœ€æ±‚ç¿»è¯‘æˆè‹±æ–‡",
+    translationDownloading: "æ­£åœ¨ä¸‹è½½æœ¬åœ°ç¿»è¯‘è¯­è¨€åŒ…",
+    translationUnsupported: "å½“å‰æµè§ˆå™¨æ— æ³•å°†æ­¤ç•Œé¢è¯­è¨€ç¿»è¯‘æˆè‹±æ–‡",
+    ready: "æ¨¡åž‹å·²å°±ç»ªï¼Œå¯ä»¥æœ¬åœ°ç”Ÿæˆ",
+    downloadable: "æ”¯æŒæœ¬åœ°ç”Ÿæˆï¼Œé¦–æ¬¡ä½¿ç”¨ä¼šå‡†å¤‡è‹±æ–‡ç¿»è¯‘åŒ…å’Œ Gemini Nano æ¨¡åž‹",
+    downloading: "æ­£åœ¨ä¸‹è½½å¹¶å‡†å¤‡æ¨¡åž‹",
+    generating: "Gemini Nano æ­£åœ¨è®¾è®¡ SVG",
+    validating: "æ­£åœ¨è§£æžå¹¶å®‰å…¨æ ¡éªŒçŸ¢é‡å›¾",
+    unsupported: "å½“å‰æµè§ˆå™¨ä¸æ”¯æŒå†…ç½® Gemini Nano",
+    unsupportedHint: "è¯·ä½¿ç”¨æ”¯æŒ Prompt API çš„æ¡Œé¢ç‰ˆ Chrome æˆ– Edgeï¼Œå¹¶ç¡®è®¤è®¾å¤‡æ»¡è¶³æœ¬åœ°æ¨¡åž‹è¦æ±‚ã€‚",
+    localNote: "é¦–æ¬¡æ¨¡åž‹ä¸‹è½½éœ€è¦ç½‘ç»œï¼Œä¹‹åŽå¯ä»Žæµè§ˆå™¨æœ¬åœ°ä½¿ç”¨ã€‚",
+    generate: "ç”ŸæˆçŸ¢é‡å›¾",
+    downloadGenerate: "ä¸‹è½½æ¨¡åž‹å¹¶ç”Ÿæˆ",
+    cancel: "å–æ¶ˆ",
+    close: "å…³é—­",
+    failed: "è¿™æ¬¡æ²¡æœ‰ç”Ÿæˆå¯ç”¨çš„ SVGï¼Œè¯·ä¿®æ”¹æè¿°åŽé‡è¯•ã€‚",
   },
   en: {
-    cardTitle: "AI design", cardHint: "Gemini Nano · On-device", cardMeta: "Describe it, get editable SVG",
+    cardTitle: "AI design", cardHint: "Gemini Nano Â· On-device", cardMeta: "Describe it, get editable SVG",
     kicker: "Local AI vector design", title: "Design a vector with Gemini Nano", intro: "Describe the graphic you need. Your prompt and generation stay in the browser.",
     prompt: "Design request", placeholder: "e.g. A clean teal paper-plane icon with a transparent background",
-    checking: "Checking browser and model…", detecting: "Detecting the design request language", ready: "Model ready for local generation", downloadable: "Local generation is supported; English translation and Gemini Nano resources are prepared on first use",
+    checking: "Checking browser and modelâ€¦", detecting: "Detecting the design request language", ready: "Model ready for local generation", downloadable: "Local generation is supported; English translation and Gemini Nano resources are prepared on first use",
     translating: "Translating the design request into English", translationDownloading: "Downloading the local translation language pack", translationUnsupported: "This browser cannot translate the selected interface language into English",
     downloading: "Downloading and preparing the model", generating: "Gemini Nano is designing the SVG", validating: "Parsing and safely validating the vector",
     unsupported: "Built-in Gemini Nano is not supported in this browser", unsupportedHint: "Use a Prompt API-capable desktop Chrome or Edge browser on a supported device.",
@@ -459,85 +459,85 @@ const AI_VECTOR_COPY = {
     downloadGenerate: "Download model & generate", cancel: "Cancel", close: "Close", failed: "No usable SVG was generated. Adjust the description and try again.",
   },
   ja: {
-    cardTitle: "AIデザイン", cardHint: "Gemini Nano・端末内", cardMeta: "説明から編集可能なSVGを生成", kicker: "ローカルAIベクターデザイン",
-    title: "Gemini Nanoでベクターをデザイン", intro: "必要なグラフィックを説明してください。処理はブラウザ内で完結します。", prompt: "デザイン要件",
-    placeholder: "例：透明背景のシンプルな青緑色の紙飛行機アイコン", checking: "ブラウザとモデルを確認中…", detecting: "入力言語を識別中", ready: "ローカル生成の準備ができました",
-    translating: "デザイン要件を英語に翻訳中", translationDownloading: "翻訳言語パックをダウンロード中", translationUnsupported: "この言語から英語への翻訳は利用できません",
-    downloadable: "ローカル生成に対応。初回に英語翻訳パックとモデルを準備します", downloading: "モデルをダウンロードして準備中", generating: "SVGをデザイン中",
-    validating: "ベクターを解析・安全確認中", unsupported: "このブラウザは内蔵Gemini Nanoに対応していません", unsupportedHint: "Prompt API対応のデスクトップ版ChromeまたはEdgeを使用してください。",
-    localNote: "初回ダウンロードにはネット接続が必要です。", generate: "ベクターを生成", downloadGenerate: "モデルを取得して生成", cancel: "キャンセル", close: "閉じる", failed: "有効なSVGを生成できませんでした。要件を調整してください。",
+    cardTitle: "AIãƒ‡ã‚¶ã‚¤ãƒ³", cardHint: "Gemini Nanoãƒ»ç«¯æœ«å†…", cardMeta: "èª¬æ˜Žã‹ã‚‰ç·¨é›†å¯èƒ½ãªSVGã‚’ç”Ÿæˆ", kicker: "ãƒ­ãƒ¼ã‚«ãƒ«AIãƒ™ã‚¯ã‚¿ãƒ¼ãƒ‡ã‚¶ã‚¤ãƒ³",
+    title: "Gemini Nanoã§ãƒ™ã‚¯ã‚¿ãƒ¼ã‚’ãƒ‡ã‚¶ã‚¤ãƒ³", intro: "å¿…è¦ãªã‚°ãƒ©ãƒ•ã‚£ãƒƒã‚¯ã‚’èª¬æ˜Žã—ã¦ãã ã•ã„ã€‚å‡¦ç†ã¯ãƒ–ãƒ©ã‚¦ã‚¶å†…ã§å®Œçµã—ã¾ã™ã€‚", prompt: "ãƒ‡ã‚¶ã‚¤ãƒ³è¦ä»¶",
+    placeholder: "ä¾‹ï¼šé€æ˜ŽèƒŒæ™¯ã®ã‚·ãƒ³ãƒ—ãƒ«ãªé’ç·‘è‰²ã®ç´™é£›è¡Œæ©Ÿã‚¢ã‚¤ã‚³ãƒ³", checking: "ãƒ–ãƒ©ã‚¦ã‚¶ã¨ãƒ¢ãƒ‡ãƒ«ã‚’ç¢ºèªä¸­â€¦", detecting: "å…¥åŠ›è¨€èªžã‚’è­˜åˆ¥ä¸­", ready: "ãƒ­ãƒ¼ã‚«ãƒ«ç”Ÿæˆã®æº–å‚™ãŒã§ãã¾ã—ãŸ",
+    translating: "ãƒ‡ã‚¶ã‚¤ãƒ³è¦ä»¶ã‚’è‹±èªžã«ç¿»è¨³ä¸­", translationDownloading: "ç¿»è¨³è¨€èªžãƒ‘ãƒƒã‚¯ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ä¸­", translationUnsupported: "ã“ã®è¨€èªžã‹ã‚‰è‹±èªžã¸ã®ç¿»è¨³ã¯åˆ©ç”¨ã§ãã¾ã›ã‚“",
+    downloadable: "ãƒ­ãƒ¼ã‚«ãƒ«ç”Ÿæˆã«å¯¾å¿œã€‚åˆå›žã«è‹±èªžç¿»è¨³ãƒ‘ãƒƒã‚¯ã¨ãƒ¢ãƒ‡ãƒ«ã‚’æº–å‚™ã—ã¾ã™", downloading: "ãƒ¢ãƒ‡ãƒ«ã‚’ãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã—ã¦æº–å‚™ä¸­", generating: "SVGã‚’ãƒ‡ã‚¶ã‚¤ãƒ³ä¸­",
+    validating: "ãƒ™ã‚¯ã‚¿ãƒ¼ã‚’è§£æžãƒ»å®‰å…¨ç¢ºèªä¸­", unsupported: "ã“ã®ãƒ–ãƒ©ã‚¦ã‚¶ã¯å†…è”µGemini Nanoã«å¯¾å¿œã—ã¦ã„ã¾ã›ã‚“", unsupportedHint: "Prompt APIå¯¾å¿œã®ãƒ‡ã‚¹ã‚¯ãƒˆãƒƒãƒ—ç‰ˆChromeã¾ãŸã¯Edgeã‚’ä½¿ç”¨ã—ã¦ãã ã•ã„ã€‚",
+    localNote: "åˆå›žãƒ€ã‚¦ãƒ³ãƒ­ãƒ¼ãƒ‰ã«ã¯ãƒãƒƒãƒˆæŽ¥ç¶šãŒå¿…è¦ã§ã™ã€‚", generate: "ãƒ™ã‚¯ã‚¿ãƒ¼ã‚’ç”Ÿæˆ", downloadGenerate: "ãƒ¢ãƒ‡ãƒ«ã‚’å–å¾—ã—ã¦ç”Ÿæˆ", cancel: "ã‚­ãƒ£ãƒ³ã‚»ãƒ«", close: "é–‰ã˜ã‚‹", failed: "æœ‰åŠ¹ãªSVGã‚’ç”Ÿæˆã§ãã¾ã›ã‚“ã§ã—ãŸã€‚è¦ä»¶ã‚’èª¿æ•´ã—ã¦ãã ã•ã„ã€‚",
   },
   ko: {
-    cardTitle: "AI 디자인", cardHint: "Gemini Nano · 기기 내", cardMeta: "설명으로 편집 가능한 SVG 생성", kicker: "로컬 AI 벡터 디자인",
-    title: "Gemini Nano로 벡터 디자인", intro: "필요한 그래픽을 설명하세요. 생성은 브라우저 안에서 처리됩니다.", prompt: "디자인 요청",
-    placeholder: "예: 투명 배경의 깔끔한 청록색 종이비행기 아이콘", checking: "브라우저와 모델 확인 중…", detecting: "입력 언어 감지 중", ready: "로컬 생성 준비 완료",
-    translating: "디자인 요청을 영어로 번역 중", translationDownloading: "번역 언어 팩 다운로드 중", translationUnsupported: "이 언어를 영어로 번역할 수 없습니다",
-    downloadable: "로컬 생성을 지원합니다. 처음 사용 시 영어 번역 팩과 모델을 준비합니다", downloading: "모델 다운로드 및 준비 중", generating: "SVG 디자인 중", validating: "벡터 구문 분석 및 안전 검사 중",
-    unsupported: "이 브라우저는 내장 Gemini Nano를 지원하지 않습니다", unsupportedHint: "Prompt API를 지원하는 데스크톱 Chrome 또는 Edge를 사용하세요.",
-    localNote: "첫 모델 다운로드에는 네트워크가 필요합니다.", generate: "벡터 생성", downloadGenerate: "모델 다운로드 후 생성", cancel: "취소", close: "닫기", failed: "사용 가능한 SVG를 생성하지 못했습니다. 설명을 수정해 보세요.",
+    cardTitle: "AI ë””ìžì¸", cardHint: "Gemini Nano Â· ê¸°ê¸° ë‚´", cardMeta: "ì„¤ëª…ìœ¼ë¡œ íŽ¸ì§‘ ê°€ëŠ¥í•œ SVG ìƒì„±", kicker: "ë¡œì»¬ AI ë²¡í„° ë””ìžì¸",
+    title: "Gemini Nanoë¡œ ë²¡í„° ë””ìžì¸", intro: "í•„ìš”í•œ ê·¸ëž˜í”½ì„ ì„¤ëª…í•˜ì„¸ìš”. ìƒì„±ì€ ë¸Œë¼ìš°ì € ì•ˆì—ì„œ ì²˜ë¦¬ë©ë‹ˆë‹¤.", prompt: "ë””ìžì¸ ìš”ì²­",
+    placeholder: "ì˜ˆ: íˆ¬ëª… ë°°ê²½ì˜ ê¹”ë”í•œ ì²­ë¡ìƒ‰ ì¢…ì´ë¹„í–‰ê¸° ì•„ì´ì½˜", checking: "ë¸Œë¼ìš°ì €ì™€ ëª¨ë¸ í™•ì¸ ì¤‘â€¦", detecting: "ìž…ë ¥ ì–¸ì–´ ê°ì§€ ì¤‘", ready: "ë¡œì»¬ ìƒì„± ì¤€ë¹„ ì™„ë£Œ",
+    translating: "ë””ìžì¸ ìš”ì²­ì„ ì˜ì–´ë¡œ ë²ˆì—­ ì¤‘", translationDownloading: "ë²ˆì—­ ì–¸ì–´ íŒ© ë‹¤ìš´ë¡œë“œ ì¤‘", translationUnsupported: "ì´ ì–¸ì–´ë¥¼ ì˜ì–´ë¡œ ë²ˆì—­í•  ìˆ˜ ì—†ìŠµë‹ˆë‹¤",
+    downloadable: "ë¡œì»¬ ìƒì„±ì„ ì§€ì›í•©ë‹ˆë‹¤. ì²˜ìŒ ì‚¬ìš© ì‹œ ì˜ì–´ ë²ˆì—­ íŒ©ê³¼ ëª¨ë¸ì„ ì¤€ë¹„í•©ë‹ˆë‹¤", downloading: "ëª¨ë¸ ë‹¤ìš´ë¡œë“œ ë° ì¤€ë¹„ ì¤‘", generating: "SVG ë””ìžì¸ ì¤‘", validating: "ë²¡í„° êµ¬ë¬¸ ë¶„ì„ ë° ì•ˆì „ ê²€ì‚¬ ì¤‘",
+    unsupported: "ì´ ë¸Œë¼ìš°ì €ëŠ” ë‚´ìž¥ Gemini Nanoë¥¼ ì§€ì›í•˜ì§€ ì•ŠìŠµë‹ˆë‹¤", unsupportedHint: "Prompt APIë¥¼ ì§€ì›í•˜ëŠ” ë°ìŠ¤í¬í†± Chrome ë˜ëŠ” Edgeë¥¼ ì‚¬ìš©í•˜ì„¸ìš”.",
+    localNote: "ì²« ëª¨ë¸ ë‹¤ìš´ë¡œë“œì—ëŠ” ë„¤íŠ¸ì›Œí¬ê°€ í•„ìš”í•©ë‹ˆë‹¤.", generate: "ë²¡í„° ìƒì„±", downloadGenerate: "ëª¨ë¸ ë‹¤ìš´ë¡œë“œ í›„ ìƒì„±", cancel: "ì·¨ì†Œ", close: "ë‹«ê¸°", failed: "ì‚¬ìš© ê°€ëŠ¥í•œ SVGë¥¼ ìƒì„±í•˜ì§€ ëª»í–ˆìŠµë‹ˆë‹¤. ì„¤ëª…ì„ ìˆ˜ì •í•´ ë³´ì„¸ìš”.",
   },
   es: {
-    cardTitle: "Diseño IA", cardHint: "Gemini Nano · En el dispositivo", cardMeta: "Describe y crea un SVG editable", kicker: "Diseño vectorial con IA local",
-    title: "Diseña un vector con Gemini Nano", intro: "Describe el gráfico. La solicitud y la generación permanecen en el navegador.", prompt: "Solicitud de diseño",
-    placeholder: "Ej.: icono limpio de avión de papel turquesa con fondo transparente", checking: "Comprobando navegador y modelo…", detecting: "Detectando el idioma de la solicitud", ready: "Modelo listo para generar localmente",
-    translating: "Traduciendo la solicitud al inglés", translationDownloading: "Descargando el paquete de traducción local", translationUnsupported: "No se puede traducir este idioma al inglés en el navegador",
-    downloadable: "Compatible; la traducción al inglés y el modelo se preparan en el primer uso", downloading: "Descargando y preparando el modelo", generating: "Diseñando el SVG", validating: "Analizando y validando el vector",
-    unsupported: "Este navegador no admite Gemini Nano integrado", unsupportedHint: "Usa Chrome o Edge de escritorio compatible con Prompt API.", localNote: "La primera descarga requiere conexión.",
-    generate: "Generar vector", downloadGenerate: "Descargar modelo y generar", cancel: "Cancelar", close: "Cerrar", failed: "No se generó un SVG válido. Ajusta la descripción.",
+    cardTitle: "DiseÃ±o IA", cardHint: "Gemini Nano Â· En el dispositivo", cardMeta: "Describe y crea un SVG editable", kicker: "DiseÃ±o vectorial con IA local",
+    title: "DiseÃ±a un vector con Gemini Nano", intro: "Describe el grÃ¡fico. La solicitud y la generaciÃ³n permanecen en el navegador.", prompt: "Solicitud de diseÃ±o",
+    placeholder: "Ej.: icono limpio de aviÃ³n de papel turquesa con fondo transparente", checking: "Comprobando navegador y modeloâ€¦", detecting: "Detectando el idioma de la solicitud", ready: "Modelo listo para generar localmente",
+    translating: "Traduciendo la solicitud al inglÃ©s", translationDownloading: "Descargando el paquete de traducciÃ³n local", translationUnsupported: "No se puede traducir este idioma al inglÃ©s en el navegador",
+    downloadable: "Compatible; la traducciÃ³n al inglÃ©s y el modelo se preparan en el primer uso", downloading: "Descargando y preparando el modelo", generating: "DiseÃ±ando el SVG", validating: "Analizando y validando el vector",
+    unsupported: "Este navegador no admite Gemini Nano integrado", unsupportedHint: "Usa Chrome o Edge de escritorio compatible con Prompt API.", localNote: "La primera descarga requiere conexiÃ³n.",
+    generate: "Generar vector", downloadGenerate: "Descargar modelo y generar", cancel: "Cancelar", close: "Cerrar", failed: "No se generÃ³ un SVG vÃ¡lido. Ajusta la descripciÃ³n.",
   },
   fr: {
-    cardTitle: "Design IA", cardHint: "Gemini Nano · Sur l’appareil", cardMeta: "Décrivez, obtenez un SVG modifiable", kicker: "Design vectoriel IA local",
-    title: "Créer un vecteur avec Gemini Nano", intro: "Décrivez le visuel. La requête et la génération restent dans le navigateur.", prompt: "Demande de design",
-    placeholder: "Ex. : icône d’avion en papier turquoise, fond transparent", checking: "Vérification du navigateur et du modèle…", detecting: "Détection de la langue de la demande", ready: "Modèle prêt pour la génération locale",
-    translating: "Traduction de la demande en anglais", translationDownloading: "Téléchargement du pack de traduction local", translationUnsupported: "La traduction de cette langue vers l’anglais n’est pas disponible",
-    downloadable: "Compatible ; la traduction anglaise et le modèle seront préparés au premier usage", downloading: "Téléchargement et préparation du modèle", generating: "Création du SVG", validating: "Analyse et validation du vecteur",
-    unsupported: "Gemini Nano intégré n’est pas pris en charge", unsupportedHint: "Utilisez Chrome ou Edge sur ordinateur avec la Prompt API.", localNote: "Le premier téléchargement nécessite une connexion.",
-    generate: "Générer le vecteur", downloadGenerate: "Télécharger et générer", cancel: "Annuler", close: "Fermer", failed: "Aucun SVG valide n’a été généré. Modifiez la description.",
+    cardTitle: "Design IA", cardHint: "Gemini Nano Â· Sur lâ€™appareil", cardMeta: "DÃ©crivez, obtenez un SVG modifiable", kicker: "Design vectoriel IA local",
+    title: "CrÃ©er un vecteur avec Gemini Nano", intro: "DÃ©crivez le visuel. La requÃªte et la gÃ©nÃ©ration restent dans le navigateur.", prompt: "Demande de design",
+    placeholder: "Ex. : icÃ´ne dâ€™avion en papier turquoise, fond transparent", checking: "VÃ©rification du navigateur et du modÃ¨leâ€¦", detecting: "DÃ©tection de la langue de la demande", ready: "ModÃ¨le prÃªt pour la gÃ©nÃ©ration locale",
+    translating: "Traduction de la demande en anglais", translationDownloading: "TÃ©lÃ©chargement du pack de traduction local", translationUnsupported: "La traduction de cette langue vers lâ€™anglais nâ€™est pas disponible",
+    downloadable: "Compatible ; la traduction anglaise et le modÃ¨le seront prÃ©parÃ©s au premier usage", downloading: "TÃ©lÃ©chargement et prÃ©paration du modÃ¨le", generating: "CrÃ©ation du SVG", validating: "Analyse et validation du vecteur",
+    unsupported: "Gemini Nano intÃ©grÃ© nâ€™est pas pris en charge", unsupportedHint: "Utilisez Chrome ou Edge sur ordinateur avec la Prompt API.", localNote: "Le premier tÃ©lÃ©chargement nÃ©cessite une connexion.",
+    generate: "GÃ©nÃ©rer le vecteur", downloadGenerate: "TÃ©lÃ©charger et gÃ©nÃ©rer", cancel: "Annuler", close: "Fermer", failed: "Aucun SVG valide nâ€™a Ã©tÃ© gÃ©nÃ©rÃ©. Modifiez la description.",
   },
   de: {
-    cardTitle: "KI-Design", cardHint: "Gemini Nano · Lokal", cardMeta: "Beschreiben und editierbares SVG erhalten", kicker: "Lokales KI-Vektordesign",
-    title: "Vektor mit Gemini Nano gestalten", intro: "Beschreibe die gewünschte Grafik. Eingabe und Generierung bleiben im Browser.", prompt: "Designwunsch",
-    placeholder: "z. B. klares türkisfarbenes Papierflieger-Icon, transparenter Hintergrund", checking: "Browser und Modell werden geprüft…", detecting: "Eingabesprache wird erkannt", ready: "Modell ist lokal einsatzbereit",
-    translating: "Designwunsch wird ins Englische übersetzt", translationDownloading: "Lokales Übersetzungspaket wird geladen", translationUnsupported: "Diese Sprache kann im Browser nicht ins Englische übersetzt werden",
-    downloadable: "Unterstützt; Englisch-Übersetzung und Modell werden bei der ersten Nutzung vorbereitet", downloading: "Modell wird geladen und vorbereitet", generating: "SVG wird gestaltet", validating: "Vektor wird geprüft",
-    unsupported: "Integriertes Gemini Nano wird nicht unterstützt", unsupportedHint: "Nutze einen Prompt-API-fähigen Desktop-Browser Chrome oder Edge.", localNote: "Der erste Download benötigt eine Verbindung.",
-    generate: "Vektor generieren", downloadGenerate: "Modell laden & generieren", cancel: "Abbrechen", close: "Schließen", failed: "Kein gültiges SVG erzeugt. Bitte Beschreibung anpassen.",
+    cardTitle: "KI-Design", cardHint: "Gemini Nano Â· Lokal", cardMeta: "Beschreiben und editierbares SVG erhalten", kicker: "Lokales KI-Vektordesign",
+    title: "Vektor mit Gemini Nano gestalten", intro: "Beschreibe die gewÃ¼nschte Grafik. Eingabe und Generierung bleiben im Browser.", prompt: "Designwunsch",
+    placeholder: "z. B. klares tÃ¼rkisfarbenes Papierflieger-Icon, transparenter Hintergrund", checking: "Browser und Modell werden geprÃ¼ftâ€¦", detecting: "Eingabesprache wird erkannt", ready: "Modell ist lokal einsatzbereit",
+    translating: "Designwunsch wird ins Englische Ã¼bersetzt", translationDownloading: "Lokales Ãœbersetzungspaket wird geladen", translationUnsupported: "Diese Sprache kann im Browser nicht ins Englische Ã¼bersetzt werden",
+    downloadable: "UnterstÃ¼tzt; Englisch-Ãœbersetzung und Modell werden bei der ersten Nutzung vorbereitet", downloading: "Modell wird geladen und vorbereitet", generating: "SVG wird gestaltet", validating: "Vektor wird geprÃ¼ft",
+    unsupported: "Integriertes Gemini Nano wird nicht unterstÃ¼tzt", unsupportedHint: "Nutze einen Prompt-API-fÃ¤higen Desktop-Browser Chrome oder Edge.", localNote: "Der erste Download benÃ¶tigt eine Verbindung.",
+    generate: "Vektor generieren", downloadGenerate: "Modell laden & generieren", cancel: "Abbrechen", close: "SchlieÃŸen", failed: "Kein gÃ¼ltiges SVG erzeugt. Bitte Beschreibung anpassen.",
   },
   pt: {
-    cardTitle: "Design com IA", cardHint: "Gemini Nano · No dispositivo", cardMeta: "Descreva e obtenha SVG editável", kicker: "Design vetorial com IA local",
-    title: "Crie um vetor com Gemini Nano", intro: "Descreva o gráfico. O pedido e a geração ficam no navegador.", prompt: "Pedido de design",
-    placeholder: "Ex.: ícone limpo de avião de papel verde-água, fundo transparente", checking: "Verificando navegador e modelo…", detecting: "Detectando o idioma do pedido", ready: "Modelo pronto para geração local",
-    translating: "Traduzindo o pedido para inglês", translationDownloading: "Baixando o pacote de tradução local", translationUnsupported: "O navegador não pode traduzir este idioma para inglês",
-    downloadable: "Compatível; a tradução para inglês e o modelo serão preparados no primeiro uso", downloading: "Baixando e preparando o modelo", generating: "Criando o SVG", validating: "Analisando e validando o vetor",
-    unsupported: "Gemini Nano integrado não é compatível", unsupportedHint: "Use Chrome ou Edge para desktop com Prompt API.", localNote: "O primeiro download precisa de conexão.",
-    generate: "Gerar vetor", downloadGenerate: "Baixar modelo e gerar", cancel: "Cancelar", close: "Fechar", failed: "Nenhum SVG válido foi gerado. Ajuste a descrição.",
+    cardTitle: "Design com IA", cardHint: "Gemini Nano Â· No dispositivo", cardMeta: "Descreva e obtenha SVG editÃ¡vel", kicker: "Design vetorial com IA local",
+    title: "Crie um vetor com Gemini Nano", intro: "Descreva o grÃ¡fico. O pedido e a geraÃ§Ã£o ficam no navegador.", prompt: "Pedido de design",
+    placeholder: "Ex.: Ã­cone limpo de aviÃ£o de papel verde-Ã¡gua, fundo transparente", checking: "Verificando navegador e modeloâ€¦", detecting: "Detectando o idioma do pedido", ready: "Modelo pronto para geraÃ§Ã£o local",
+    translating: "Traduzindo o pedido para inglÃªs", translationDownloading: "Baixando o pacote de traduÃ§Ã£o local", translationUnsupported: "O navegador nÃ£o pode traduzir este idioma para inglÃªs",
+    downloadable: "CompatÃ­vel; a traduÃ§Ã£o para inglÃªs e o modelo serÃ£o preparados no primeiro uso", downloading: "Baixando e preparando o modelo", generating: "Criando o SVG", validating: "Analisando e validando o vetor",
+    unsupported: "Gemini Nano integrado nÃ£o Ã© compatÃ­vel", unsupportedHint: "Use Chrome ou Edge para desktop com Prompt API.", localNote: "O primeiro download precisa de conexÃ£o.",
+    generate: "Gerar vetor", downloadGenerate: "Baixar modelo e gerar", cancel: "Cancelar", close: "Fechar", failed: "Nenhum SVG vÃ¡lido foi gerado. Ajuste a descriÃ§Ã£o.",
   },
   th: {
-    cardTitle: "ออกแบบด้วย AI", cardHint: "Gemini Nano · บนอุปกรณ์", cardMeta: "อธิบายเพื่อสร้าง SVG ที่แก้ไขได้", kicker: "ออกแบบเวกเตอร์ด้วย AI ในเครื่อง",
-    title: "ออกแบบเวกเตอร์ด้วย Gemini Nano", intro: "อธิบายกราฟิกที่ต้องการ ข้อมูลและการสร้างจะอยู่ในเบราว์เซอร์", prompt: "ความต้องการ",
-    placeholder: "เช่น ไอคอนเครื่องบินกระดาษสีเขียวอมฟ้า พื้นหลังโปร่งใส", checking: "กำลังตรวจสอบเบราว์เซอร์และโมเดล…", detecting: "กำลังตรวจจับภาษาที่ป้อน", ready: "โมเดลพร้อมสร้างในเครื่อง",
-    translating: "กำลังแปลความต้องการเป็นภาษาอังกฤษ", translationDownloading: "กำลังดาวน์โหลดชุดภาษาแปลในเครื่อง", translationUnsupported: "เบราว์เซอร์แปลภาษานี้เป็นอังกฤษไม่ได้",
-    downloadable: "รองรับ โดยจะเตรียมชุดแปลอังกฤษและโมเดลเมื่อใช้ครั้งแรก", downloading: "กำลังดาวน์โหลดและเตรียมโมเดล", generating: "กำลังออกแบบ SVG", validating: "กำลังตรวจสอบเวกเตอร์",
-    unsupported: "เบราว์เซอร์นี้ไม่รองรับ Gemini Nano ในตัว", unsupportedHint: "ใช้ Chrome หรือ Edge บนเดสก์ท็อปที่รองรับ Prompt API", localNote: "การดาวน์โหลดครั้งแรกต้องใช้อินเทอร์เน็ต",
-    generate: "สร้างเวกเตอร์", downloadGenerate: "ดาวน์โหลดและสร้าง", cancel: "ยกเลิก", close: "ปิด", failed: "สร้าง SVG ที่ใช้ได้ไม่สำเร็จ โปรดแก้คำอธิบาย",
+    cardTitle: "à¸­à¸­à¸à¹à¸šà¸šà¸”à¹‰à¸§à¸¢ AI", cardHint: "Gemini Nano Â· à¸šà¸™à¸­à¸¸à¸›à¸à¸£à¸“à¹Œ", cardMeta: "à¸­à¸˜à¸´à¸šà¸²à¸¢à¹€à¸žà¸·à¹ˆà¸­à¸ªà¸£à¹‰à¸²à¸‡ SVG à¸—à¸µà¹ˆà¹à¸à¹‰à¹„à¸‚à¹„à¸”à¹‰", kicker: "à¸­à¸­à¸à¹à¸šà¸šà¹€à¸§à¸à¹€à¸•à¸­à¸£à¹Œà¸”à¹‰à¸§à¸¢ AI à¹ƒà¸™à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡",
+    title: "à¸­à¸­à¸à¹à¸šà¸šà¹€à¸§à¸à¹€à¸•à¸­à¸£à¹Œà¸”à¹‰à¸§à¸¢ Gemini Nano", intro: "à¸­à¸˜à¸´à¸šà¸²à¸¢à¸à¸£à¸²à¸Ÿà¸´à¸à¸—à¸µà¹ˆà¸•à¹‰à¸­à¸‡à¸à¸²à¸£ à¸‚à¹‰à¸­à¸¡à¸¹à¸¥à¹à¸¥à¸°à¸à¸²à¸£à¸ªà¸£à¹‰à¸²à¸‡à¸ˆà¸°à¸­à¸¢à¸¹à¹ˆà¹ƒà¸™à¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œ", prompt: "à¸„à¸§à¸²à¸¡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£",
+    placeholder: "à¹€à¸Šà¹ˆà¸™ à¹„à¸­à¸„à¸­à¸™à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡à¸šà¸´à¸™à¸à¸£à¸°à¸”à¸²à¸©à¸ªà¸µà¹€à¸‚à¸µà¸¢à¸§à¸­à¸¡à¸Ÿà¹‰à¸² à¸žà¸·à¹‰à¸™à¸«à¸¥à¸±à¸‡à¹‚à¸›à¸£à¹ˆà¸‡à¹ƒà¸ª", checking: "à¸à¸³à¸¥à¸±à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œà¹à¸¥à¸°à¹‚à¸¡à¹€à¸”à¸¥â€¦", detecting: "à¸à¸³à¸¥à¸±à¸‡à¸•à¸£à¸§à¸ˆà¸ˆà¸±à¸šà¸ à¸²à¸©à¸²à¸—à¸µà¹ˆà¸›à¹‰à¸­à¸™", ready: "à¹‚à¸¡à¹€à¸”à¸¥à¸žà¸£à¹‰à¸­à¸¡à¸ªà¸£à¹‰à¸²à¸‡à¹ƒà¸™à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡",
+    translating: "à¸à¸³à¸¥à¸±à¸‡à¹à¸›à¸¥à¸„à¸§à¸²à¸¡à¸•à¹‰à¸­à¸‡à¸à¸²à¸£à¹€à¸›à¹‡à¸™à¸ à¸²à¸©à¸²à¸­à¸±à¸‡à¸à¸¤à¸©", translationDownloading: "à¸à¸³à¸¥à¸±à¸‡à¸”à¸²à¸§à¸™à¹Œà¹‚à¸«à¸¥à¸”à¸Šà¸¸à¸”à¸ à¸²à¸©à¸²à¹à¸›à¸¥à¹ƒà¸™à¹€à¸„à¸£à¸·à¹ˆà¸­à¸‡", translationUnsupported: "à¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œà¹à¸›à¸¥à¸ à¸²à¸©à¸²à¸™à¸µà¹‰à¹€à¸›à¹‡à¸™à¸­à¸±à¸‡à¸à¸¤à¸©à¹„à¸¡à¹ˆà¹„à¸”à¹‰",
+    downloadable: "à¸£à¸­à¸‡à¸£à¸±à¸š à¹‚à¸”à¸¢à¸ˆà¸°à¹€à¸•à¸£à¸µà¸¢à¸¡à¸Šà¸¸à¸”à¹à¸›à¸¥à¸­à¸±à¸‡à¸à¸¤à¸©à¹à¸¥à¸°à¹‚à¸¡à¹€à¸”à¸¥à¹€à¸¡à¸·à¹ˆà¸­à¹ƒà¸Šà¹‰à¸„à¸£à¸±à¹‰à¸‡à¹à¸£à¸", downloading: "à¸à¸³à¸¥à¸±à¸‡à¸”à¸²à¸§à¸™à¹Œà¹‚à¸«à¸¥à¸”à¹à¸¥à¸°à¹€à¸•à¸£à¸µà¸¢à¸¡à¹‚à¸¡à¹€à¸”à¸¥", generating: "à¸à¸³à¸¥à¸±à¸‡à¸­à¸­à¸à¹à¸šà¸š SVG", validating: "à¸à¸³à¸¥à¸±à¸‡à¸•à¸£à¸§à¸ˆà¸ªà¸­à¸šà¹€à¸§à¸à¹€à¸•à¸­à¸£à¹Œ",
+    unsupported: "à¹€à¸šà¸£à¸²à¸§à¹Œà¹€à¸‹à¸­à¸£à¹Œà¸™à¸µà¹‰à¹„à¸¡à¹ˆà¸£à¸­à¸‡à¸£à¸±à¸š Gemini Nano à¹ƒà¸™à¸•à¸±à¸§", unsupportedHint: "à¹ƒà¸Šà¹‰ Chrome à¸«à¸£à¸·à¸­ Edge à¸šà¸™à¹€à¸”à¸ªà¸à¹Œà¸—à¹‡à¸­à¸›à¸—à¸µà¹ˆà¸£à¸­à¸‡à¸£à¸±à¸š Prompt API", localNote: "à¸à¸²à¸£à¸”à¸²à¸§à¸™à¹Œà¹‚à¸«à¸¥à¸”à¸„à¸£à¸±à¹‰à¸‡à¹à¸£à¸à¸•à¹‰à¸­à¸‡à¹ƒà¸Šà¹‰à¸­à¸´à¸™à¹€à¸—à¸­à¸£à¹Œà¹€à¸™à¹‡à¸•",
+    generate: "à¸ªà¸£à¹‰à¸²à¸‡à¹€à¸§à¸à¹€à¸•à¸­à¸£à¹Œ", downloadGenerate: "à¸”à¸²à¸§à¸™à¹Œà¹‚à¸«à¸¥à¸”à¹à¸¥à¸°à¸ªà¸£à¹‰à¸²à¸‡", cancel: "à¸¢à¸à¹€à¸¥à¸´à¸", close: "à¸›à¸´à¸”", failed: "à¸ªà¸£à¹‰à¸²à¸‡ SVG à¸—à¸µà¹ˆà¹ƒà¸Šà¹‰à¹„à¸”à¹‰à¹„à¸¡à¹ˆà¸ªà¸³à¹€à¸£à¹‡à¸ˆ à¹‚à¸›à¸£à¸”à¹à¸à¹‰à¸„à¸³à¸­à¸˜à¸´à¸šà¸²à¸¢",
   },
   vi: {
-    cardTitle: "Thiết kế AI", cardHint: "Gemini Nano · Trên thiết bị", cardMeta: "Mô tả để tạo SVG có thể chỉnh sửa", kicker: "Thiết kế vector AI cục bộ",
-    title: "Thiết kế vector bằng Gemini Nano", intro: "Mô tả hình bạn cần. Yêu cầu và quá trình tạo nằm trong trình duyệt.", prompt: "Yêu cầu thiết kế",
-    placeholder: "VD: biểu tượng máy bay giấy xanh ngọc, nền trong suốt", checking: "Đang kiểm tra trình duyệt và mô hình…", detecting: "Đang nhận diện ngôn ngữ nhập", ready: "Mô hình sẵn sàng tạo cục bộ",
-    translating: "Đang dịch yêu cầu sang tiếng Anh", translationDownloading: "Đang tải gói dịch cục bộ", translationUnsupported: "Trình duyệt không thể dịch ngôn ngữ này sang tiếng Anh",
-    downloadable: "Được hỗ trợ; gói dịch tiếng Anh và mô hình sẽ được chuẩn bị ở lần dùng đầu", downloading: "Đang tải và chuẩn bị mô hình", generating: "Đang thiết kế SVG", validating: "Đang phân tích và xác thực vector",
-    unsupported: "Trình duyệt không hỗ trợ Gemini Nano tích hợp", unsupportedHint: "Dùng Chrome hoặc Edge máy tính có Prompt API.", localNote: "Lần tải đầu cần kết nối mạng.",
-    generate: "Tạo vector", downloadGenerate: "Tải mô hình và tạo", cancel: "Hủy", close: "Đóng", failed: "Không tạo được SVG hợp lệ. Hãy điều chỉnh mô tả.",
+    cardTitle: "Thiáº¿t káº¿ AI", cardHint: "Gemini Nano Â· TrÃªn thiáº¿t bá»‹", cardMeta: "MÃ´ táº£ Ä‘á»ƒ táº¡o SVG cÃ³ thá»ƒ chá»‰nh sá»­a", kicker: "Thiáº¿t káº¿ vector AI cá»¥c bá»™",
+    title: "Thiáº¿t káº¿ vector báº±ng Gemini Nano", intro: "MÃ´ táº£ hÃ¬nh báº¡n cáº§n. YÃªu cáº§u vÃ  quÃ¡ trÃ¬nh táº¡o náº±m trong trÃ¬nh duyá»‡t.", prompt: "YÃªu cáº§u thiáº¿t káº¿",
+    placeholder: "VD: biá»ƒu tÆ°á»£ng mÃ¡y bay giáº¥y xanh ngá»c, ná»n trong suá»‘t", checking: "Äang kiá»ƒm tra trÃ¬nh duyá»‡t vÃ  mÃ´ hÃ¬nhâ€¦", detecting: "Äang nháº­n diá»‡n ngÃ´n ngá»¯ nháº­p", ready: "MÃ´ hÃ¬nh sáºµn sÃ ng táº¡o cá»¥c bá»™",
+    translating: "Äang dá»‹ch yÃªu cáº§u sang tiáº¿ng Anh", translationDownloading: "Äang táº£i gÃ³i dá»‹ch cá»¥c bá»™", translationUnsupported: "TrÃ¬nh duyá»‡t khÃ´ng thá»ƒ dá»‹ch ngÃ´n ngá»¯ nÃ y sang tiáº¿ng Anh",
+    downloadable: "ÄÆ°á»£c há»— trá»£; gÃ³i dá»‹ch tiáº¿ng Anh vÃ  mÃ´ hÃ¬nh sáº½ Ä‘Æ°á»£c chuáº©n bá»‹ á»Ÿ láº§n dÃ¹ng Ä‘áº§u", downloading: "Äang táº£i vÃ  chuáº©n bá»‹ mÃ´ hÃ¬nh", generating: "Äang thiáº¿t káº¿ SVG", validating: "Äang phÃ¢n tÃ­ch vÃ  xÃ¡c thá»±c vector",
+    unsupported: "TrÃ¬nh duyá»‡t khÃ´ng há»— trá»£ Gemini Nano tÃ­ch há»£p", unsupportedHint: "DÃ¹ng Chrome hoáº·c Edge mÃ¡y tÃ­nh cÃ³ Prompt API.", localNote: "Láº§n táº£i Ä‘áº§u cáº§n káº¿t ná»‘i máº¡ng.",
+    generate: "Táº¡o vector", downloadGenerate: "Táº£i mÃ´ hÃ¬nh vÃ  táº¡o", cancel: "Há»§y", close: "ÄÃ³ng", failed: "KhÃ´ng táº¡o Ä‘Æ°á»£c SVG há»£p lá»‡. HÃ£y Ä‘iá»u chá»‰nh mÃ´ táº£.",
   },
   ru: {
-    cardTitle: "ИИ-дизайн", cardHint: "Gemini Nano · На устройстве", cardMeta: "Описание → редактируемый SVG", kicker: "Локальный ИИ-дизайн вектора",
-    title: "Создать вектор с Gemini Nano", intro: "Опишите нужную графику. Запрос и генерация остаются в браузере.", prompt: "Задача",
-    placeholder: "Например: лаконичная бирюзовая иконка бумажного самолёта, прозрачный фон", checking: "Проверяем браузер и модель…", detecting: "Определяем язык запроса", ready: "Модель готова к локальной генерации",
-    translating: "Переводим задачу на английский", translationDownloading: "Загружаем локальный языковой пакет", translationUnsupported: "Браузер не может перевести этот язык на английский",
-    downloadable: "Поддерживается; при первом запуске будут подготовлены перевод на английский и модель", downloading: "Загрузка и подготовка модели", generating: "Создание SVG", validating: "Разбор и безопасная проверка вектора",
-    unsupported: "Встроенный Gemini Nano не поддерживается", unsupportedHint: "Используйте настольный Chrome или Edge с Prompt API.", localNote: "Для первой загрузки нужна сеть.",
-    generate: "Создать вектор", downloadGenerate: "Загрузить и создать", cancel: "Отмена", close: "Закрыть", failed: "Не удалось получить корректный SVG. Измените описание.",
+    cardTitle: "Ð˜Ð˜-Ð´Ð¸Ð·Ð°Ð¹Ð½", cardHint: "Gemini Nano Â· ÐÐ° ÑƒÑÑ‚Ñ€Ð¾Ð¹ÑÑ‚Ð²Ðµ", cardMeta: "ÐžÐ¿Ð¸ÑÐ°Ð½Ð¸Ðµ â†’ Ñ€ÐµÐ´Ð°ÐºÑ‚Ð¸Ñ€ÑƒÐµÐ¼Ñ‹Ð¹ SVG", kicker: "Ð›Ð¾ÐºÐ°Ð»ÑŒÐ½Ñ‹Ð¹ Ð˜Ð˜-Ð´Ð¸Ð·Ð°Ð¹Ð½ Ð²ÐµÐºÑ‚Ð¾Ñ€Ð°",
+    title: "Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ Ð²ÐµÐºÑ‚Ð¾Ñ€ Ñ Gemini Nano", intro: "ÐžÐ¿Ð¸ÑˆÐ¸Ñ‚Ðµ Ð½ÑƒÐ¶Ð½ÑƒÑŽ Ð³Ñ€Ð°Ñ„Ð¸ÐºÑƒ. Ð—Ð°Ð¿Ñ€Ð¾Ñ Ð¸ Ð³ÐµÐ½ÐµÑ€Ð°Ñ†Ð¸Ñ Ð¾ÑÑ‚Ð°ÑŽÑ‚ÑÑ Ð² Ð±Ñ€Ð°ÑƒÐ·ÐµÑ€Ðµ.", prompt: "Ð—Ð°Ð´Ð°Ñ‡Ð°",
+    placeholder: "ÐÐ°Ð¿Ñ€Ð¸Ð¼ÐµÑ€: Ð»Ð°ÐºÐ¾Ð½Ð¸Ñ‡Ð½Ð°Ñ Ð±Ð¸Ñ€ÑŽÐ·Ð¾Ð²Ð°Ñ Ð¸ÐºÐ¾Ð½ÐºÐ° Ð±ÑƒÐ¼Ð°Ð¶Ð½Ð¾Ð³Ð¾ ÑÐ°Ð¼Ð¾Ð»Ñ‘Ñ‚Ð°, Ð¿Ñ€Ð¾Ð·Ñ€Ð°Ñ‡Ð½Ñ‹Ð¹ Ñ„Ð¾Ð½", checking: "ÐŸÑ€Ð¾Ð²ÐµÑ€ÑÐµÐ¼ Ð±Ñ€Ð°ÑƒÐ·ÐµÑ€ Ð¸ Ð¼Ð¾Ð´ÐµÐ»ÑŒâ€¦", detecting: "ÐžÐ¿Ñ€ÐµÐ´ÐµÐ»ÑÐµÐ¼ ÑÐ·Ñ‹Ðº Ð·Ð°Ð¿Ñ€Ð¾ÑÐ°", ready: "ÐœÐ¾Ð´ÐµÐ»ÑŒ Ð³Ð¾Ñ‚Ð¾Ð²Ð° Ðº Ð»Ð¾ÐºÐ°Ð»ÑŒÐ½Ð¾Ð¹ Ð³ÐµÐ½ÐµÑ€Ð°Ñ†Ð¸Ð¸",
+    translating: "ÐŸÐµÑ€ÐµÐ²Ð¾Ð´Ð¸Ð¼ Ð·Ð°Ð´Ð°Ñ‡Ñƒ Ð½Ð° Ð°Ð½Ð³Ð»Ð¸Ð¹ÑÐºÐ¸Ð¹", translationDownloading: "Ð—Ð°Ð³Ñ€ÑƒÐ¶Ð°ÐµÐ¼ Ð»Ð¾ÐºÐ°Ð»ÑŒÐ½Ñ‹Ð¹ ÑÐ·Ñ‹ÐºÐ¾Ð²Ð¾Ð¹ Ð¿Ð°ÐºÐµÑ‚", translationUnsupported: "Ð‘Ñ€Ð°ÑƒÐ·ÐµÑ€ Ð½Ðµ Ð¼Ð¾Ð¶ÐµÑ‚ Ð¿ÐµÑ€ÐµÐ²ÐµÑÑ‚Ð¸ ÑÑ‚Ð¾Ñ‚ ÑÐ·Ñ‹Ðº Ð½Ð° Ð°Ð½Ð³Ð»Ð¸Ð¹ÑÐºÐ¸Ð¹",
+    downloadable: "ÐŸÐ¾Ð´Ð´ÐµÑ€Ð¶Ð¸Ð²Ð°ÐµÑ‚ÑÑ; Ð¿Ñ€Ð¸ Ð¿ÐµÑ€Ð²Ð¾Ð¼ Ð·Ð°Ð¿ÑƒÑÐºÐµ Ð±ÑƒÐ´ÑƒÑ‚ Ð¿Ð¾Ð´Ð³Ð¾Ñ‚Ð¾Ð²Ð»ÐµÐ½Ñ‹ Ð¿ÐµÑ€ÐµÐ²Ð¾Ð´ Ð½Ð° Ð°Ð½Ð³Ð»Ð¸Ð¹ÑÐºÐ¸Ð¹ Ð¸ Ð¼Ð¾Ð´ÐµÐ»ÑŒ", downloading: "Ð—Ð°Ð³Ñ€ÑƒÐ·ÐºÐ° Ð¸ Ð¿Ð¾Ð´Ð³Ð¾Ñ‚Ð¾Ð²ÐºÐ° Ð¼Ð¾Ð´ÐµÐ»Ð¸", generating: "Ð¡Ð¾Ð·Ð´Ð°Ð½Ð¸Ðµ SVG", validating: "Ð Ð°Ð·Ð±Ð¾Ñ€ Ð¸ Ð±ÐµÐ·Ð¾Ð¿Ð°ÑÐ½Ð°Ñ Ð¿Ñ€Ð¾Ð²ÐµÑ€ÐºÐ° Ð²ÐµÐºÑ‚Ð¾Ñ€Ð°",
+    unsupported: "Ð’ÑÑ‚Ñ€Ð¾ÐµÐ½Ð½Ñ‹Ð¹ Gemini Nano Ð½Ðµ Ð¿Ð¾Ð´Ð´ÐµÑ€Ð¶Ð¸Ð²Ð°ÐµÑ‚ÑÑ", unsupportedHint: "Ð˜ÑÐ¿Ð¾Ð»ÑŒÐ·ÑƒÐ¹Ñ‚Ðµ Ð½Ð°ÑÑ‚Ð¾Ð»ÑŒÐ½Ñ‹Ð¹ Chrome Ð¸Ð»Ð¸ Edge Ñ Prompt API.", localNote: "Ð”Ð»Ñ Ð¿ÐµÑ€Ð²Ð¾Ð¹ Ð·Ð°Ð³Ñ€ÑƒÐ·ÐºÐ¸ Ð½ÑƒÐ¶Ð½Ð° ÑÐµÑ‚ÑŒ.",
+    generate: "Ð¡Ð¾Ð·Ð´Ð°Ñ‚ÑŒ Ð²ÐµÐºÑ‚Ð¾Ñ€", downloadGenerate: "Ð—Ð°Ð³Ñ€ÑƒÐ·Ð¸Ñ‚ÑŒ Ð¸ ÑÐ¾Ð·Ð´Ð°Ñ‚ÑŒ", cancel: "ÐžÑ‚Ð¼ÐµÐ½Ð°", close: "Ð—Ð°ÐºÑ€Ñ‹Ñ‚ÑŒ", failed: "ÐÐµ ÑƒÐ´Ð°Ð»Ð¾ÑÑŒ Ð¿Ð¾Ð»ÑƒÑ‡Ð¸Ñ‚ÑŒ ÐºÐ¾Ñ€Ñ€ÐµÐºÑ‚Ð½Ñ‹Ð¹ SVG. Ð˜Ð·Ð¼ÐµÐ½Ð¸Ñ‚Ðµ Ð¾Ð¿Ð¸ÑÐ°Ð½Ð¸Ðµ.",
   },
 };
 
@@ -768,8 +768,8 @@ function LibraryTypeTabs({ t, activeType, onSelect }) {
 }
 
 const AI_MUSIC_COPY = {
-  zh: { title: "AI 音乐", hint: "本地音乐生成", description: "音乐描述", descriptionPlaceholder: "例如：雨夜咖啡店里安静忧郁的爵士钢琴", style: "风格", mood: "氛围", instrument: "主乐器", duration: "时长", bpm: "速度", generate: "生成音乐", cancel: "取消", first: "首次下载模型，之后从本地缓存加载。", modelSetup: "模型准备", modelReady: "模型已就绪", musicGeneration: "音乐生成", waitingToGenerate: "等待生成", download: "并行下载模型", cache: "从本地缓存加载模型", initializing: "初始化 WebGPU 模型", translating: "翻译音乐描述", conditioning: "理解音乐描述", generating: "正在生成", decoding: "正在合成音频", complete: "已添加到 My assets", english: "高级：模型提示词" },
-  en: { title: "AI music", hint: "Local music", description: "Describe your music", descriptionPlaceholder: "e.g. melancholic jazz piano in a rainy café", style: "Style", mood: "Mood", instrument: "Lead", duration: "Length", bpm: "Tempo", generate: "Generate music", cancel: "Cancel", first: "The model downloads once, then loads from local cache.", modelSetup: "Model setup", modelReady: "Model ready", musicGeneration: "Music generation", waitingToGenerate: "Waiting to generate", download: "Downloading model files in parallel", cache: "Loading models from local cache", initializing: "Initializing WebGPU models", translating: "Translating description", conditioning: "Understanding prompt", generating: "Generating", decoding: "Decoding audio", complete: "Added to My assets", english: "Advanced: model prompt" },
+  zh: { title: "AI éŸ³ä¹", hint: "æœ¬åœ°éŸ³ä¹ç”Ÿæˆ", description: "éŸ³ä¹æè¿°", descriptionPlaceholder: "ä¾‹å¦‚ï¼šé›¨å¤œå’–å•¡åº—é‡Œå®‰é™å¿§éƒçš„çˆµå£«é’¢ç´", style: "é£Žæ ¼", mood: "æ°›å›´", instrument: "ä¸»ä¹å™¨", duration: "æ—¶é•¿", bpm: "é€Ÿåº¦", generate: "ç”ŸæˆéŸ³ä¹", cancel: "å–æ¶ˆ", first: "é¦–æ¬¡ä¸‹è½½æ¨¡åž‹ï¼Œä¹‹åŽä»Žæœ¬åœ°ç¼“å­˜åŠ è½½ã€‚", modelSetup: "æ¨¡åž‹å‡†å¤‡", modelReady: "æ¨¡åž‹å·²å°±ç»ª", musicGeneration: "éŸ³ä¹ç”Ÿæˆ", waitingToGenerate: "ç­‰å¾…ç”Ÿæˆ", download: "å¹¶è¡Œä¸‹è½½æ¨¡åž‹", cache: "ä»Žæœ¬åœ°ç¼“å­˜åŠ è½½æ¨¡åž‹", initializing: "åˆå§‹åŒ– WebGPU æ¨¡åž‹", translating: "ç¿»è¯‘éŸ³ä¹æè¿°", conditioning: "ç†è§£éŸ³ä¹æè¿°", generating: "æ­£åœ¨ç”Ÿæˆ", decoding: "æ­£åœ¨åˆæˆéŸ³é¢‘", complete: "å·²æ·»åŠ åˆ° My assets", english: "é«˜çº§ï¼šæ¨¡åž‹æç¤ºè¯" },
+  en: { title: "AI music", hint: "Local music", description: "Describe your music", descriptionPlaceholder: "e.g. melancholic jazz piano in a rainy cafÃ©", style: "Style", mood: "Mood", instrument: "Lead", duration: "Length", bpm: "Tempo", generate: "Generate music", cancel: "Cancel", first: "The model downloads once, then loads from local cache.", modelSetup: "Model setup", modelReady: "Model ready", musicGeneration: "Music generation", waitingToGenerate: "Waiting to generate", download: "Downloading model files in parallel", cache: "Loading models from local cache", initializing: "Initializing WebGPU models", translating: "Translating description", conditioning: "Understanding prompt", generating: "Generating", decoding: "Decoding audio", complete: "Added to My assets", english: "Advanced: model prompt" },
 };
 
 function AiMusicLibraryCard({ language, onClick }) {
@@ -785,7 +785,7 @@ function AiMusicLibraryCard({ language, onClick }) {
   );
 }
 const AI_OPTION_LABELS = {
-  zh: { cinematic: "电影感", lofi: "Lo-fi", ambient: "氛围", electronic: "电子", orchestral: "管弦", uplifting: "振奋", calm: "平静", dreamy: "梦幻", dramatic: "戏剧性", dark: "暗黑", piano: "钢琴", guitar: "木吉他", synth: "合成器", strings: "弦乐", drums: "鼓组" },
+  zh: { cinematic: "ç”µå½±æ„Ÿ", lofi: "Lo-fi", ambient: "æ°›å›´", electronic: "ç”µå­", orchestral: "ç®¡å¼¦", uplifting: "æŒ¯å¥‹", calm: "å¹³é™", dreamy: "æ¢¦å¹»", dramatic: "æˆå‰§æ€§", dark: "æš—é»‘", piano: "é’¢ç´", guitar: "æœ¨å‰ä»–", synth: "åˆæˆå™¨", strings: "å¼¦ä¹", drums: "é¼“ç»„" },
 };
 
 export function AiMusicGenerator({ language, music, embedded = false }) {
@@ -807,7 +807,7 @@ export function AiMusicGenerator({ language, music, embedded = false }) {
   return (
     <section className={`ai-music-card ${open ? "is-open" : ""} ${embedded ? "is-embedded" : ""}`}>
       {!embedded ? <HeadTag className="ai-music-card-head" type="button" onClick={() => setOpen((value) => !value)} aria-expanded={open}>
-        <span className="ai-music-spark">✦</span>
+        <span className="ai-music-spark">âœ¦</span>
         <span><strong>{copy.title}</strong><small>{copy.hint}</small></span>
         <CaretDown size={17} />
       </HeadTag> : null}
@@ -834,7 +834,7 @@ export function AiMusicGenerator({ language, music, embedded = false }) {
                 <span className={generationStarted ? "is-active" : ""}><i>2</i>{copy.musicGeneration}<small>{generationStarted ? `${generationProgress}%` : copy.waitingToGenerate}</small></span>
               </div>
               <div className="ai-music-progress">
-                <div><strong>{activeStageLabel}</strong><small>{activeStageStatus} · {activeStageProgress}%</small></div>
+                <div><strong>{activeStageLabel}</strong><small>{activeStageStatus} Â· {activeStageProgress}%</small></div>
                 <span><i style={{ width: `${activeStageProgress}%` }} /></span>
               </div>
             </div>
@@ -918,10 +918,10 @@ function AssetPreviewDialog({ asset, t, onClose }) {
       <section className="asset-preview-dialog" role="dialog" aria-modal="true" aria-labelledby="asset-preview-title">
         <header>
           <div>
-            <span>{t("assetPreview", "素材预览")}</span>
+            <span>{t("assetPreview", "ç´ æé¢„è§ˆ")}</span>
             <strong id="asset-preview-title">{assetDisplayName}</strong>
           </div>
-          <button type="button" onClick={onClose} aria-label={t("closeAssetPreview", "关闭预览")}>
+          <button type="button" onClick={onClose} aria-label={t("closeAssetPreview", "å…³é—­é¢„è§ˆ")}>
             <X size={20} />
           </button>
         </header>
@@ -937,11 +937,11 @@ function AssetPreviewDialog({ asset, t, onClose }) {
                   <i style={{ "--audio-preview-progress": `${Math.round(audioPreviewProgress * 100)}%` }}>
                     <b>{Math.round(audioPreviewProgress * 100)}%</b>
                   </i>
-                  <span>{t("audioPreviewLoading", "正在加载音乐预览…")}</span>
+                  <span>{t("audioPreviewLoading", "æ­£åœ¨åŠ è½½éŸ³ä¹é¢„è§ˆâ€¦")}</span>
                 </div>
               ) : null}
               {audioPreviewStatus === "error" ? (
-                <div className="asset-preview-audio-error" role="alert">{t("audioPreviewFailed", "音乐预览加载失败，请稍后重试")}</div>
+                <div className="asset-preview-audio-error" role="alert">{t("audioPreviewFailed", "éŸ³ä¹é¢„è§ˆåŠ è½½å¤±è´¥ï¼Œè¯·ç¨åŽé‡è¯•")}</div>
               ) : null}
               {audioPreviewSrc ? <audio
                 className={audioPreviewStatus === "ready" ? "is-ready" : "is-waiting"}
@@ -964,7 +964,7 @@ function AssetPreviewDialog({ asset, t, onClose }) {
             {assetMeta ? <span>{assetMeta}</span> : <span />}
             {asset.blob ? (
               <button type="button" onClick={() => downloadMediaBlob(asset.blob, asset.name || "asset")}>
-                <DownloadSimple size={14} />{t("download", "下载")}
+                <DownloadSimple size={14} />{t("download", "ä¸‹è½½")}
               </button>
             ) : null}
           </footer>
@@ -1024,7 +1024,7 @@ function AssetRow({ asset, selected, t, downloadState }) {
             : asset.type === "video"
               ? t("assetVideo")
               : asset.kind === "vector"
-                ? t("libraryVector", "矢量")
+                ? t("libraryVector", "çŸ¢é‡")
                 : t("assetImage")}
         </span>
         {downloadState?.status === "loading" ? (
@@ -1034,7 +1034,7 @@ function AssetRow({ asset, selected, t, downloadState }) {
         ) : downloadState?.status === "ready" ? <i className="asset-ready-dot" title={t("libraryAssetReady")} /> : null}
         <span className="asset-preview-hover" aria-hidden="true">
           <PlayCircle size={30} weight="fill" />
-          <em>{t("assetPreview", "素材预览")}</em>
+          <em>{t("assetPreview", "ç´ æé¢„è§ˆ")}</em>
         </span>
       </div>
       <div>
@@ -1314,6 +1314,7 @@ export function ToolPanel(props) {
               onLoadMomentIntoTimeline={onLoadMomentIntoTimeline}
               onApplyCaptions={props.onApplyCaptions}
               captionStyle={props.captionStyle}
+              hasCaptions={Array.isArray(props.captionSegments) && props.captionSegments.length > 0}
             />
           </div>
         </div>
@@ -1357,7 +1358,7 @@ export function ToolPanel(props) {
             setSelectedAudioSegmentId?.("");
             setSelectedTrack?.("");
             setVoiceTab("synthesis");
-            notify("已打开 AI 配音");
+            notify("å·²æ‰“å¼€ AI é…éŸ³");
           }}
         >
           <MicrophoneStage size={24} weight="duotone" />
@@ -1736,13 +1737,13 @@ export function VisualEffectsPanel({
         </div> : null}
         {activeTab === "transform" ?
         <section className="visual-editor-card">
-          <div className="visual-editor-heading"><span><Diamond size={16} weight="fill" />{t("visualKeyframes")}</span><em>{localTime.toFixed(2)}s · {keyframes.length} {t("visualFrames")}</em></div>
+          <div className="visual-editor-heading"><span><Diamond size={16} weight="fill" />{t("visualKeyframes")}</span><em>{localTime.toFixed(2)}s Â· {keyframes.length} {t("visualFrames")}</em></div>
           <button className="panel-secondary visual-add-all-keyframes" type="button" onClick={() => onChange?.({ keyframe: { time: localTime, ...transform } })}><Diamond size={14} weight="fill" />{t("visualAddAllKeyframes")}</button>
-          {keyframes.length ? <div className="visual-keyframe-times" aria-label={t("visualKeyframes")}>{keyframes.map((frame) => <button type="button" aria-label={`${frame.time.toFixed(2)}s · ${t("visualKeyframes")}`} className={Math.abs(frame.time - localTime) <= 0.04 ? "is-current" : ""} key={frame.time} onClick={() => onSeek?.(frame.time)}>{frame.time.toFixed(2)}s</button>)}</div> : null}
+          {keyframes.length ? <div className="visual-keyframe-times" aria-label={t("visualKeyframes")}>{keyframes.map((frame) => <button type="button" aria-label={`${frame.time.toFixed(2)}s Â· ${t("visualKeyframes")}`} className={Math.abs(frame.time - localTime) <= 0.04 ? "is-current" : ""} key={frame.time} onClick={() => onSeek?.(frame.time)}>{frame.time.toFixed(2)}s</button>)}</div> : null}
           {[['scale', t('visualScale'), 0.2, 3, 0.01, 100], ['x', t('visualPositionX'), -100, 100, 1, 1], ['y', t('visualPositionY'), -100, 100, 1, 1], ['rotation', t('visualRotation'), -180, 180, 1, 1], ['opacity', t('visualOpacity'), 0, 1, 0.01, 100]].map(([key, label, min, max, step, displayScale]) => {
             const keyed = hasVisualPropertyKeyframe(keyframes, localTime, key);
             const displayValue = Math.round(transform[key] * displayScale * 100) / 100;
-            return <div className="slider-field compact-slider visual-keyframe-property" key={key}><div><label>{label}</label><span className="visual-property-value"><label className="visual-number-field"><input aria-label={`${label} · ${t("visualKeyframes")}`} type="number" min={min * displayScale} max={max * displayScale} step={step * displayScale} value={displayValue} onChange={(event) => updateTransform(key, Number(event.target.value) / displayScale)} /><i>{key === 'rotation' ? '°' : '%'}</i></label><button className={keyed ? "is-active" : ""} type="button" aria-label={`${keyed ? t("visualRemovePropertyKeyframe") : t("visualAddPropertyKeyframe")} · ${label}`} onClick={() => keyed ? onChange?.({ removePropertyKeyframe: { time: localTime, key } }) : onChange?.({ propertyKeyframe: { time: localTime, key, value: transform[key] } })}><Diamond size={13} weight={keyed ? "fill" : "regular"} /></button></span></div><input aria-label={`${label} · slider`} type="range" min={min} max={max} step={step} value={transform[key]} onChange={(event) => updateTransform(key, Number(event.target.value))} /></div>;
+            return <div className="slider-field compact-slider visual-keyframe-property" key={key}><div><label>{label}</label><span className="visual-property-value"><label className="visual-number-field"><input aria-label={`${label} Â· ${t("visualKeyframes")}`} type="number" min={min * displayScale} max={max * displayScale} step={step * displayScale} value={displayValue} onChange={(event) => updateTransform(key, Number(event.target.value) / displayScale)} /><i>{key === 'rotation' ? 'Â°' : '%'}</i></label><button className={keyed ? "is-active" : ""} type="button" aria-label={`${keyed ? t("visualRemovePropertyKeyframe") : t("visualAddPropertyKeyframe")} Â· ${label}`} onClick={() => keyed ? onChange?.({ removePropertyKeyframe: { time: localTime, key } }) : onChange?.({ propertyKeyframe: { time: localTime, key, value: transform[key] } })}><Diamond size={13} weight={keyed ? "fill" : "regular"} /></button></span></div><input aria-label={`${label} Â· slider`} type="range" min={min} max={max} step={step} value={transform[key]} onChange={(event) => updateTransform(key, Number(event.target.value))} /></div>;
           })}
           <button className="panel-secondary" type="button" onClick={() => onChange?.({ removeKeyframeAt: localTime })}>{t("visualDeleteKeyframe")}</button>
         </section> : null}
@@ -1761,8 +1762,8 @@ export function VisualEffectsPanel({
         {activeTab === "speed" ? <section className="visual-editor-card visual-speed-card">
           {!singleSection ? <div className="visual-editor-heading"><strong>{t("visualSpeed")}</strong><em>{t("visualClipScoped")}</em></div> : null}
           {isVideo ? <>
-            <div className="visual-speed-presets" aria-label={t("visualSpeed")}>{[0.25, 0.5, 1, 1.5, 2, 3, 4].map((rate) => <button type="button" className={Math.abs(playbackRate - rate) < 0.001 ? "is-active" : ""} key={rate} onClick={() => onChange?.({ playbackRate: rate })}>{rate}×</button>)}</div>
-            <div className="slider-field compact-slider"><div><label>{t("visualSpeed")}</label><strong>{playbackRate.toFixed(playbackRate % 1 ? 2 : 0)}×</strong></div><input aria-label={t("visualSpeed")} type="range" min="0.25" max="4" step="0.05" value={playbackRate} onChange={(event) => onChange?.({ playbackRate: Number(event.target.value) })} /></div>
+            <div className="visual-speed-presets" aria-label={t("visualSpeed")}>{[0.25, 0.5, 1, 1.5, 2, 3, 4].map((rate) => <button type="button" className={Math.abs(playbackRate - rate) < 0.001 ? "is-active" : ""} key={rate} onClick={() => onChange?.({ playbackRate: rate })}>{rate}Ã—</button>)}</div>
+            <div className="slider-field compact-slider"><div><label>{t("visualSpeed")}</label><strong>{playbackRate.toFixed(playbackRate % 1 ? 2 : 0)}Ã—</strong></div><input aria-label={t("visualSpeed")} type="range" min="0.25" max="4" step="0.05" value={playbackRate} onChange={(event) => onChange?.({ playbackRate: Number(event.target.value) })} /></div>
             <div className="visual-speed-summary"><span><em>{t("visualSourceDuration")}</em><strong>{sourceDuration.toFixed(2)}s</strong></span><span><em>{t("visualTimelineDuration")}</em><strong>{Number(segment.duration).toFixed(2)}s</strong></span></div>
             <p className="visual-speed-hint">{sourceAudioLinked ? t("sourceAudioSynced") : t("visualSpeedVisualOnlyHint")}</p>
           </> : <div className="empty-state visual-speed-empty">{t("visualSpeedImageHint")}</div>}
@@ -1791,7 +1792,7 @@ export function VisualEffectsPanel({
         {activeTab === "timing" ? <section className="visual-editor-card visual-overlay-timing-card">
           {!singleSection ? <div className="visual-editor-heading"><strong>{t("overlayTiming", "Timing & layer")}</strong><em>{t("visualClipScoped")}</em></div> : null}
           <section className="visual-overlay-presets"><strong>{t("layoutPresets")}</strong><div>
-            {[["top-left", "↖"], ["top-right", "↗"], ["bottom-left", "↙"], ["bottom-right", "↘"], ["center", "●"], ["full", "□"]].map(([id, label]) => <button type="button" key={id} title={id} aria-label={`${t("layoutPresets")} ${id}`} onClick={() => onApplyPreset?.(id)}>{label}</button>)}
+            {[["top-left", "â†–"], ["top-right", "â†—"], ["bottom-left", "â†™"], ["bottom-right", "â†˜"], ["center", "â—"], ["full", "â–¡"]].map(([id, label]) => <button type="button" key={id} title={id} aria-label={`${t("layoutPresets")} ${id}`} onClick={() => onApplyPreset?.(id)}>{label}</button>)}
           </div></section>
           <label><span>{t("clipStart", "Start time")}</span><input type="number" min="0" step="0.1" value={segment.start} onChange={(event) => onChange?.({ timing: { start: Math.max(0, Number(event.target.value) || 0) } })} /></label>
           <label><span>{t("clipDuration", "Duration")}</span><input type="number" min="0.1" step="0.1" value={segment.duration} onChange={(event) => onChange?.({ timing: { duration: Math.max(0.1, Number(event.target.value) || 0.1) } })} /></label>
@@ -1896,7 +1897,7 @@ function StickerPanel({
   const [activeCategory, setActiveCategory] = useState("all");
   const [visibleCount, setVisibleCount] = useState(STICKER_PAGE_SIZE);
   const loadMoreRef = useRef(null);
-  const emptySticker = options.find((option) => option.id === "none") ?? { id: "none", name: "无贴纸" };
+  const emptySticker = options.find((option) => option.id === "none") ?? { id: "none", name: "æ— è´´çº¸" };
   const stickerOptions = useMemo(() => options.filter((option) => option.id !== "none"), [options]);
   const filteredStickers = useMemo(
     () =>
@@ -1967,7 +1968,7 @@ function StickerPanel({
           const dragAsset = {
             ...option,
             type: "sticker",
-            meta: "贴纸",
+            meta: "è´´çº¸",
           };
 
           return (
@@ -2155,9 +2156,9 @@ export function VoiceSynthesisPanel({
             <span className="avatar"><Waveform size={17} weight="bold" /></span>
             <span>
               <strong>{profile.name}</strong>
-              <em>{t("cloneVoiceMultilingual", "多语言 · 克隆音色")}</em>
+              <em>{t("cloneVoiceMultilingual", "å¤šè¯­è¨€ Â· å…‹éš†éŸ³è‰²")}</em>
             </span>
-            <small>{t("cloneVoiceBadge", "克隆")}</small>
+            <small>{t("cloneVoiceBadge", "å…‹éš†")}</small>
           </button>
         ))}
         {filteredVoices.map((voice) => (
@@ -2173,7 +2174,7 @@ export function VoiceSynthesisPanel({
             <span>
               <strong>{voice.name}</strong>
               <em>
-                {voice.language} · {voice.gender}
+                {voice.language} Â· {voice.gender}
               </em>
             </span>
             <small>{voice.badge}</small>
@@ -2182,7 +2183,7 @@ export function VoiceSynthesisPanel({
       </div>
 
       <div className="model-row">
-        <span title={selectedVoice.detail}>{selectedVoiceProfile ? `${t("cloneBaseVoice", "基础语言声音")} · ${selectedVoice.name}` : selectedVoice.detail}</span>
+        <span title={selectedVoice.detail}>{selectedVoiceProfile ? `${t("cloneBaseVoice", "åŸºç¡€è¯­è¨€å£°éŸ³")} Â· ${selectedVoice.name}` : selectedVoice.detail}</span>
         <button
           type="button"
           onClick={() => selectedVoiceProfile
@@ -2197,10 +2198,10 @@ export function VoiceSynthesisPanel({
 
       <div className="voice-sample-preview">
         <div>
-          <strong>{t("voiceSampleTitle", "音色样音")}</strong>
+          <strong>{t("voiceSampleTitle", "éŸ³è‰²æ ·éŸ³")}</strong>
           <span>{selectedVoiceProfile
-            ? `${selectedVoiceProfile.name} · ${t("cloneLanguageFlow", "先合成所选语言，再转换为此音色")}`
-            : `${selectedVoice.name} · ${t("voiceSampleHint", "切换音色后试听对应的预生成样音")}`}</span>
+            ? `${selectedVoiceProfile.name} Â· ${t("cloneLanguageFlow", "å…ˆåˆæˆæ‰€é€‰è¯­è¨€ï¼Œå†è½¬æ¢ä¸ºæ­¤éŸ³è‰²")}`
+            : `${selectedVoice.name} Â· ${t("voiceSampleHint", "åˆ‡æ¢éŸ³è‰²åŽè¯•å¬å¯¹åº”çš„é¢„ç”Ÿæˆæ ·éŸ³")}`}</span>
         </div>
         <audio
           ref={voiceSampleRef}
@@ -2226,7 +2227,7 @@ export function VoiceSynthesisPanel({
           <span>{Math.round(volume * 100)}%</span>
         </div>
         <input id="volume" type="range" min="0" max="4" step="0.05" value={volume} onChange={(event) => setVolume(Number(event.target.value))} />
-        {volume > 1 ? <small className="voice-gain-hint">{t("voiceGainLimiterHint", "高增益已启用限幅保护")}</small> : null}
+        {volume > 1 ? <small className="voice-gain-hint">{t("voiceGainLimiterHint", "é«˜å¢žç›Šå·²å¯ç”¨é™å¹…ä¿æŠ¤")}</small> : null}
       </div>
 
       {status === "generating" ? (
@@ -2254,7 +2255,7 @@ export function VoiceSynthesisPanel({
       </div>
       {audioBlob && audioUrl ? (
         <div className="generated-voice-result" aria-live="polite">
-          <div><Check size={18} weight="bold" /><span><strong>{t("voiceAddedToTimeline", "已加入配音时间线")}</strong><em>{t("voicePreviewHint", "试听本次已生成的时间线配音")}</em></span></div>
+          <div><Check size={18} weight="bold" /><span><strong>{t("voiceAddedToTimeline", "å·²åŠ å…¥é…éŸ³æ—¶é—´çº¿")}</strong><em>{t("voicePreviewHint", "è¯•å¬æœ¬æ¬¡å·²ç”Ÿæˆçš„æ—¶é—´çº¿é…éŸ³")}</em></span></div>
           <audio controls preload="metadata" src={audioUrl} />
         </div>
       ) : null}
@@ -2307,10 +2308,10 @@ export function MyVoicesPanel({
   }, [recordedVoices]);
   const runCloneTest = async () => {
     if (!draft?.blob || !authorized || cloneState === "running") return;
-    setCloneState("running"); setCloneProgress(3); setClonePhase(t("cloneChecking", "检查参考声音"));
+    setCloneState("running"); setCloneProgress(3); setClonePhase(t("cloneChecking", "æ£€æŸ¥å‚è€ƒå£°éŸ³"));
     try {
       const nextEmbedding = await extractVoiceEmbedding(draft.blob, (event) => {
-        setCloneProgress(Math.min(48, Math.round((event.progress || 0) * 0.55))); setClonePhase(event.phase || t("cloneEncoding", "提取音色"));
+        setCloneProgress(Math.min(48, Math.round((event.progress || 0) * 0.55))); setClonePhase(event.phase || t("cloneEncoding", "æå–éŸ³è‰²"));
       });
       const { blob: baseBlob } = await synthesizeBaseVoice({
         voice: selectedVoice, text: getVoiceCloneTestSentence(selectedVoice), speed: 1, notify, t,
@@ -2318,21 +2319,21 @@ export function MyVoicesPanel({
         onProgress: (progress) => setCloneProgress(48 + Math.round(Math.min(100, progress) * 0.18)),
       });
       const converted = await convertVoiceBlob(baseBlob, nextEmbedding, {
-        onProgress: (event) => { setCloneProgress(66 + Math.round((event.progress || 0) * 0.34)); setClonePhase(event.phase || t("cloneConverting", "生成克隆试听")); },
+        onProgress: (event) => { setCloneProgress(66 + Math.round((event.progress || 0) * 0.34)); setClonePhase(event.phase || t("cloneConverting", "ç”Ÿæˆå…‹éš†è¯•å¬")); },
       });
       setEmbedding(nextEmbedding); setTestBlob(converted); setCloneProgress(100); setCloneState("ready");
     } catch (error) {
-      console.error(error); setCloneState("error"); setClonePhase(error instanceof Error ? error.message : t("cloneFailed", "克隆试听失败"));
+      console.error(error); setCloneState("error"); setClonePhase(error instanceof Error ? error.message : t("cloneFailed", "å…‹éš†è¯•å¬å¤±è´¥"));
     }
   };
   const saveClone = async () => {
     if (!draft || !embedding || !testBlob || cloneState !== "ready") return;
     const now = new Date().toISOString();
-    const profile = { id: crypto.randomUUID(), name: draft.name.replace(/\.[^.]+$/, "") || t("myCloneVoice", "我的克隆声音"),
+    const profile = { id: crypto.randomUUID(), name: draft.name.replace(/\.[^.]+$/, "") || t("myCloneVoice", "æˆ‘çš„å…‹éš†å£°éŸ³"),
       sourceKind: draft.sourceKind, referenceBlob: draft.blob, testBlob, embedding: Float32Array.from(embedding),
       favorite: false, authorized: true, createdAt: now, updatedAt: now };
     await addVoiceProfile(profile); setSelectedVoiceProfileId(profile.id); setDraft(null); setTestBlob(null); setEmbedding(null); setAuthorized(false); setCloneState("idle");
-    notify(t("cloneSaved", "克隆声音已保存到“克隆声音”"));
+    notify(t("cloneSaved", "å…‹éš†å£°éŸ³å·²ä¿å­˜åˆ°â€œå…‹éš†å£°éŸ³â€"));
   };
 
   return (
@@ -2343,8 +2344,8 @@ export function MyVoicesPanel({
       <div className="voice-source-grid">
       <div className={`record-card ${isRecording ? "is-recording" : ""}`}>
         <div>
-          <strong>{t("recordReferenceVoice", "录制参考声音")}</strong>
-          <span>{isRecording ? `${t("recording")} · ${formatClock(recordingElapsed)}` : t("recordReferenceHint", "录制自己的声音，完成后直接进入克隆试听。")}</span>
+          <strong>{t("recordReferenceVoice", "å½•åˆ¶å‚è€ƒå£°éŸ³")}</strong>
+          <span>{isRecording ? `${t("recording")} Â· ${formatClock(recordingElapsed)}` : t("recordReferenceHint", "å½•åˆ¶è‡ªå·±çš„å£°éŸ³ï¼Œå®ŒæˆåŽç›´æŽ¥è¿›å…¥å…‹éš†è¯•å¬ã€‚")}</span>
         </div>
         <button
           type="button"
@@ -2357,21 +2358,21 @@ export function MyVoicesPanel({
       </div>
 
       <button className="record-card upload-voice-card" type="button" onClick={() => fileInputRef.current?.click()}>
-        <div><strong>{t("uploadVoice", "上传声音")}</strong><span>{t("uploadVoiceHint", "选择清晰的单人语音作为参考")}</span></div>
+        <div><strong>{t("uploadVoice", "ä¸Šä¼ å£°éŸ³")}</strong><span>{t("uploadVoiceHint", "é€‰æ‹©æ¸…æ™°çš„å•äººè¯­éŸ³ä½œä¸ºå‚è€ƒ")}</span></div>
         <CloudArrowUp size={22} weight="bold" />
       </button>
       </div>
 
       {draft ? (
         <section className="clone-enrollment-card">
-          <header><div><strong>{t("cloneTestTitle", "克隆试听")}</strong><span>{draft.name}</span></div><button type="button" onClick={() => setDraft(null)}><X size={15} /></button></header>
-          <div className="clone-test-language"><span>{t("cloneTestLanguage", "测试语言")}</span><strong>{selectedVoice.language}</strong><em>{getVoiceCloneTestSentence(selectedVoice)}</em></div>
+          <header><div><strong>{t("cloneTestTitle", "å…‹éš†è¯•å¬")}</strong><span>{draft.name}</span></div><button type="button" onClick={() => setDraft(null)}><X size={15} /></button></header>
+          <div className="clone-test-language"><span>{t("cloneTestLanguage", "æµ‹è¯•è¯­è¨€")}</span><strong>{selectedVoice.language}</strong><em>{getVoiceCloneTestSentence(selectedVoice)}</em></div>
           <audio controls preload="metadata" src={referenceUrl} />
-          <label className="clone-consent"><input type="checkbox" checked={authorized} onChange={(event) => setAuthorized(event.target.checked)} /><span>{t("cloneConsent", "我确认已获得该声音的授权，并仅用于合法、非误导用途。")}</span></label>
-          {cloneState === "running" ? <div className="voice-generation-loading clone-generation-loading" role="status" aria-live="polite"><i className="voice-generation-spinner" aria-hidden="true" /><div><strong>{clonePhase}</strong><span>{t("cloneLocalHint", "声音只在当前浏览器中处理")}</span></div><em>{cloneProgress}%</em><div className="progress-track"><span style={{ width: `${cloneProgress}%` }} /></div></div> : null}
+          <label className="clone-consent"><input type="checkbox" checked={authorized} onChange={(event) => setAuthorized(event.target.checked)} /><span>{t("cloneConsent", "æˆ‘ç¡®è®¤å·²èŽ·å¾—è¯¥å£°éŸ³çš„æŽˆæƒï¼Œå¹¶ä»…ç”¨äºŽåˆæ³•ã€éžè¯¯å¯¼ç”¨é€”ã€‚")}</span></label>
+          {cloneState === "running" ? <div className="voice-generation-loading clone-generation-loading" role="status" aria-live="polite"><i className="voice-generation-spinner" aria-hidden="true" /><div><strong>{clonePhase}</strong><span>{t("cloneLocalHint", "å£°éŸ³åªåœ¨å½“å‰æµè§ˆå™¨ä¸­å¤„ç†")}</span></div><em>{cloneProgress}%</em><div className="progress-track"><span style={{ width: `${cloneProgress}%` }} /></div></div> : null}
           {cloneState === "error" ? <div className="clone-inline-error">{clonePhase}</div> : null}
-          {testUrl ? <div className="clone-ab-preview"><span>{t("cloneListenBeforeSave", "请先试听克隆结果，确认满意后再保存")}</span><audio controls preload="metadata" src={testUrl} /></div> : null}
-          <div className="clone-actions"><button type="button" disabled={!authorized || cloneState === "running"} onClick={runCloneTest}>{testBlob ? t("cloneRetest", "重新测试") : t("cloneTest", "测试克隆")}</button><button type="button" className="is-primary" disabled={!testBlob || cloneState !== "ready"} onClick={saveClone}>{t("saveToMyVoices", "保存到我的声音")}</button></div>
+          {testUrl ? <div className="clone-ab-preview"><span>{t("cloneListenBeforeSave", "è¯·å…ˆè¯•å¬å…‹éš†ç»“æžœï¼Œç¡®è®¤æ»¡æ„åŽå†ä¿å­˜")}</span><audio controls preload="metadata" src={testUrl} /></div> : null}
+          <div className="clone-actions"><button type="button" disabled={!authorized || cloneState === "running"} onClick={runCloneTest}>{testBlob ? t("cloneRetest", "é‡æ–°æµ‹è¯•") : t("cloneTest", "æµ‹è¯•å…‹éš†")}</button><button type="button" className="is-primary" disabled={!testBlob || cloneState !== "ready"} onClick={saveClone}>{t("saveToMyVoices", "ä¿å­˜åˆ°æˆ‘çš„å£°éŸ³")}</button></div>
         </section>
       ) : null}
 
@@ -2383,11 +2384,11 @@ export function MyVoicesPanel({
               <div>
                 <strong>{recording.name}</strong>
                 <span>
-                  {recording.createdAt} · {formatTime(recording.duration)}
+                  {recording.createdAt} Â· {formatTime(recording.duration)}
                 </span>
               </div>
               <button type="button" onClick={() => chooseReference(recording.blob, recording.name, "recording")}>
-                {t("useAsReference", "作为参考")}
+                {t("useAsReference", "ä½œä¸ºå‚è€ƒ")}
               </button>
               <button
                 type="button"
@@ -2400,19 +2401,19 @@ export function MyVoicesPanel({
         </>
       ) : null}
 
-      <div className="panel-subtitle">{t("savedCloneVoices", "已保存的克隆声音")}</div>
+      <div className="panel-subtitle">{t("savedCloneVoices", "å·²ä¿å­˜çš„å…‹éš†å£°éŸ³")}</div>
       {voiceProfiles.length ? voiceProfiles.map((profile) => (
           <div className={`history-item clone-profile-item ${selectedVoiceProfileId === profile.id ? "is-selected" : ""}`} key={profile.id}>
             <div className="clone-profile-copy">
-              <strong>{profile.name}</strong><span>{profile.sourceKind === "recording" ? t("recordVoice", "录制声音") : t("uploadVoice", "上传声音")}</span>
+              <strong>{profile.name}</strong><span>{profile.sourceKind === "recording" ? t("recordVoice", "å½•åˆ¶å£°éŸ³") : t("uploadVoice", "ä¸Šä¼ å£°éŸ³")}</span>
             </div>
             <div className="clone-profile-actions">
-              <button type="button" onClick={() => { setSelectedVoiceProfileId(profile.id); notify(t("cloneSelected", "已选择克隆音色")); }}>{t("use")}</button>
+              <button type="button" onClick={() => { setSelectedVoiceProfileId(profile.id); notify(t("cloneSelected", "å·²é€‰æ‹©å…‹éš†éŸ³è‰²")); }}>{t("use")}</button>
               <button type="button" onClick={() => toggleVoiceProfileFavorite(profile.id)}>{profile.favorite ? t("saved") : t("favorite")}</button>
               <button type="button" onClick={() => removeVoiceProfile(profile.id)}>{t("delete")}</button>
             </div>
           </div>
-        )) : <div className="empty-state">{t("noCloneVoices", "上传或录制参考声音，通过试听后会显示在这里。")}</div>}
+        )) : <div className="empty-state">{t("noCloneVoices", "ä¸Šä¼ æˆ–å½•åˆ¶å‚è€ƒå£°éŸ³ï¼Œé€šè¿‡è¯•å¬åŽä¼šæ˜¾ç¤ºåœ¨è¿™é‡Œã€‚")}</div>}
     </div>
   );
 }
@@ -2422,10 +2423,10 @@ export function FavoriteVoicesPanel({ favoriteVoiceIds, setFavoriteVoiceIds, sel
   const builtIns = VOICES.filter((voice) => favoriteVoiceIds.includes(voice.id));
   const clones = voiceProfiles.filter((profile) => profile.favorite);
   return <div className="history-panel">
-    <div className="panel-subtitle">{t("builtInVoices", "内置声音")}</div>
-    {builtIns.map((voice) => <div className={`history-item ${selectedVoiceId === voice.id && !selectedVoiceProfileId ? "is-selected" : ""}`} key={voice.id}><div><strong>{voice.name}</strong><span>{voice.language} · {voice.detail}</span></div><button type="button" onClick={() => { setSelectedVoiceId(voice.id); setSelectedVoiceProfileId(""); notify(t("voiceSelected", "已切换声音")); }}>{t("use")}</button><button type="button" onClick={() => setFavoriteVoiceIds((ids) => ids.filter((id) => id !== voice.id))}>{t("remove")}</button></div>)}
-    <div className="panel-subtitle">{t("cloneVoices", "克隆声音")}</div>
-    {clones.map((profile) => <div className={`history-item ${selectedVoiceProfileId === profile.id ? "is-selected" : ""}`} key={profile.id}><div><strong>{profile.name}</strong><span>{t("browserLocalVoice", "保存在当前浏览器")}</span></div><button type="button" onClick={() => setSelectedVoiceProfileId(profile.id)}>{t("use")}</button><button type="button" onClick={() => toggleVoiceProfileFavorite(profile.id)}>{t("remove")}</button></div>)}
+    <div className="panel-subtitle">{t("builtInVoices", "å†…ç½®å£°éŸ³")}</div>
+    {builtIns.map((voice) => <div className={`history-item ${selectedVoiceId === voice.id && !selectedVoiceProfileId ? "is-selected" : ""}`} key={voice.id}><div><strong>{voice.name}</strong><span>{voice.language} Â· {voice.detail}</span></div><button type="button" onClick={() => { setSelectedVoiceId(voice.id); setSelectedVoiceProfileId(""); notify(t("voiceSelected", "å·²åˆ‡æ¢å£°éŸ³")); }}>{t("use")}</button><button type="button" onClick={() => setFavoriteVoiceIds((ids) => ids.filter((id) => id !== voice.id))}>{t("remove")}</button></div>)}
+    <div className="panel-subtitle">{t("cloneVoices", "å…‹éš†å£°éŸ³")}</div>
+    {clones.map((profile) => <div className={`history-item ${selectedVoiceProfileId === profile.id ? "is-selected" : ""}`} key={profile.id}><div><strong>{profile.name}</strong><span>{t("browserLocalVoice", "ä¿å­˜åœ¨å½“å‰æµè§ˆå™¨")}</span></div><button type="button" onClick={() => setSelectedVoiceProfileId(profile.id)}>{t("use")}</button><button type="button" onClick={() => toggleVoiceProfileFavorite(profile.id)}>{t("remove")}</button></div>)}
     {!builtIns.length && !clones.length ? <div className="empty-state">{t("noFavoriteVoices")}</div> : null}
   </div>;
 }
@@ -2439,7 +2440,7 @@ export function HistoryPanel({ historyItems, useHistoryItem: onUseHistoryItem, s
             <div>
               <strong>{item.voiceName}</strong>
               <span>
-                {item.createdAt} · {formatTime(item.duration)} · {item.script.slice(0, 18)}
+                {item.createdAt} Â· {formatTime(item.duration)} Â· {item.script.slice(0, 18)}
               </span>
             </div>
             <button type="button" onClick={() => onUseHistoryItem(item)}>
