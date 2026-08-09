@@ -386,5 +386,5 @@ Katitor can be run locally in containers using Docker Compose.
 # 🤝 Developers
 
 Designed, built, and maintained with ❤️ by:
-- **Bhavya Dhanwani** — Core Software Architect & Lead Developer
+- **Bhavya Dhanwani** — Core Software Architect & Lead Developer & CEO
 - **Gaurav Chhajer** — Creative UI/UX and Full Stack Engineer
