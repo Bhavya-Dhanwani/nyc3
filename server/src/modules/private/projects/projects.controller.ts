@@ -774,7 +774,7 @@ class ProjectsController {
                     transcriptData = await this.transcriptionService.transcribeDeepgram(audioPath, apiKey);
                 } catch (dgErr: any) {
                     if (dgErr.response?.status === 401) {
-                        throw new BadRequest("Deepgram returned 401 Unauthorized ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Â¦Ãƒâ€šÃ‚Â¡ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â your API key is invalid. Please check and re-enter your Deepgram key in Settings.");
+                        throw new BadRequest("Deepgram returned 401 Unauthorized — your API key is invalid. Please check and re-enter your Deepgram key in Settings.");
                     }
                     throw dgErr;
                 }
@@ -897,7 +897,7 @@ class ProjectsController {
         const provider = req.body.provider || env.LLM_PROVIDER || "mistral";
         const customApiKey = req.body.apiKey || null;
         const modelName = req.body.modelName || env.LLM_MODEL || undefined;
-        const durationStyle = req.body.durationStyle || "mixed"; // short, medium, long, mixed
+        const durationStyle = "one-minute"; // Generated clips are always a real 60-second source range.
         const clipCount = parseInt(req.body.clipCount || req.body.count || env.DEFAULT_CLIP_COUNT || "5") || 5;
         const userId = (req as any).user?.userId;
 
@@ -1728,6 +1728,25 @@ class ProjectsController {
 
     }
 
+    detectSilence = async (req: Request, res: Response) => {
+        const { projectId } = req.params;
+        const userId = (req as any).user?.userId;
+        const project = await this.projectDao.findProjectById(projectId);
+        if (!project) throw new NotFound("Project not found");
+        if (project.userId && project.userId.toString() !== userId) throw new Forbidden("You do not have access to this resource");
+        if (!project.sourcePath || !fs.existsSync(project.sourcePath)) throw new NotFound("Project source video is missing");
+        try {
+            const result = await this.mediaService.detectSilence(project.sourcePath, req.body);
+            const totalSilence = result.silences.reduce((total, range) => total + range.duration, 0);
+            if (totalSilence >= result.duration - 0.01) throw new BadRequest("No speech or audible content was detected.");
+            return Ok(res, "Silence detection completed", { videoId: projectId, duration: result.duration, silences: result.silences, totalSilence, estimatedDurationAfterCut: Math.max(0, result.duration - totalSilence) });
+        } catch (error: any) {
+            if (error?.code === "NO_AUDIO") throw new BadRequest("This video does not contain an audio track.");
+            if (error instanceof BadRequest) throw error;
+            logger.error(`Silence detection failed for ${projectId}: ${error.message}`);
+            throw new BadRequest(`Silence detection failed: ${error.message}`);
+        }
+    };
     // save project timeline state
     saveTimeline = async (req: Request, res: Response) => {
 
@@ -1983,3 +2002,5 @@ class ProjectsController {
 }
 
 export default ProjectsController;
+
+

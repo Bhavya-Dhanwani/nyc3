@@ -6,7 +6,8 @@ import {
     createProjectValidators,
     getProjectValidators,
     renameProjectValidators,
-    updateClipCountValidators
+    updateClipCountValidators,
+    detectSilenceValidators
 } from "./projects.validator.js";
 
 // making the router
@@ -65,6 +66,7 @@ router.delete("/:projectId", getProjectValidators, controller.deleteProject);
     @access Private
 */
 router.post("/:projectId/transcribe", getProjectValidators, controller.transcribeProject);
+router.post("/:projectId/detect-silence", detectSilenceValidators, controller.detectSilence);
 
 /*
     @route POST /api/projects/:projectId/moments
@@ -140,3 +142,4 @@ router.get("/:projectId/drive-files/:fileId/content", getProjectValidators, cont
 
 // exporting the router
 export default router;
+

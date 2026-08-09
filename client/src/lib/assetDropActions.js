@@ -36,11 +36,11 @@ export function createAssetDropActions(d) {
         pendingSegment = d.appendVisualAssetToTimeline({ ...rawAsset, preparing: true, prepareProgress: bucket }, { message: tr("remoteAssetPreparing", "在线素材正在准备") });
       }
       progressBucket = bucket;
-      d.setVisualSegments((segments) => segments.map((segment) => segment.id === pendingSegment.id ? { ...segment, prepareProgress: bucket } : segment));
+      if (pendingSegment?.id) d.setVisualSegments((segments) => segments.map((segment) => segment?.id === pendingSegment.id ? { ...segment, prepareProgress: bucket } : segment));
     });
     if (!asset) {
       if (pendingSegment) {
-        if (hadVisualBefore) d.setVisualSegments((segments) => segments.filter((segment) => segment.id !== pendingSegment.id));
+        if (hadVisualBefore && pendingSegment?.id) d.setVisualSegments((segments) => segments.filter((segment) => segment?.id !== pendingSegment.id));
         else d.clearImageTrack?.(tr("remoteAssetRemovedAfterFailure", "在线素材下载失败，已移除临时片段"));
       }
       return;
@@ -162,3 +162,4 @@ export function createAssetDropActions(d) {
 
   return { applyAssetToTrack, handleTrackAssetDrop, handleVisualStyleDrop };
 }
+

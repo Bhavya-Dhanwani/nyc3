@@ -394,20 +394,33 @@ export function ProjectsDashboard({
       {/* Create Project Modal */}
       {isCreateModalOpen && (
         <div className="modal-backdrop">
-          <div className="modal-card" style={{ maxWidth: "460px" }}>
+          <div className="create-project-card">
             <div className="modal-header">
-              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", margin: 0 }}>Create New Project</h3>
+              <h3 style={{ fontSize: "18px", fontWeight: 700, color: "#ffffff", margin: 0 }}>Create New Project</h3>
               <button
                 onClick={() => setIsCreateModalOpen(false)}
                 disabled={creating}
-                style={{ background: "transparent", border: "none", color: "var(--as-text-muted)", cursor: "pointer" }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "rgba(255, 255, 255, 0.4)",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "50%",
+                  transition: "all 0.2s ease"
+                }}
+                className="hover:bg-white/10 hover:text-white"
               >
                 <X size={16} />
               </button>
             </div>
 
             <form onSubmit={handleCreateProject}>
-              <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div className="modal-body">
                 {error && (
                   <div className="auth-error-banner">
                     <span>{error}</span>
@@ -427,15 +440,7 @@ export function ProjectsDashboard({
 
                 <div className="form-group">
                   <label className="form-label">Source Video</label>
-                  <div style={{
-                    border: "2px dashed var(--as-input-border)",
-                    borderRadius: "var(--as-radius-md)",
-                    padding: "24px 16px",
-                    textAlign: "center",
-                    background: "var(--as-input-bg)",
-                    cursor: "pointer",
-                    position: "relative"
-                  }}>
+                  <div className="project-upload-zone">
                     <input
                       type="file"
                       accept="video/*,audio/*"
@@ -450,11 +455,11 @@ export function ProjectsDashboard({
                       }}
                       style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }}
                     />
-                    <Upload size={24} style={{ color: "var(--as-text-muted)", margin: "0 auto 8px auto" }} />
-                    <p style={{ fontSize: "12px", fontWeight: 500, color: "#ffffff", margin: 0 }}>
+                    <Upload size={24} style={{ color: "rgba(255, 255, 255, 0.4)", margin: "0 auto 12px auto" }} />
+                    <p style={{ fontSize: "13px", fontWeight: 600, color: "#ffffff", margin: 0 }}>
                       {selectedFile ? selectedFile.name : "Click or drag video to upload"}
                     </p>
-                    <p style={{ fontSize: "10px", color: "var(--as-text-muted)", margin: "4px 0 0 0" }}>MP4, MOV, WEBM, MKV up to 2GB</p>
+                    <p style={{ fontSize: "11px", color: "rgba(255, 255, 255, 0.4)", margin: "6px 0 0 0" }}>MP4, MOV, WEBM, MKV up to 2GB</p>
                   </div>
                 </div>
 

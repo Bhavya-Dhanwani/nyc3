@@ -542,7 +542,7 @@ const AI_VECTOR_COPY = {
 };
 
 function AiVectorDesignCard({ language, onClick }) {
-  const copy = AI_VECTOR_COPY[language] || AI_VECTOR_COPY.en;
+  const copy = AI_VECTOR_COPY.en;
   return (
     <button className="ai-vector-card" type="button" onClick={onClick}>
       <span className="ai-vector-card-art" aria-hidden="true">
@@ -555,7 +555,7 @@ function AiVectorDesignCard({ language, onClick }) {
 }
 
 function AiVectorDesignDialog({ language, onClose, onGenerated }) {
-  const copy = AI_VECTOR_COPY[language] || AI_VECTOR_COPY.en;
+  const copy = AI_VECTOR_COPY.en;
   const [request, setRequest] = useState("");
   const [availability, setAvailability] = useState("checking");
   const [phase, setPhase] = useState("checking");
@@ -773,7 +773,7 @@ const AI_MUSIC_COPY = {
 };
 
 function AiMusicLibraryCard({ language, onClick }) {
-  const copy = AI_MUSIC_COPY[language] || AI_MUSIC_COPY.en;
+  const copy = AI_MUSIC_COPY.en;
   return (
     <button className="ai-vector-card ai-music-library-card" type="button" onClick={onClick}>
       <span className="ai-vector-card-art" aria-hidden="true">
@@ -789,8 +789,8 @@ const AI_OPTION_LABELS = {
 };
 
 export function AiMusicGenerator({ language, music, embedded = false }) {
-  const copy = AI_MUSIC_COPY[language] || AI_MUSIC_COPY.en;
-  const labels = AI_OPTION_LABELS[language] || {};
+  const copy = AI_MUSIC_COPY.en;
+  const labels = {};
   const [open, setOpen] = useState(embedded);
   const [selection, setSelection] = useState({ description: "", style: "cinematic", mood: "dreamy", instrument: "piano", seconds: 30, bpm: 90 });
   const running = music?.job?.state === "running";
@@ -1293,7 +1293,7 @@ export function ToolPanel(props) {
   }
 
   if (activeTool === "smart") {
-    const aiCopy = AI_MUSIC_COPY[uiLanguage] || AI_MUSIC_COPY.en;
+    const aiCopy = AI_MUSIC_COPY.en;
 
     if (smartMode === "ai-shorts") {
       return (

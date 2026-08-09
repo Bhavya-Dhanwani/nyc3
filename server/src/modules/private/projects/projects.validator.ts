@@ -74,9 +74,19 @@ const updateClipCountValidators = [
 
 ];
 
+const detectSilenceValidators = [
+    ...getProjectValidators,
+    body("threshold").isFloat({ min: -60, max: -10 }).withMessage("threshold must be between -60 and -10 dB"),
+    body("minDuration").isFloat({ min: 0.1, max: 10 }).withMessage("minDuration must be between 0.1 and 10 seconds"),
+    body("padding").isFloat({ min: 0, max: 1 }).withMessage("padding must be between 0 and 1 second"),
+    validateErrors
+];
+
 export {
     createProjectValidators,
     getProjectValidators,
     renameProjectValidators,
-    updateClipCountValidators
+    updateClipCountValidators,
+    detectSilenceValidators
 };
+
