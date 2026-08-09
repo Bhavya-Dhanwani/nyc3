@@ -53,10 +53,10 @@ export default function Sticky() {
 
 	return (
 		<motion.div
-			className="fixed rounded-[50px] z-[100] bg-white p-4 pointer-events-none"
+			className="fixed top-0 left-0 rounded-[50px] z-[100] bg-white p-4 pointer-events-none"
 			style={{
-				left: smoothMouse.x,
-				top: smoothMouse.y,
+				x: smoothMouse.x,
+				y: smoothMouse.y,
 			}}>
 			<div className="flex items-center gap-2 justify-center">
 				<BsArrowLeft size={10} />

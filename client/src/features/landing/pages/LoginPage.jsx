@@ -91,7 +91,7 @@ export default function LoginPage() {
             className="object-contain max-h-[46px] brightness-125 transition-transform duration-300 group-hover:scale-105"
           />
           <div className="flex flex-col">
-            <span className="font-humaneMedium text-3xl sm:text-4xl leading-none tracking-tight text-white">
+            <span className="font-humaneMedium text-3xl sm:text-4xl leading-none tracking-[0.09em] text-white">
               KATITOR
             </span>
             <span className="text-[10px] uppercase tracking-widest text-white/70">
@@ -162,7 +162,7 @@ export default function LoginPage() {
           <div className="w-full flex flex-col items-center text-center relative z-10 max-w-xl mx-auto">
             {/* Colossal KATITOR Title */}
             <div className="w-full text-center">
-              <h1 className="font-humaneMedium text-[26vw] lg:text-[15vw] uppercase leading-[0.78] tracking-[-3px] sm:tracking-[-6px] text-white drop-shadow-[0_20px_40px_rgba(0,0,0,0.35)] select-none">
+              <h1 className="font-humaneMedium text-[26vw] lg:text-[15vw] uppercase leading-[0.78] tracking-[0.03em] sm:tracking-[0.04em] text-white drop-shadow-[0_20px_40px_rgba(0,0,0,0.35)] select-none">
                 KATITOR
               </h1>
             </div>
@@ -303,7 +303,7 @@ export default function LoginPage() {
         <div className="hidden lg:flex w-full lg:w-1/2 h-full relative overflow-hidden bg-black items-center justify-center">
           {/* Full-Bleed Video covering the whole side */}
           <video
-            src="/duevora/Duevora.mp4"
+            src={isRegister ? "/assets/signup.mp4" : "/assets/login.mp4"}
             autoPlay
             loop
             muted

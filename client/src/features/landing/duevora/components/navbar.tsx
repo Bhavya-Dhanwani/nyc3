@@ -4,9 +4,15 @@ import { motion } from "framer-motion";
 import { logo } from "../assets";
 import Button from "./button";
 import Menu from "./menu";
+import { getAccessToken } from "../../../../lib/api.js";
 
 export default function Navbar() {
 	const [visible, setVisible] = useState(true);
+	const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+	useEffect(() => {
+		setIsLoggedIn(Boolean(getAccessToken()));
+	}, []);
 
 	useEffect(() => {
 		let lastScrollY = window.scrollY;
@@ -64,10 +70,17 @@ export default function Navbar() {
 				</div>
 
 				<div className="ml-auto flex items-center gap-2">
-					<Button
-						title="Get Started"
-						to="/register"
-					/>
+					{isLoggedIn ? (
+						<Button
+							title="Dashboard"
+							to="/dashboard"
+						/>
+					) : (
+						<Button
+							title="Get Started"
+							to="/register"
+						/>
+					)}
 				</div>
 			</div>
 		</motion.nav>

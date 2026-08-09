@@ -30,7 +30,7 @@ export default function WhoWeAre() {
 
 	return (
 		<>
-			<div className="w-full h-auto min-h-screen md:h-screen bg-greenColor pt-10 md:pt-20">
+			<div className="w-full h-auto bg-greenColor pt-16 pb-12">
 				<div className="w-full flex flex-col md:flex-row items-center justify-between gap-5 p-10 h-full">
 					<div className="w-full md:w-1/2 flex flex-col justify-between gap-5 relative h-full">
 						<div className="flex flex-col">
@@ -80,12 +80,12 @@ export default function WhoWeAre() {
 							<div className="relative">
 								<motion.img
 									animate={{
-										rotate: [0, 360],
-										transition: {
-											duration: 6,
-											ease: "linear",
-											repeat: Infinity,
-										},
+										rotate: 360,
+									}}
+									transition={{
+										duration: 6,
+										ease: "linear",
+										repeat: Infinity,
 									}}
 									src={"/duevora/circlerotation.svg"}
 									alt="right eye"
@@ -101,7 +101,7 @@ export default function WhoWeAre() {
 					</div>
 				</div>
 			</div>
-			<div className="w-full h-auto min-h-screen md:h-screen bg-greenColor py-10 md:py-20">
+			<div className="w-full h-auto bg-greenColor pt-8 pb-24">
 				<div className="w-full flex flex-col md:flex-row h-full relative">
 					<div
 						ref={container2Ref}
@@ -117,7 +117,7 @@ export default function WhoWeAre() {
 							/>
 						</motion.div>
 					</div>
-					<div className="w-full md:w-1/2 h-full flex justify-center items-center relative z-50 px-5 md:px-0 py-10 md:py-0">
+					<div className="w-full md:w-1/2 h-full flex flex-col justify-center items-center relative z-50 px-5 md:px-0 py-10 md:py-0">
 						<div className="flex flex-col gap-14">
 							<motion.p className="text-center leading-tight tracking-tight text-[18px] uppercase font-medium font-bodoniseventytwo text-white flex items-center justify-center gap-3 flex-col">
 								WHY KATITOR ????
@@ -144,6 +144,35 @@ export default function WhoWeAre() {
 />
 							</div>
 						</div>
+
+						{/* Premium Custom Feature Grid to fill the vertical space */}
+						<div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-4xl mt-12 mx-auto px-4 z-50">
+							<div className="bg-[#1c1c1c] p-6 rounded-2xl border border-white/10 shadow-lg flex flex-col gap-2 transition-transform duration-300 hover:-translate-y-1">
+								<h3 className="text-xl font-bold uppercase text-[#b3eb16] font-helveticaNeue">AI Moment Finder</h3>
+								<p className="text-[13px] text-white/70 font-helveticaNeue leading-snug">
+									Analyze hours of live streams and long videos automatically to identify viral clips and top moments based on high-impact hooks.
+								</p>
+							</div>
+							<div className="bg-[#1c1c1c] p-6 rounded-2xl border border-white/10 shadow-lg flex flex-col gap-2 transition-transform duration-300 hover:-translate-y-1">
+								<h3 className="text-xl font-bold uppercase text-[#b3eb16] font-helveticaNeue">Natural AI Voiceovers</h3>
+								<p className="text-[13px] text-white/70 font-helveticaNeue leading-snug">
+									Create natural voices in 14+ languages with advanced TTS models running locally in your browser, with zero lag or waiting queues.
+								</p>
+							</div>
+							<div className="bg-[#1c1c1c] p-6 rounded-2xl border border-white/10 shadow-lg flex flex-col gap-2 transition-transform duration-300 hover:-translate-y-1">
+								<h3 className="text-xl font-bold uppercase text-[#b3eb16] font-helveticaNeue">Whisper Auto Subtitles</h3>
+								<p className="text-[13px] text-white/70 font-helveticaNeue leading-snug">
+									Generate precise subtitle timelines in one click. Customize font families, scale, placement, and animations instantly.
+								</p>
+							</div>
+							<div className="bg-[#1c1c1c] p-6 rounded-2xl border border-white/10 shadow-lg flex flex-col gap-2 transition-transform duration-300 hover:-translate-y-1">
+								<h3 className="text-xl font-bold uppercase text-[#b3eb16] font-helveticaNeue">Precision Timeline</h3>
+								<p className="text-[13px] text-white/70 font-helveticaNeue leading-snug">
+									A browser-first timeline editor designed to trim, crop, split, zoom, layer media, and export vertical 9:16 Shorts with ease.
+								</p>
+							</div>
+						</div>
+
 						<motion.div
 							className="hidden md:block absolute -bottom-40 -right-10 overflow-hidden"
 							style={{ y: mq, rotate: mrq }}>

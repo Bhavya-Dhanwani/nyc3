@@ -77,50 +77,23 @@ export default function Eye() {
 					className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[225px] h-[200px] flex flex-col"
 					ref={emojiFaceRef}>
 					<div className="flex flex-1 justify-between">
-						<motion.img
-							animate={{
-								rotate: [0, 360],
-								transition: {
-									duration: 4,
-									ease: "linear",
-									repeat: Infinity,
-								},
-							}}
+						<img
 							src={"/duevora/eyes.svg"}
-							alt="right eye"
+							alt="left eye"
 							width={50}
 							height={50}
-							className="w-[80px] h-[80px]"
+							className="w-[80px] h-[80px] spin-eyes"
 						/>
-						<motion.img
-							animate={{
-								rotate: [0, 360],
-								transition: {
-									duration: 4,
-									ease: "linear",
-									repeat: Infinity,
-								},
-							}}
+						<img
 							src={"/duevora/eyes.svg"}
 							alt="right eye"
 							width={50}
 							height={50}
-							className="w-[80px] h-[80px]"
+							className="w-[80px] h-[80px] spin-eyes"
 						/>
 					</div>
 					<div className="flex flex-1 justify-center items-start">
-						<motion.div
-							animate={{
-								height: [50, 80, 50],
-								transition: {
-									duration: 2,
-									ease: [0.075, 0.82, 0.165, 1],
-									repeat: Infinity,
-									repeatType: "reverse",
-								},
-							}}
-							className="w-10 h-10 rounded-full bg-black"
-						/>
+						<div className="w-10 bg-black rounded-full mouth-talking" />
 					</div>
 				</div>
 			</div>
