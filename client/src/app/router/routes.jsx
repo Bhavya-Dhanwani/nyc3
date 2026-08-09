@@ -10,11 +10,11 @@ export const routes = [
     children: [
       {
         path: "/",
-        element: <DashboardPage />,
+        element: <LandingPage />,
       },
       {
-        path: "/landing",
-        element: <LandingPage />,
+        path: "/dashboard",
+        element: <DashboardPage />,
       },
     ],
   },
@@ -25,7 +25,7 @@ export const routes = [
     element: <div style={{ padding: "2rem", textAlign: "center" }}>
       <h1>404</h1>
       <p>Page not found</p>
-      <a href="/">Go to Dashboard</a>
+      <a href="/dashboard">Go to Dashboard</a>
     </div>,
   },
 ];
