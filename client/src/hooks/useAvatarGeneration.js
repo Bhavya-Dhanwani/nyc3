@@ -26,7 +26,7 @@ export function useAvatarGeneration(d) {
       });
       const testDuration = import.meta.env.DEV ? Number(import.meta.env.VITE_AVATAR_TEST_DURATION || 0) : 0;
       const duration = testDuration > 0 ? Math.max(0.5, Math.min(4, testDuration))
-        : Math.max(MIN_VISUAL_SEGMENT_SECONDS, Math.min(4, d.audioDuration || d.imageDuration || 4));
+        : Math.max(MIN_VISUAL_SEGMENT_SECONDS, d.audioDuration || d.imageDuration || 4);
       let motionBuffer;
       if (d.avatarMotionCacheRef.current.audioBlob === d.audioBlob && d.avatarMotionCacheRef.current.motion) {
         motionBuffer = d.avatarMotionCacheRef.current.motion.slice(0);

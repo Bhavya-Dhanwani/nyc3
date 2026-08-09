@@ -233,46 +233,60 @@ export function ProjectsDashboard({
       <main className="dashboard-main">
         {/* Banner & Action Bar */}
         <div className="dashboard-hero-card">
-          <div>
-            <h2 className="dashboard-hero-title">Projects Studio</h2>
-            <p className="dashboard-hero-desc">
-              Create video projects, run automated AI moment detection, and edit in the full timeline editor.
-            </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            <h2 className="dashboard-hero-title" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+              <span>Projects Studio</span>
+              <span style={{ fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "9999px", background: "rgba(255, 255, 255, 0.08)", color: "#ffffff", border: "1px solid rgba(255, 255, 255, 0.15)", letterSpacing: "0.04em" }}>
+                AI POWERED
+              </span>
+            </h2>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--as-text-secondary)", background: "rgba(255, 255, 255, 0.05)", padding: "4px 12px", borderRadius: "9999px", border: "1px solid rgba(255, 255, 255, 0.1)", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Film size={12} color="#ffffff" />
+                <span>{projects.length} {projects.length === 1 ? "Project" : "Projects"}</span>
+              </span>
+
+              <span style={{ fontSize: "11px", fontWeight: 600, color: "var(--as-text-secondary)", background: "rgba(255, 255, 255, 0.05)", padding: "4px 12px", borderRadius: "9999px", border: "1px solid rgba(255, 255, 255, 0.1)", display: "flex", alignItems: "center", gap: "6px" }}>
+                <Cloud size={12} color="#34d399" />
+                <span>Drive Sync Enabled</span>
+              </span>
+            </div>
           </div>
 
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="btn-primary-gradient"
           >
-            <Plus size={16} />
+            <Plus size={18} />
             <span>New Video Project</span>
           </button>
         </div>
 
         {/* Projects Grid */}
         {loading ? (
-          <div style={{ padding: "60px 0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", color: "var(--as-text-muted)" }}>
-            <Loader2 size={32} style={{ animation: "spin 1s linear infinite", color: "var(--as-accent-primary)" }} />
-            <p style={{ fontSize: "13px" }}>Loading your projects...</p>
+          <div style={{ padding: "80px 0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px", color: "var(--as-text-muted)" }}>
+            <Loader2 size={36} style={{ animation: "spin 1s linear infinite", color: "#ffffff" }} />
+            <p style={{ fontSize: "13px", fontWeight: 500 }}>Loading projects...</p>
           </div>
         ) : projects.length === 0 ? (
           <div style={{
-            padding: "60px 24px",
-            border: "1px dashed var(--as-card-border)",
-            borderRadius: "var(--as-radius-lg)",
+            padding: "80px 24px",
+            border: "1px dashed rgba(255, 255, 255, 0.15)",
+            borderRadius: "24px",
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "center",
             textAlign: "center",
-            background: "rgba(255, 255, 255, 0.01)"
+            background: "rgba(18, 18, 18, 0.5)"
           }}>
-            <div style={{ width: "56px", height: "56px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
-              <Film size={26} color="var(--as-text-muted)" />
+            <div style={{ width: "64px", height: "64px", background: "rgba(255, 255, 255, 0.06)", borderRadius: "20px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px", border: "1px solid rgba(255, 255, 255, 0.12)" }}>
+              <Film size={28} color="#ffffff" />
             </div>
-            <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#ffffff", margin: "0 0 6px 0" }}>No Projects Yet</h3>
-            <p style={{ fontSize: "13px", color: "var(--as-text-muted)", maxWidth: "360px", margin: "0 0 18px 0" }}>
-              Upload a long-form video to start generating AI short clips and editing on the timeline.
+            <h3 style={{ fontSize: "16px", fontWeight: 700, color: "#ffffff", margin: "0 0 6px 0" }}>No Projects Yet</h3>
+            <p style={{ fontSize: "13px", color: "var(--as-text-muted)", maxWidth: "320px", margin: "0 0 20px 0" }}>
+              Upload a long video to automatically detect viral clips and edit on the timeline.
             </p>
             <button
               onClick={() => setIsCreateModalOpen(true)}
@@ -286,6 +300,7 @@ export function ProjectsDashboard({
           <div className="projects-grid">
             {projects.map((project) => {
               const pId = project._id || project.id;
+              const isReady = (project.status || "").toLowerCase() === "ready";
               return (
                 <div
                   key={pId}
@@ -294,7 +309,7 @@ export function ProjectsDashboard({
                 >
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
                     <div style={{ minWidth: 0 }}>
-                      <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                      <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {project.name || project.originalName || "Untitled Project"}
                       </h3>
                       <p style={{ fontSize: "11px", color: "var(--as-text-muted)", margin: "4px 0 0 0", display: "flex", alignItems: "center", gap: "4px" }}>
@@ -305,15 +320,17 @@ export function ProjectsDashboard({
 
                     <button
                       onClick={(e) => handleDeleteProject(pId, e)}
-                      style={{ background: "transparent", border: "none", color: "var(--as-text-muted)", cursor: "pointer", padding: "4px", borderRadius: "4px" }}
+                      style={{ background: "rgba(255, 255, 255, 0.05)", border: "1px solid rgba(255, 255, 255, 0.1)", color: "var(--as-text-muted)", cursor: "pointer", padding: "6px", borderRadius: "8px", transition: "all 0.2s ease" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = "#f43f5e"; e.currentTarget.style.background = "rgba(244, 63, 94, 0.12)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = "var(--as-text-muted)"; e.currentTarget.style.background = "rgba(255, 255, 255, 0.05)"; }}
                       title="Delete project"
                     >
-                      <Trash2 size={14} />
+                      <Trash2 size={13} />
                     </button>
                   </div>
 
                   <div className="project-card-thumb">
-                    <Film size={32} />
+                    <Film size={34} />
                     <div className="project-card-thumb-overlay">
                       <button
                         type="button"
@@ -322,36 +339,47 @@ export function ProjectsDashboard({
                           onOpenProject(project);
                         }}
                         style={{
-                          padding: "8px 18px",
-                          background: "var(--as-accent-primary)",
-                          color: "#ffffff",
+                          padding: "9px 20px",
+                          background: "#ffffff",
+                          color: "#000000",
                           border: "none",
-                          borderRadius: "8px",
+                          borderRadius: "9999px",
                           fontSize: "12px",
                           fontWeight: 700,
                           display: "flex",
                           alignItems: "center",
-                          gap: "6px",
+                          gap: "8px",
                           cursor: "pointer",
                           pointerEvents: "auto",
                           zIndex: 10,
-                          boxShadow: "0 4px 14px rgba(0,0,0,0.4)"
+                          boxShadow: "0 4px 14px rgba(0,0,0,0.6)"
                         }}
                       >
-                        <span>Open in Editor</span>
+                        <span>Open Editor</span>
                         <ArrowRight size={14} />
                       </button>
                     </div>
                   </div>
 
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid var(--as-card-border)", fontSize: "11px", color: "var(--as-text-muted)" }}>
-                    <span style={{ textTransform: "capitalize", padding: "2px 8px", borderRadius: "4px", background: "rgba(255, 255, 255, 0.05)", color: "var(--as-text-secondary)" }}>
-                      {project.status || "Ready"}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "10px", borderTop: "1px solid rgba(255, 255, 255, 0.06)", fontSize: "11px" }}>
+                    <span style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      padding: "3px 9px",
+                      borderRadius: "999px",
+                      fontWeight: 600,
+                      background: isReady ? "rgba(52, 211, 153, 0.12)" : "rgba(251, 191, 36, 0.12)",
+                      color: isReady ? "#34d399" : "#fbbf24",
+                      border: isReady ? "1px solid rgba(52, 211, 153, 0.25)" : "1px solid rgba(251, 191, 36, 0.25)"
+                    }}>
+                      <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "currentColor", display: "inline-block" }} />
+                      <span style={{ textTransform: "capitalize" }}>{project.status || "Ready"}</span>
                     </span>
 
                     {project.driveFolderId && (
-                      <span style={{ display: "flex", alignItems: "center", gap: "4px", color: "#34d399" }}>
-                        <Cloud size={12} />
+                      <span style={{ display: "flex", alignItems: "center", gap: "5px", color: "#34d399", fontWeight: 600, fontSize: "10px", background: "rgba(52, 211, 153, 0.08)", padding: "3px 8px", borderRadius: "999px", border: "1px solid rgba(52, 211, 153, 0.2)" }}>
+                        <Cloud size={11} />
                         <span>Drive Synced</span>
                       </span>
                     )}

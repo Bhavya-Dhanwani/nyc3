@@ -1330,9 +1330,12 @@ export function ToolPanel(props) {
             ["smart-frame", FrameCorners, t("smartFrame"), t("smartFrameHint")],
             ["avatar", PersonSimpleRun, t("smartAvatar"), t("smartAvatarHint")],
           ].map(([id, Icon, title, hint]) => (
-            <button className={smartMode === id ? "is-active" : ""} type="button" role="tab" aria-selected={smartMode === id} key={id} onClick={() => {
+            <button className={smartMode === id ? "is-active" : ""} style={id === "auto-edit" ? { display: "none" } : undefined} type="button" role="tab" aria-selected={smartMode === id} key={id} onClick={() => {
               setSmartMode(id);
-              if (id === "avatar") openAvatarPanel();
+              if (id === "avatar") {
+                openAvatarPanel();
+                if (window.matchMedia?.("(max-width: 760px)").matches) openMobileInspector?.();
+              }
               if (id === "ai-music" && window.matchMedia?.("(max-width: 760px)").matches) openMobileInspector?.();
             }}>
               <Icon size={24} weight="duotone" /><strong>{title}</strong><span>{hint}</span>

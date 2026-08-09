@@ -82,7 +82,7 @@ export function Topbar({
         <IconButton label={t("collapseSidebar")} active={compactRail} onClick={() => setCompactRail((v) => !v)}>
           <SlidersHorizontal size={19} />
         </IconButton>
-        <div>
+        <div style={{ minWidth: 0 }}>
           <div className="project-title-row">
             <div className="project-title">{currentProject?.name || t("projectTitle")}</div>
             <div className="menu-anchor">
@@ -180,14 +180,14 @@ export function Topbar({
           </button>
         )}
 
-        <button className="play-toggle" type="button" onClick={handlePlayToggle} disabled={!imageSrc}>
+        <button className="preview-button" type="button" onClick={handlePlayToggle} disabled={!imageSrc}>
           {isPlaying ? <Pause size={17} weight="fill" /> : <Play size={17} weight="fill" />}
           <span>{isPlaying ? t("pause") : t("play")}</span>
         </button>
 
         <div className="menu-anchor">
           <button
-            className="export-trigger"
+            className="export-button"
             type="button"
             onClick={() => setShowExportMenu((open) => !open)}
             disabled={exporting || !imageSrc}
