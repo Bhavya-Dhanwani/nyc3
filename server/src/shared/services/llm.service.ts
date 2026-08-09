@@ -64,9 +64,11 @@ class LlmService {
 
     // function to construct LLM prompt
     buildPrompt(compactedTranscript: string, durationStyle = "mixed", targetCount = 6): string {
-        let lengthInstruction = "30-60 seconds long";
+        let lengthInstruction = "exactly 60 seconds long";
 
-        if (durationStyle === "short") {
+        if (durationStyle === "one-minute") {
+            lengthInstruction = "exactly 60 seconds long (never shorter and never looped)";
+        } else if (durationStyle === "short") {
             lengthInstruction = "15-30 seconds long";
         } else if (durationStyle === "medium") {
             lengthInstruction = "30-60 seconds long";
@@ -197,8 +199,12 @@ ${compactedTranscript}`;
     normalizeCandidates(drafts: any[], transcriptDuration: number, durationStyle = "mixed"): CandidateResult[] {
         let minDuration = 10.0;
         let maxDuration = 90.0;
+        const forceOneMinute = durationStyle === "one-minute";
 
-        if (durationStyle === "short") {
+        if (durationStyle === "one-minute") {
+            minDuration = 60.0;
+            maxDuration = 60.0;
+        } else if (durationStyle === "short") {
             minDuration = 10.0;
             maxDuration = 30.0;
         } else if (durationStyle === "medium") {
@@ -219,6 +225,10 @@ ${compactedTranscript}`;
             let end = parseFloat(item.end) || 0.0;
 
             if (start < 0) start = 0;
+            if (forceOneMinute && transcriptDuration >= 60) {
+                start = Math.min(start, transcriptDuration - 60);
+                end = start + 60;
+            }
             if (end > transcriptDuration && transcriptDuration > 0) end = transcriptDuration;
             if (end <= start) continue;
 
@@ -242,9 +252,9 @@ ${compactedTranscript}`;
         }
 
         // Filter by duration and hook presence
-        let filtered = processed.filter(c => c.duration >= minDuration && c.duration <= maxDuration && c.hook.length > 0);
+        let filtered = processed.filter(c => forceOneMinute ? Math.abs(c.duration - 60) <= 0.01 : c.duration >= minDuration && c.duration <= maxDuration && c.hook.length > 0);
 
-        if (filtered.length === 0) {
+        if (filtered.length === 0 && !forceOneMinute) {
             filtered = processed.filter(c => c.duration >= 5.0 && c.hook.length > 0);
         }
 
@@ -487,5 +497,12 @@ function clampScore(val: any): number {
 }
 
 export default LlmService;
+
+
+
+
+
+
+
 
 

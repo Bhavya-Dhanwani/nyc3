@@ -1,4 +1,4 @@
-﻿// Importing modules
+// Importing modules
 import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
@@ -169,9 +169,11 @@ class CandidatesController {
 
             // Resolve Google Drive project subfolder ID if drive client is active
             let projectFolderId: string | undefined = undefined;
+                let clipsFolderId: string | undefined = undefined;
             if (drive) {
                 const mainFolderId = await this.googleDriveService.findOrCreateFolder(drive, "AutoShorts Studio");
                 projectFolderId = await this.googleDriveService.findOrCreateFolder(drive, project.name || "Untitled Project", mainFolderId);
+                clipsFolderId = await this.googleDriveService.findOrCreateFolder(drive, "Clips", projectFolderId);
             }
 
             // Upload the clip SRT file to Google Drive project subfolder if it exists
@@ -184,9 +186,9 @@ class CandidatesController {
                     "text/plain",
                     "AutoShorts Studio",
                     undefined,
-                    projectFolderId
+                    clipsFolderId
                 );
-                logger.info(`Uploaded clip SRT subtitle track "${srtFilename}" to Google Drive project folder`);
+                logger.info(`Uploaded clip SRT subtitle track "${srtFilename}" to Google Drive Clips folder`);
             }
 
             // 1. Render Vertical Clip using Remotion
@@ -218,7 +220,7 @@ class CandidatesController {
                     "video/mp4",
                     "AutoShorts Studio",
                     undefined,
-                    projectFolderId
+                    clipsFolderId
                 );
             }
 
@@ -251,7 +253,7 @@ class CandidatesController {
                     "video/mp4",
                     "AutoShorts Studio",
                     undefined,
-                    projectFolderId
+                    clipsFolderId
                 );
             }
 
@@ -294,9 +296,11 @@ class CandidatesController {
 
                 // Resolve Google Drive project subfolder ID if drive client is active
                 let projectFolderId: string | undefined = undefined;
+                let clipsFolderId: string | undefined = undefined;
                 if (drive) {
                     const mainFolderId = await this.googleDriveService.findOrCreateFolder(drive, "AutoShorts Studio");
                     projectFolderId = await this.googleDriveService.findOrCreateFolder(drive, project.name || "Untitled Project", mainFolderId);
+                clipsFolderId = await this.googleDriveService.findOrCreateFolder(drive, "Clips", projectFolderId);
                 }
 
                 // 1. Render Fallback Vertical Flat Clip
@@ -321,7 +325,7 @@ class CandidatesController {
                         "video/mp4",
                         "AutoShorts Studio",
                         undefined,
-                        projectFolderId
+                        clipsFolderId
                     );
                 }
 
@@ -346,7 +350,7 @@ class CandidatesController {
                         "video/mp4",
                         "AutoShorts Studio",
                         undefined,
-                        projectFolderId
+                        clipsFolderId
                     );
                 }
 
@@ -776,5 +780,8 @@ class CandidatesController {
 }
 
 export default CandidatesController;
+
+
+
 
 

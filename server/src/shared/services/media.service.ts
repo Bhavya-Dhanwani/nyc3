@@ -1,5 +1,5 @@
-﻿// Importing modules
-import { exec } from "child_process";
+// Importing modules
+import { exec, execFile } from "child_process";
 import path from "path";
 import fs from "fs";
 import logger from "../config/logger.config.js";
@@ -52,7 +52,8 @@ class MediaService {
                         width: videoStream ? parseInt(videoStream.width) : null,
                         height: videoStream ? parseInt(videoStream.height) : null,
                         videoCodec: videoStream ? videoStream.codec_name : null,
-                        audioCodec: audioStream ? audioStream.codec_name : null
+                        audioCodec: audioStream ? audioStream.codec_name : null,
+                        hasAudio: !!audioStream
                     };
 
                     resolve(result);
@@ -63,6 +64,22 @@ class MediaService {
         });
     }
 
+    async detectSilence(sourcePath: string, options: { threshold: number; minDuration: number; padding: number }): Promise<{ duration: number; silences: Array<{ start: number; end: number; duration: number }> }> {
+        const probe: any = await this.probeMedia(sourcePath);
+        const duration = Number(probe.durationSec);
+        if (!Number.isFinite(duration) || duration <= 0) throw new Error("Could not determine media duration");
+        if (!probe.hasAudio) { const error: any = new Error("This video does not contain an audio track."); error.code = "NO_AUDIO"; throw error; }
+        const threshold = Math.max(-60, Math.min(-10, Number(options.threshold)));
+        const minDuration = Math.max(0.1, Math.min(10, Number(options.minDuration)));
+        const padding = Math.max(0, Math.min(1, Number(options.padding)));
+        const args = ["-hide_banner", "-nostdin", "-i", sourcePath, "-map", "0:a:0", "-af", `silencedetect=noise=${threshold}dB:d=${minDuration}`, "-f", "null", "-"];
+        const stderr = await new Promise<string>((resolve, reject) => execFile("ffmpeg", args, { timeout: 120000, windowsHide: true, maxBuffer: 4 * 1024 * 1024 }, (error, _stdout, output) => { if (error && !/silence_(start|end)/.test(output || "")) return reject(error); resolve(output || ""); }));
+        const raw: Array<{ start: number; end: number }> = []; let pendingStart: number | null = null;
+        for (const line of stderr.split(/\r?\n/)) { const startMatch = line.match(/silence_start\s*:\s*(-?\d+(?:\.\d+)?)/i); if (startMatch) pendingStart = Number(startMatch[1]); const endMatch = line.match(/silence_end\s*:\s*(-?\d+(?:\.\d+)?)/i); if (endMatch && pendingStart !== null) { raw.push({ start: pendingStart, end: Number(endMatch[1]) }); pendingStart = null; } }
+        if (pendingStart !== null) raw.push({ start: pendingStart, end: duration });
+        const ranges = raw.map(({ start, end }) => ({ start: Math.max(0, start), end: Math.min(duration, end) })).filter((range) => range.end - range.start >= minDuration - 0.001).sort((a, b) => a.start - b.start).reduce<Array<{ start: number; end: number }>>((ranges, range) => { const previous = ranges.at(-1); if (previous && range.start <= previous.end + 0.001) previous.end = Math.max(previous.end, range.end); else ranges.push(range); return ranges; }, []).map(({ start, end }) => ({ start: Math.min(end, start + padding), end: Math.max(start, end - padding) })).filter((range) => range.end - range.start > 0.001);
+        return { duration, silences: ranges.map((range) => ({ ...range, duration: range.end - range.start })) };
+    }
     // function to extract audio mp3 file from media (compact and optimized for Whisper cloud limits)
     async extractAudio(sourcePath: string, projectDir: string, googleToken?: string): Promise<string> {
         return new Promise((resolve, reject) => {
@@ -329,5 +346,6 @@ class MediaService {
 }
 
 export default MediaService;
+
 
 

@@ -164,6 +164,7 @@ export function Timeline({
   isPlaying,
   handleAddSegment,
   handleRemoveSegment,
+  onOpenRemoveSilence,
   adjustSelectedSegmentWeight,
   timelineZoom,
   setTimelineZoom,
@@ -280,6 +281,9 @@ export function Timeline({
   const [timelineSelectionMenuOpen, setTimelineSelectionMenuOpen] = useState(false);
   const [timelineRangeSelection, setTimelineRangeSelection] = useState(() => new Set());
   const [timelineRangeDrag, setTimelineRangeDrag] = useState(null);
+  const [batchDuration, setBatchDuration] = useState("1");
+  const [clipRangeStart, setClipRangeStart] = useState(null);
+  const [clipRangeEnd, setClipRangeEnd] = useState(null);
   const timelineSelectionTriggerRef = useRef(null);
   const timelineRangeDragClickGuardRef = useRef("");
 
@@ -367,14 +371,14 @@ export function Timeline({
     notify(t(
       timelineSelectionMode === "left" ? "timelineSelectedLeft" : "timelineSelectedRight",
       timelineSelectionMode === "left"
-        ? `已向左选择 ${next.size} 个片段`
-        : `已向右选择 ${next.size} 个片段`,
+        ? `Ã¥Â·Â²Ã¥Ââ€˜Ã¥Â·Â¦Ã©â‚¬â€°Ã¦â€¹Â© ${next.size} Ã¤Â¸ÂªÃ§â€°â€¡Ã¦Â®Âµ`
+        : `Ã¥Â·Â²Ã¥Ââ€˜Ã¥ÂÂ³Ã©â‚¬â€°Ã¦â€¹Â© ${next.size} Ã¤Â¸ÂªÃ§â€°â€¡Ã¦Â®Âµ`,
     ).replace("{count}", next.size));
   };
   const toggleTimelineClipInSelection = (track, id) => {
     if (!isTimelineClipVisible(track, id)) return;
     if (trackLocks[track]) {
-      notify(t("timelineLockedSelectionSkipped", "锁定轨道中的片段不能加入多选"));
+      notify(t("timelineLockedSelectionSkipped", "Ã©â€ÂÃ¥Â®Å¡Ã¨Â½Â¨Ã©Ââ€œÃ¤Â¸Â­Ã§Å¡â€žÃ§â€°â€¡Ã¦Â®ÂµÃ¤Â¸ÂÃ¨Æ’Â½Ã¥Å Â Ã¥â€¦Â¥Ã¥Â¤Å¡Ã©â‚¬â€°"));
       return;
     }
     const key = timelineSelectionKey(track, id);
@@ -521,7 +525,7 @@ export function Timeline({
         if (suppressTimelineClipClickRef.current === id) suppressTimelineClipClickRef.current = "";
         if (timelineRangeDragClickGuardRef.current === pressedKey) timelineRangeDragClickGuardRef.current = "";
       }, 240);
-      notify(t("timelineRangeMoved", "已移动 {count} 个片段").replace("{count}", selectedClips.length));
+      notify(t("timelineRangeMoved", "Ã¥Â·Â²Ã§Â§Â»Ã¥Å Â¨ {count} Ã¤Â¸ÂªÃ§â€°â€¡Ã¦Â®Âµ").replace("{count}", selectedClips.length));
     };
     window.addEventListener("pointermove", move, { capture: true, passive: false });
     window.addEventListener("pointerup", finish, { capture: true, once: true });
@@ -544,6 +548,69 @@ export function Timeline({
     setContextMenu(null);
     setMobileClipActionsVisible(false);
     setMobileClipActionTrack("");
+  };
+  const selectedTimelineClips = () => timelineSelectableClips.filter((clip) =>
+    timelineRangeSelection.has(timelineSelectionKey(clip.track, clip.id)) && !trackLocks[clip.track]);
+  const deleteSelectedTimelineClips = () => {
+    const clips = selectedTimelineClips();
+    if (!clips.length) return void handleDeleteTrack();
+    const idsFor = (track) => new Set(clips.filter((clip) => clip.track === track).map((clip) => clip.id));
+    const visualIds = idsFor("image");
+    if (visualIds.size) setVisualSegments((items) => items.filter((segment) => !visualIds.has(segment.id)));
+    const overlayIds = idsFor("overlay");
+    if (overlayIds.size) setVisualOverlaySegments?.((items) => items.filter((segment) => !overlayIds.has(segment.id)));
+    const stickerIds = idsFor("sticker");
+    if (stickerIds.size) setStickerSegments((items) => items.filter((segment) => !stickerIds.has(segment.id)));
+    const captionIds = idsFor("caption");
+    if (captionIds.size) setCaptionSegments((items) => items.filter((segment) => !captionIds.has(segment.id)));
+    const audioIds = idsFor("audio");
+    if (audioIds.size) setAudioSegments((items) => items.filter((segment) => !audioIds.has(segment.id)));
+    const musicIds = idsFor("music");
+    if (musicIds.size && musicSegments.length) setMusicSegments((items) => items.filter((segment) => !musicIds.has(segment.id)));
+    clearTimelineClipFocus();
+    notify(`Deleted ${clips.length} selected clip${clips.length === 1 ? "" : "s"}`);
+  };
+  const applyBatchDuration = () => {
+    const duration = Number(batchDuration); const clips = selectedTimelineClips();
+    if (!Number.isFinite(duration) || duration < 0.1) return void notify("Enter a duration of at least 0.1 seconds");
+    if (!clips.length) return void notify("Select one or more clips first");
+    const selected = new Set(clips.map((clip) => timelineSelectionKey(clip.track, clip.id)));
+    const visualIds = new Set(clips.filter((clip) => clip.track === "image").map((clip) => clip.id));
+    if (visualIds.size) setVisualSegments((items) => {
+      const fixed = items.filter((segment) => !visualIds.has(segment.id)).reduce((total, segment) => total + (Number(segment.duration) || 0), 0); let remaining = MAX_TIMELINE_DURATION_SECONDS - fixed;
+      return items.map((segment) => {
+        if (!visualIds.has(segment.id)) return segment;
+        const nextDuration = Math.min(duration, Math.max(0.1, remaining)); remaining -= nextDuration;
+        const rate = Math.max(0.25, Math.min(4, Number(segment.playbackRate) || 1));
+        return { ...segment, duration: nextDuration, ...(segment.type === "video" ? { sourceDuration: nextDuration * rate } : {}) };
+      });
+    });
+    const patch = (track, segment) => selected.has(timelineSelectionKey(track, segment.id))
+      ? { ...segment, duration: Math.min(duration, Math.max(0.1, MAX_TIMELINE_DURATION_SECONDS - (segment.start || 0))) } : segment;
+    setVisualOverlaySegments?.((items) => items.map((segment) => patch("overlay", segment)));
+    setStickerSegments((items) => items.map((segment) => patch("sticker", segment)));
+    setAudioSegments((items) => items.map((segment) => selected.has(timelineSelectionKey("audio", segment.id))
+      ? { ...patch("audio", segment), sourceDuration: duration * Math.max(0.25, Math.min(4, Number(segment.playbackRate) || 1)) } : segment));
+    if (musicSegments.length) setMusicSegments?.((items) => items.map((segment) => selected.has(timelineSelectionKey("music", segment.id))
+      ? { ...patch("music", segment), sourceDuration: duration * Math.max(0.25, Math.min(4, Number(segment.playbackRate) || 1)) } : segment));
+    setCaptionSegments((items) => items.map((segment) => selected.has(timelineSelectionKey("caption", segment.id))
+      ? { ...segment, start: Number(segment.start) || 0, end: (Number(segment.start) || 0) + duration } : segment));
+    notify(`Set ${clips.length} selected clip${clips.length === 1 ? "" : "s"} to ${duration}s`);
+  };
+  const deleteMarkedClipRange = () => {
+    const start = Math.min(clipRangeStart ?? NaN, clipRangeEnd ?? NaN); const end = Math.max(clipRangeStart ?? NaN, clipRangeEnd ?? NaN);
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end - start < 0.05) return void notify("Mark an In and Out point before deleting a range");
+    const selectedId = selectedVisualSegmentId || [...timelineRangeSelection].find((key) => key.startsWith("image:"))?.slice(6);
+    const index = displayedVisualSegments.findIndex((segment) => segment.id === selectedId); const range = renderedVisualTimeline[index]; const source = displayedVisualSegments[index];
+    if (!source || !range || start < range.start || end > range.end) return void notify("Select one visual clip, then mark a range inside that clip");
+    const leftDuration = start - range.start; const rightDuration = range.end - end; const rate = Math.max(0.25, Math.min(4, Number(source.playbackRate) || 1));
+    setVisualSegments((items) => {
+      const itemIndex = items.findIndex((segment) => segment.id === source.id); if (itemIndex < 0) return items;
+      const left = leftDuration >= 0.1 ? { ...source, duration: leftDuration, ...(source.type === "video" ? { sourceDuration: leftDuration * rate } : {}) } : null;
+      const right = rightDuration >= 0.1 ? { ...source, id: left ? `${source.id}-trim-${Date.now()}` : source.id, duration: rightDuration, ...(source.type === "video" ? { sourceStart: (Number(source.sourceStart) || 0) + (end - range.start) * rate, sourceDuration: rightDuration * rate } : {}) } : null;
+      const next = [...items]; next.splice(itemIndex, 1, ...[left, right].filter(Boolean)); return next;
+    });
+    setClipRangeStart(null); setClipRangeEnd(null); setTimelineRangeSelection(new Set()); notify("Deleted the marked part of the clip");
   };
   const selectTimelineTrackBackground = (event, track, tool = "") => {
     if (event.target instanceof Element && event.target.closest("[data-timeline-segment-track]")) return;
@@ -690,7 +757,7 @@ export function Timeline({
   };
 
   const updateJunctionTransition = (index, patch) => {
-    if (trackLocks.image) return void notify("图片轨已锁定，无法修改转场");
+    if (trackLocks.image) return void notify("Ã¥â€ºÂ¾Ã§â€°â€¡Ã¨Â½Â¨Ã¥Â·Â²Ã©â€ÂÃ¥Â®Å¡Ã¯Â¼Å’Ã¦â€”Â Ã¦Â³â€¢Ã¤Â¿Â®Ã¦â€Â¹Ã¨Â½Â¬Ã¥Å“Âº");
     setVisualSegments((items) => items.map((item, itemIndex) => itemIndex === index
       ? { ...item, transition: { id: item.transition?.id || "none", duration: item.transition?.duration || 0.5, ...patch } }
       : item));
@@ -1606,7 +1673,7 @@ export function Timeline({
             )}
           </div>
         ) : null}
-        <span>{track === "overlay" ? <><PictureInPicture size={12} />{t("dropAsOverlay", "作为画中画")}</> : track === "image" ? <><PlusCircle size={12} />{t("appendAfter", "添加到后面")}</> : t("dropSlot", "释放到这里")}</span>
+        <span>{track === "overlay" ? <><PictureInPicture size={12} />{t("dropAsOverlay", "Ã¤Â½Å“Ã¤Â¸ÂºÃ§â€Â»Ã¤Â¸Â­Ã§â€Â»")}</> : track === "image" ? <><PlusCircle size={12} />{t("appendAfter", "Ã¦Â·Â»Ã¥Å Â Ã¥Ë†Â°Ã¥ÂÅ½Ã©ÂÂ¢")}</> : t("dropSlot", "Ã©â€¡Å Ã¦â€Â¾Ã¥Ë†Â°Ã¨Â¿â„¢Ã©â€¡Å’")}</span>
         <strong>
           {track === "overlay" || track === "image"
             ? assetDragPreview?.name || (assetDragPreview?.type === "video" ? t("assetVideo") : t("assetImage"))
@@ -1841,7 +1908,7 @@ export function Timeline({
                 : <video src={segment.src} crossOrigin="anonymous" muted playsInline preload="metadata" />
               : Array.from({ length: overlayImageCount }, (_, thumbnailIndex) => <img src={segment.src} alt="" crossOrigin="anonymous" draggable={false} key={`${segment.id}-overlay-image-${thumbnailIndex}`} />)}
           </div>
-          {segment.type === "video" ? <button className="clip-mute-toggle" type="button" aria-label={t(segment.muted ? "unmuteClip" : "muteClip", segment.muted ? "取消静音" : "静音")} title={t(segment.muted ? "unmuteClip" : "muteClip", segment.muted ? "取消静音" : "静音")} onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); if (trackLocks.overlay) return void notify("画中画轨已锁定，无法切换静音"); setVisualOverlaySegments((items) => items.map((item) => item.id === segment.id ? { ...item, muted: !item.muted } : item)); }}>{segment.muted ? <SpeakerSlash size={13} /> : <SpeakerHigh size={13} />}</button> : null}
+          {segment.type === "video" ? <button className="clip-mute-toggle" type="button" aria-label={t(segment.muted ? "unmuteClip" : "muteClip", segment.muted ? "Ã¥Ââ€“Ã¦Â¶Ë†Ã©Ââ„¢Ã©Å¸Â³" : "Ã©Ââ„¢Ã©Å¸Â³")} title={t(segment.muted ? "unmuteClip" : "muteClip", segment.muted ? "Ã¥Ââ€“Ã¦Â¶Ë†Ã©Ââ„¢Ã©Å¸Â³" : "Ã©Ââ„¢Ã©Å¸Â³")} onPointerDown={(event) => event.stopPropagation()} onClick={(event) => { event.stopPropagation(); if (trackLocks.overlay) return void notify("Ã§â€Â»Ã¤Â¸Â­Ã§â€Â»Ã¨Â½Â¨Ã¥Â·Â²Ã©â€ÂÃ¥Â®Å¡Ã¯Â¼Å’Ã¦â€”Â Ã¦Â³â€¢Ã¥Ë†â€¡Ã¦ÂÂ¢Ã©Ââ„¢Ã©Å¸Â³"); setVisualOverlaySegments((items) => items.map((item) => item.id === segment.id ? { ...item, muted: !item.muted } : item)); }}>{segment.muted ? <SpeakerSlash size={13} /> : <SpeakerHigh size={13} />}</button> : null}
           <span>{segment.name || t("overlayTrack", "Overlay")}</span>
           <i className="visual-overlay-resize is-start" onPointerDown={(event) => startOverlayEdit(event, "resize-start")} />
           <i className="visual-overlay-resize is-end" onPointerDown={(event) => startOverlayEdit(event, "resize-end")} />
@@ -1855,10 +1922,10 @@ export function Timeline({
             "--overlay-width": `${timelineDuration > 0 ? Math.max(0.01, Math.min(100, (draggingVisualSegment.duration / timelineDuration) * 100)) : 0}%`,
           }}
         >
-          <span>{t("dropAsOverlay", "作为画中画")}</span>
+          <span>{t("dropAsOverlay", "Ã¤Â½Å“Ã¤Â¸ÂºÃ§â€Â»Ã¤Â¸Â­Ã§â€Â»")}</span>
         </div>
       ) : null}
-      {!lane.length ? <div className="track-drop-hint">{t("dropAsOverlay", "作为画中画")}</div> : null}
+      {!lane.length ? <div className="track-drop-hint">{t("dropAsOverlay", "Ã¤Â½Å“Ã¤Â¸ÂºÃ§â€Â»Ã¤Â¸Â­Ã§â€Â»")}</div> : null}
       {renderAssetDropSlot("overlay")}
     </div>
   );
@@ -1952,7 +2019,7 @@ export function Timeline({
               ref={timelineSelectionTriggerRef}
               type="button"
               className={`timeline-selection-trigger ${timelineSelectionMode !== "select" ? "is-active" : ""}`}
-              aria-label={t("timelineSelectionTools", "选择工具")}
+              aria-label={t("timelineSelectionTools", "Ã©â‚¬â€°Ã¦â€¹Â©Ã¥Â·Â¥Ã¥â€¦Â·")}
               aria-haspopup="menu"
               aria-expanded={timelineSelectionMenuOpen}
               onClick={() => setTimelineSelectionMenuOpen((open) => !open)}
@@ -1974,9 +2041,9 @@ export function Timeline({
                 }}
               >
                 {[
-                  ["select", CursorClick, t("timelineSelect", "选择")],
-                  ["left", ArrowLineLeft, t("timelineSelectLeft", "向左全选")],
-                  ["right", ArrowLineRight, t("timelineSelectRight", "向右全选")],
+                  ["select", CursorClick, t("timelineSelect", "Ã©â‚¬â€°Ã¦â€¹Â©")],
+                  ["left", ArrowLineLeft, t("timelineSelectLeft", "Ã¥Ââ€˜Ã¥Â·Â¦Ã¥â€¦Â¨Ã©â‚¬â€°")],
+                  ["right", ArrowLineRight, t("timelineSelectRight", "Ã¥Ââ€˜Ã¥ÂÂ³Ã¥â€¦Â¨Ã©â‚¬â€°")],
                 ].map(([mode, Icon, label]) => (
                   <button
                     type="button"
@@ -2008,6 +2075,14 @@ export function Timeline({
             {t(sourceAudioLinked ? "sourceAudioSynced" : "sourceAudioIndependent")}
           </span> : null}
         </div>
+        <div className="timeline-batch-tools" aria-label="Batch clip editing">
+          <button type="button" className="is-danger" disabled={!timelineRangeSelection.size} onClick={deleteSelectedTimelineClips}><Trash size={15} /> Delete {timelineRangeSelection.size || ""}</button>
+          <label title="Set every selected clip to this duration"><span>Duration</span><input type="number" min="0.1" step="0.1" value={batchDuration} onChange={(event) => setBatchDuration(event.target.value)} /><small>s</small></label>
+          <button type="button" disabled={!timelineRangeSelection.size} onClick={applyBatchDuration}>Apply</button>
+          <button type="button" className={clipRangeStart == null ? "" : "is-active"} onClick={() => setClipRangeStart(currentTime)}>Mark In</button>
+          <button type="button" className={clipRangeEnd == null ? "" : "is-active"} onClick={() => setClipRangeEnd(currentTime)}>Mark Out</button>
+          <button type="button" className="is-danger" disabled={clipRangeStart == null || clipRangeEnd == null} onClick={deleteMarkedClipRange}>Delete range</button>
+        </div>
         <div className="timeline-segment-tools">
           <button className="timeline-play-button" type="button" disabled={!canPreview} onClick={handlePlayToggle}>
             {isPlaying ? <Pause size={17} weight="fill" /> : <Play size={17} weight="fill" />}
@@ -2021,6 +2096,7 @@ export function Timeline({
             <MinusCircle size={17} />
             {t("removeSegment")}
           </button>
+          <button type="button" onClick={onOpenRemoveSilence}><Sparkle size={17} />Remove Silence</button>
           <IconButton label={t("shortenSegment")} onClick={() => adjustSelectedSegmentWeight(-0.5)}>
             <ArrowsInLineHorizontal size={18} />
           </IconButton>
@@ -2176,7 +2252,7 @@ export function Timeline({
               onContextMenu={(event) => showTrackContextMenu(event, "image")}
             >
               {assetDropTargetTrack === "image" || assetDropTargetTrack === "overlay" ? (
-                <div className="track-drop-hint">{assetDropTargetTrack === "overlay" ? t("dropAsOverlay", "作为画中画") : t("appendAfter", "添加到后面")}</div>
+                <div className="track-drop-hint">{assetDropTargetTrack === "overlay" ? t("dropAsOverlay", "Ã¤Â½Å“Ã¤Â¸ÂºÃ§â€Â»Ã¤Â¸Â­Ã§â€Â»") : t("appendAfter", "Ã¦Â·Â»Ã¥Å Â Ã¥Ë†Â°Ã¥ÂÅ½Ã©ÂÂ¢")}</div>
               ) : null}
               {!imageSrc ? (
                 <button
@@ -2247,7 +2323,7 @@ export function Timeline({
                         data-timeline-segment-index={index}
                         data-timeline-segment-id={segment.id}
                         data-range-selected={isRangeSelected("image", segment.id) || undefined}
-                        data-placeholder={t("dropSlot", "放置位置")}
+                        data-placeholder={t("dropSlot", "Ã¦â€Â¾Ã§Â½Â®Ã¤Â½ÂÃ§Â½Â®")}
                         style={{
                           "--image-clip-width": `${segmentWidth}%`,
                           "--promotion-gap-width": `${promotionGapWidth}%`,
@@ -2284,19 +2360,19 @@ export function Timeline({
                         {segment.preparing ? (
                           <div className="timeline-media-preparing" aria-live="polite">
                             <i className="timeline-media-spinner" />
-                            <strong>{t("timelineMediaPreparing", "正在准备素材")}</strong>
+                            <strong>{t("timelineMediaPreparing", "Ã¦Â­Â£Ã¥Å“Â¨Ã¥â€¡â€ Ã¥Â¤â€¡Ã§Â´Â Ã¦ÂÂ")}</strong>
                             <em>{Math.round((segment.prepareProgress || 0) * 100)}%</em>
                           </div>
                         ) : segmentType === "video" ? (
                           <button
                             className="clip-mute-toggle"
                             type="button"
-                            aria-label={t(segment.sourceAudioDisabled ? "unmuteClip" : "muteClip", segment.sourceAudioDisabled ? "取消静音" : "静音")}
-                            title={t(segment.sourceAudioDisabled ? "unmuteClip" : "muteClip", segment.sourceAudioDisabled ? "取消静音" : "静音")}
+                            aria-label={t(segment.sourceAudioDisabled ? "unmuteClip" : "muteClip", segment.sourceAudioDisabled ? "Ã¥Ââ€“Ã¦Â¶Ë†Ã©Ââ„¢Ã©Å¸Â³" : "Ã©Ââ„¢Ã©Å¸Â³")}
+                            title={t(segment.sourceAudioDisabled ? "unmuteClip" : "muteClip", segment.sourceAudioDisabled ? "Ã¥Ââ€“Ã¦Â¶Ë†Ã©Ââ„¢Ã©Å¸Â³" : "Ã©Ââ„¢Ã©Å¸Â³")}
                             onPointerDown={(event) => event.stopPropagation()}
                             onClick={(event) => {
                               event.stopPropagation();
-                              if (trackLocks.image) return void notify("图片轨已锁定，无法切换静音");
+                              if (trackLocks.image) return void notify("Ã¥â€ºÂ¾Ã§â€°â€¡Ã¨Â½Â¨Ã¥Â·Â²Ã©â€ÂÃ¥Â®Å¡Ã¯Â¼Å’Ã¦â€”Â Ã¦Â³â€¢Ã¥Ë†â€¡Ã¦ÂÂ¢Ã©Ââ„¢Ã©Å¸Â³");
                               setVisualSegments((items) => items.map((item) => item.id === segment.id ? { ...item, sourceAudioDisabled: !item.sourceAudioDisabled } : item));
                             }}
                           >
@@ -2383,7 +2459,7 @@ export function Timeline({
                       "--main-drop-width": `${timelineDuration > 0 ? Math.max(0.01, Math.min(100, (overlay?.duration || 0.5) / timelineDuration * 100)) : 0}%`,
                     }}
                   >
-                    <span>{t("dropSlot", "放置位置")}</span>
+                    <span>{t("dropSlot", "Ã¦â€Â¾Ã§Â½Â®Ã¤Â½ÂÃ§Â½Â®")}</span>
                   </div>
                 );
               })() : null}
@@ -2395,7 +2471,7 @@ export function Timeline({
                     className={`visual-junction ${transition.id !== "none" ? "has-transition" : ""}`}
                     key={`junction-${segment.id}`}
                     type="button"
-                    aria-label={`${t("transition")}: ${trOption(TRANSITIONS.find((item) => item.id === transition.id)?.name || "无转场")}`}
+                    aria-label={`${t("transition")}: ${trOption(TRANSITIONS.find((item) => item.id === transition.id)?.name || "Ã¦â€”Â Ã¨Â½Â¬Ã¥Å“Âº")}`}
                     title={t("transitionSettings")}
                     style={{ left: `${((range?.end || 0) / Math.max(0.01, timelineDuration)) * 100}%` }}
                     onPointerDown={(event) => event.stopPropagation()}
@@ -2404,7 +2480,7 @@ export function Timeline({
                       const rect = event.currentTarget.getBoundingClientRect();
                       setTransitionEditor({ index, x: rect.left + rect.width / 2, y: rect.top });
                     }}
-                  ><span>◇</span></button>
+                  ><span>Ã¢â€”â€¡</span></button>
                 );
               })}
               {renderAssetDropSlot("image")}
@@ -2458,7 +2534,7 @@ export function Timeline({
                         data-timeline-segment-index={index}
                         data-timeline-segment-id={segment.id}
                         data-range-selected={isRangeSelected("caption", segment.id) || undefined}
-                        data-placeholder={t("dropSlot", "放置位置")}
+                        data-placeholder={t("dropSlot", "Ã¦â€Â¾Ã§Â½Â®Ã¤Â½ÂÃ§Â½Â®")}
                         style={{
                           "--caption-left": `${segmentLeft}%`,
                           "--caption-width": `${segmentWidth}%`,
@@ -2515,7 +2591,7 @@ export function Timeline({
               {sourceAudioExtractionPendingId && !sourceAudioBlob ? (
                 <div className="source-audio-extraction-state" role="status" aria-live="polite">
                   <CircleNotch size={16} />
-                  <span>{t("separatingSourceAudio", "正在分离音频…")}</span>
+                  <span>{t("separatingSourceAudio", "Ã¦Â­Â£Ã¥Å“Â¨Ã¥Ë†â€ Ã§Â¦Â»Ã©Å¸Â³Ã©Â¢â€˜Ã¢â‚¬Â¦")}</span>
                 </div>
               ) : null}
               {sourceAudioBlob && sourceAudioLinked && linkedSourceAudioSegments.length ? linkedSourceAudioSegments.map((segment) => (
@@ -2685,7 +2761,7 @@ export function Timeline({
           style={{ left: timelineRangeDrag.x + 14, top: timelineRangeDrag.y + 14 }}
         >
           <span>{timelineRangeSelection.size}</span>
-          <strong>{t("timelineMovingSelection", "移动选中片段")}</strong>
+          <strong>{t("timelineMovingSelection", "Ã§Â§Â»Ã¥Å Â¨Ã©â‚¬â€°Ã¤Â¸Â­Ã§â€°â€¡Ã¦Â®Âµ")}</strong>
           <em>{timelineRangeDrag.delta >= 0 ? "+" : ""}{timelineRangeDrag.delta.toFixed(2)}s</em>
         </div>
       ), document.body) : null}
@@ -2701,22 +2777,22 @@ export function Timeline({
             if (actionId === "visual-animation") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("animation")}><MonitorPlay size={20} /><span>{t("visualTabAnimation")}</span></button>;
             if (actionId === "visual-speed") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("speed")}><ArrowsOutLineHorizontal size={20} /><span>{t("visualTabSpeed")}</span></button>;
             if (actionId === "visual-repair") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("repair")}><Sparkle size={20} /><span>{t("repairTab")}</span></button>;
-            if (actionId === "visual-vector") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("vector")}><Sparkle size={20} /><span>{t("vectorProperties", "矢量")}</span></button>;
-            if (actionId === "overlay-timing") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("timing")}><PictureInPicture size={20} /><span>{t("overlayTiming", "层级")}</span></button>;
+            if (actionId === "visual-vector") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("vector")}><Sparkle size={20} /><span>{t("vectorProperties", "Ã§Å¸Â¢Ã©â€¡Â")}</span></button>;
+            if (actionId === "overlay-timing") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("timing")}><PictureInPicture size={20} /><span>{t("overlayTiming", "Ã¥Â±â€šÃ§ÂºÂ§")}</span></button>;
             if (actionId === "caption-properties") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("caption")}><ClosedCaptioning size={20} /><span>{t("caption")}</span></button>;
             if (actionId === "caption-font") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("font")}><TextT size={20} /><span>{t("captionFont")}</span></button>;
             if (actionId === "caption-voice") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("voice")}><Waveform size={20} /><span>{t("aiVoice")}</span></button>;
             if (actionId === "sticker-properties") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("sticker")}><SlidersHorizontal size={20} /><span>{t("properties")}</span></button>;
             if (actionId === "audio-properties") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("audio")}><Waveform size={20} /><span>{t("mobileClipAudio")}</span></button>;
             if (actionId === "audio-fade") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("fade")}><ArrowsInLineHorizontal size={20} /><span>{t("mobileClipFade")}</span></button>;
-            if (actionId === "audio-voice-color") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("voice-color")}><Sparkle size={20} weight="fill" /><span>{t("voiceColorTab", "音色")}</span></button>;
+            if (actionId === "audio-voice-color") return <button type="button" key={actionId} onClick={() => openSelectedClipInspector("voice-color")}><Sparkle size={20} weight="fill" /><span>{t("voiceColorTab", "Ã©Å¸Â³Ã¨â€°Â²")}</span></button>;
             if (actionId === "split") return <button type="button" key={actionId} onClick={() => runMobileClipAction(handleCutTrack)}><Scissors size={20} /><span>{t("mobileClipSplit")}</span></button>;
             if (actionId === "copy") return <button type="button" key={actionId} onClick={() => runMobileClipAction(handleDuplicateTrack)}><CopySimple size={20} /><span>{t("mobileClipCopy")}</span></button>;
             if (actionId === "captions") return <button type="button" key={actionId} disabled={audioProcessingBusy || !selectedMobileAudioSegment} onClick={generateSelectedMobileAudioCaptions}><ClosedCaptioning size={20} /><span>{t("mobileClipCaptions")}</span></button>;
             if (actionId === "caption-link") return <button type="button" key={actionId} onClick={toggleSelectedMobileCaptionAudioLink}>{selectedMobileHasLinkedCaption ? <LinkBreak size={20} /> : <LinkSimple size={20} />}<span>{t(selectedMobileHasLinkedCaption ? "captionUnlinkAudio" : "captionLinkAudio")}</span></button>;
             if (actionId === "caption-align") return <button type="button" key={actionId} onClick={alignSelectedMobileCaptionAudio}><ArrowsInLineHorizontal size={20} /><span>{t("captionAlignToAudio")}</span></button>;
             if (actionId === "separate") return <button type="button" key={actionId} disabled={audioProcessingBusy || !selectedMobileAudioSegment} onClick={separateSelectedMobileAudio}><Waveform size={20} /><span>{t("mobileClipSeparate")}</span></button>;
-            if (actionId === "extract-source-audio") return <button type="button" key={actionId} disabled={Boolean(sourceAudioExtractionPendingId) || !selectedMobileVisualSegment} onClick={() => void runSourceAudioExtraction(selectedMobileVisualSegment)}>{sourceAudioExtractionPendingId === selectedMobileVisualSegment?.id ? <CircleNotch className="spin" size={20} /> : <Waveform size={20} />}<span>{t(sourceAudioExtractionPendingId === selectedMobileVisualSegment?.id ? "separatingSourceAudio" : "separateSourceAudio", sourceAudioExtractionPendingId === selectedMobileVisualSegment?.id ? "正在分离音频…" : "分离音频")}</span></button>;
+            if (actionId === "extract-source-audio") return <button type="button" key={actionId} disabled={Boolean(sourceAudioExtractionPendingId) || !selectedMobileVisualSegment} onClick={() => void runSourceAudioExtraction(selectedMobileVisualSegment)}>{sourceAudioExtractionPendingId === selectedMobileVisualSegment?.id ? <CircleNotch className="spin" size={20} /> : <Waveform size={20} />}<span>{t(sourceAudioExtractionPendingId === selectedMobileVisualSegment?.id ? "separatingSourceAudio" : "separateSourceAudio", sourceAudioExtractionPendingId === selectedMobileVisualSegment?.id ? "Ã¦Â­Â£Ã¥Å“Â¨Ã¥Ë†â€ Ã§Â¦Â»Ã©Å¸Â³Ã©Â¢â€˜Ã¢â‚¬Â¦" : "Ã¥Ë†â€ Ã§Â¦Â»Ã©Å¸Â³Ã©Â¢â€˜")}</span></button>;
             return <button className="is-danger" type="button" key={actionId} onClick={() => runMobileClipAction(handleDeleteTrack)}><Trash size={20} /><span>{t("mobileClipDelete")}</span></button>;
           })}
           </div>
@@ -2745,14 +2821,14 @@ export function Timeline({
                 </button>
               ) : null}
               {contextMenu.track === "image" && contextImageSegment?.type === "video" ? <>
-                <button type="button" role="menuitem" disabled={Boolean(trackLocks.image)} onClick={() => runContextAction(() => setVisualSegments((items) => items.map((item) => item.id === contextImageSegment.id ? { ...item, sourceAudioDisabled: !item.sourceAudioDisabled } : item)))}>{contextImageSegment.sourceAudioDisabled ? <SpeakerHigh size={16} /> : <SpeakerSlash size={16} />}{t(contextImageSegment.sourceAudioDisabled ? "unmuteClip" : "muteClip", contextImageSegment.sourceAudioDisabled ? "取消静音" : "静音")}</button>
+                <button type="button" role="menuitem" disabled={Boolean(trackLocks.image)} onClick={() => runContextAction(() => setVisualSegments((items) => items.map((item) => item.id === contextImageSegment.id ? { ...item, sourceAudioDisabled: !item.sourceAudioDisabled } : item)))}>{contextImageSegment.sourceAudioDisabled ? <SpeakerHigh size={16} /> : <SpeakerSlash size={16} />}{t(contextImageSegment.sourceAudioDisabled ? "unmuteClip" : "muteClip", contextImageSegment.sourceAudioDisabled ? "Ã¥Ââ€“Ã¦Â¶Ë†Ã©Ââ„¢Ã©Å¸Â³" : "Ã©Ââ„¢Ã©Å¸Â³")}</button>
                 <button type="button" role="menuitem" disabled={Boolean(sourceAudioExtractionPendingId)} onClick={() => void runSourceAudioExtraction(contextImageSegment)}>
                   {sourceAudioExtractionPendingId === contextImageSegment.id ? <CircleNotch size={16} /> : <Waveform size={16} />}
-                  {t(sourceAudioExtractionPendingId === contextImageSegment.id ? "separatingSourceAudio" : "separateSourceAudio", sourceAudioExtractionPendingId === contextImageSegment.id ? "正在分离音频…" : "分离音频")}
+                  {t(sourceAudioExtractionPendingId === contextImageSegment.id ? "separatingSourceAudio" : "separateSourceAudio", sourceAudioExtractionPendingId === contextImageSegment.id ? "Ã¦Â­Â£Ã¥Å“Â¨Ã¥Ë†â€ Ã§Â¦Â»Ã©Å¸Â³Ã©Â¢â€˜Ã¢â‚¬Â¦" : "Ã¥Ë†â€ Ã§Â¦Â»Ã©Å¸Â³Ã©Â¢â€˜")}
                 </button>
               </> : null}
               {contextMenu.track === "overlay" && contextOverlaySegment?.type === "video" ? (
-                <button type="button" role="menuitem" disabled={Boolean(trackLocks.overlay)} onClick={() => runContextAction(() => setVisualOverlaySegments((items) => items.map((item) => item.id === contextOverlaySegment.id ? { ...item, muted: !item.muted } : item)))}>{contextOverlaySegment.muted ? <SpeakerHigh size={16} /> : <SpeakerSlash size={16} />}{t(contextOverlaySegment.muted ? "unmuteClip" : "muteClip", contextOverlaySegment.muted ? "取消静音" : "静音")}</button>
+                <button type="button" role="menuitem" disabled={Boolean(trackLocks.overlay)} onClick={() => runContextAction(() => setVisualOverlaySegments((items) => items.map((item) => item.id === contextOverlaySegment.id ? { ...item, muted: !item.muted } : item)))}>{contextOverlaySegment.muted ? <SpeakerHigh size={16} /> : <SpeakerSlash size={16} />}{t(contextOverlaySegment.muted ? "unmuteClip" : "muteClip", contextOverlaySegment.muted ? "Ã¥Ââ€“Ã¦Â¶Ë†Ã©Ââ„¢Ã©Å¸Â³" : "Ã©Ââ„¢Ã©Å¸Â³")}</button>
               ) : null}
               {contextMenu.track === "audio" && contextAudioSegment ? <>
                 <button type="button" role="menuitem" onClick={() => runContextAction(() => contextAudioHasLinkedCaption ? unlinkAudioCaptions?.(contextAudioSegment.id) : linkAudioToCaption?.(contextAudioSegment.id))}>{contextAudioHasLinkedCaption ? <LinkBreak size={16} /> : <LinkSimple size={16} />}{t(contextAudioHasLinkedCaption ? "captionUnlinkAudio" : "captionLinkAudio")}</button>
@@ -2784,7 +2860,7 @@ export function Timeline({
         const maxDuration = Math.max(0.1, Math.min(2, (segment?.duration || 0.5) / 2, (displayedVisualSegments[transitionEditor.index + 1]?.duration || 0.5) / 2));
         return (
           <div className="transition-popover" role="dialog" aria-label={t("transitionSettings")} style={{ left: transitionEditor.x, top: transitionEditor.y }} onPointerDown={(event) => event.stopPropagation()}>
-            <div className="transition-popover-head"><strong>{t("transition")}</strong><button type="button" onClick={() => setTransitionEditor(null)} aria-label={t("close")}>×</button></div>
+            <div className="transition-popover-head"><strong>{t("transition")}</strong><button type="button" onClick={() => setTransitionEditor(null)} aria-label={t("close")}>Ãƒâ€”</button></div>
             <div className="transition-presets">
               {TRANSITIONS.map((option) => (
                 <button type="button" className={transition.id === option.id ? "is-selected" : ""} key={option.id} onClick={() => updateJunctionTransition(transitionEditor.index, { id: option.id })}>

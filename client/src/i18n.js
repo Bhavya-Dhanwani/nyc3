@@ -3439,42 +3439,33 @@ export const LANGUAGE_FALLBACKS = {
 };
 
 export function getStoredLanguage() {
-  if (typeof window === "undefined") {
-    return "en";
-  }
-
-  try {
-    const stored = window.localStorage.getItem(LANGUAGE_STORAGE_KEY);
-    return APP_LANGUAGES.some((language) => language.id === stored) ? stored : "en";
-  } catch {
-    return "en";
-  }
+  return "en";
 }
 
 export function getCopyLanguage(languageId) {
-  return UI_COPY[languageId] ? languageId : LANGUAGE_FALLBACKS[languageId] ?? "en";
+  return "en";
 }
 
 export function createTranslator(languageId) {
-  const copyLanguage = getCopyLanguage(languageId);
-  const copy = UI_COPY[copyLanguage] ?? UI_COPY.en;
+  const copyLanguage = "en";
+  const copy = UI_COPY.en;
   const fallback = UI_COPY.en;
-  const srtImportCopy = SRT_IMPORT_COPY[languageId] ?? SRT_IMPORT_COPY.en;
-  const exportCopy = EXPORT_RENDER_COPY[copyLanguage] ?? EXPORT_RENDER_COPY.en;
-  const exportOptionsCopy = EXPORT_OPTIONS_COPY[languageId] ?? EXPORT_OPTIONS_COPY.en;
-  const exportExtraStatusCopy = EXPORT_EXTRA_STATUS_COPY[languageId] ?? EXPORT_EXTRA_STATUS_COPY.en;
-  const assetPreviewCopy = ASSET_PREVIEW_COPY[copyLanguage] ?? ASSET_PREVIEW_COPY.en;
-  const assetDropCopy = ASSET_DROP_COPY[copyLanguage] ?? ASSET_DROP_COPY.en;
-  const autoCaptionStatusCopy = AUTO_CAPTION_STATUS_COPY[copyLanguage] ?? AUTO_CAPTION_STATUS_COPY.en;
-  const ttsBackendCopy = TTS_BACKEND_COPY[languageId] ?? TTS_BACKEND_COPY[copyLanguage] ?? TTS_BACKEND_COPY.en;
-  const captionAudioLinkCopy = CAPTION_AUDIO_LINK_COPY[languageId] ?? CAPTION_AUDIO_LINK_COPY[copyLanguage] ?? CAPTION_AUDIO_LINK_COPY.en;
-  const mobileDrawerCopy = MOBILE_DRAWER_COPY[languageId] ?? MOBILE_DRAWER_COPY.en;
-  const mobileClipActionCopy = MOBILE_CLIP_ACTION_COPY[languageId] ?? MOBILE_CLIP_ACTION_COPY.en;
-  const mobileStickerCopy = MOBILE_STICKER_COPY[languageId] ?? MOBILE_STICKER_COPY.en;
-  const completionCopy = globalThis.__GENERATING_I18N__ ? {} : I18N_COMPLETION_COPY[languageId] ?? I18N_COMPLETION_COPY.en ?? {};
-  const repairCopy = { ...REPAIR_COPY.en, ...(REPAIR_COPY[languageId] ?? {}), ...(REPAIR_LOCALIZED_COPY[languageId] ?? {}) };
-  const projectChromeCopy = PROJECT_CHROME_COPY[languageId] ?? PROJECT_CHROME_COPY.en;
-  const coreLabelCopy = CORE_LABEL_COPY[languageId] ?? CORE_LABEL_COPY.en;
+  const srtImportCopy = SRT_IMPORT_COPY.en;
+  const exportCopy = EXPORT_RENDER_COPY.en;
+  const exportOptionsCopy = EXPORT_OPTIONS_COPY.en;
+  const exportExtraStatusCopy = EXPORT_EXTRA_STATUS_COPY.en;
+  const assetPreviewCopy = ASSET_PREVIEW_COPY.en;
+  const assetDropCopy = ASSET_DROP_COPY.en;
+  const autoCaptionStatusCopy = AUTO_CAPTION_STATUS_COPY.en;
+  const ttsBackendCopy = TTS_BACKEND_COPY.en;
+  const captionAudioLinkCopy = CAPTION_AUDIO_LINK_COPY.en;
+  const mobileDrawerCopy = MOBILE_DRAWER_COPY.en;
+  const mobileClipActionCopy = MOBILE_CLIP_ACTION_COPY.en;
+  const mobileStickerCopy = MOBILE_STICKER_COPY.en;
+  const completionCopy = I18N_COMPLETION_COPY.en ?? {};
+  const repairCopy = REPAIR_COPY.en;
+  const projectChromeCopy = PROJECT_CHROME_COPY.en;
+  const coreLabelCopy = CORE_LABEL_COPY.en;
   const specializedCopy = Object.assign({}, ...[
     EXPORT_RENDER_COPY, MEDIA_COMPATIBILITY_COPY, COMMUNITY_LINKS_COPY, VOICE_COLOR_COPY, VOICE_CLONE_COPY, TIMELINE_SELECTION_COPY, FACE_SWAP_COPY, VECTOR_LIBRARY_COPY, PROJECT_CHROME_COPY, CORE_LABEL_COPY, MOBILE_DRAWER_COPY, MOBILE_CLIP_ACTION_COPY,
     VISUAL_EDITOR_COPY, TRANSITION_EDITOR_COPY, ASSET_PREVIEW_COPY, ASSET_DROP_COPY,
@@ -3488,19 +3479,18 @@ export function createTranslator(languageId) {
     AUTO_EDIT_REVIEW_COPY, AUTO_EDIT_FLOW_COPY, AUTO_EDIT_SEGMENT_COPY,
     AUTO_EDIT_RESULT_COPY, IMAGE_AI_CAPTION_COPY, PICTURE_IN_PICTURE_COPY, EFFECTS_WORKSPACE_COPY, VECTOR_STATE_COPY, VECTOR_DOCUMENT_COPY, VECTOR_ADVANCED_COPY,
     SRT_IMPORT_COPY,
-  ].map((source) => source[languageId] ?? {}));
-  return (key, fallbackText) => coreLabelCopy[key] ?? repairCopy[key] ?? specializedCopy[key] ?? exportOptionsCopy[key] ?? EXPORT_OPTIONS_COPY.en[key] ?? exportExtraStatusCopy[key] ?? EXPORT_EXTRA_STATUS_COPY.en[key] ?? projectChromeCopy[key] ?? PROJECT_CHROME_COPY.en[key] ?? captionAudioLinkCopy[key] ?? CAPTION_AUDIO_LINK_COPY.en[key] ?? ttsBackendCopy[key] ?? TTS_BACKEND_COPY.en[key] ?? mobileStickerCopy[key] ?? MOBILE_STICKER_COPY.en[key] ?? mobileClipActionCopy[key] ?? MOBILE_CLIP_ACTION_COPY.en[key] ?? mobileDrawerCopy[key] ?? MOBILE_DRAWER_COPY.en[key] ?? srtImportCopy[key] ?? exportCopy[key] ?? EXPORT_RENDER_COPY.en[key] ?? assetPreviewCopy[key] ?? ASSET_PREVIEW_COPY.en[key] ?? assetDropCopy[key] ?? ASSET_DROP_COPY.en[key] ?? autoCaptionStatusCopy[key] ?? AUTO_CAPTION_STATUS_COPY.en[key] ?? completionCopy[key] ?? copy[key] ?? fallback[key] ?? UI_COPY.en[key] ?? UI_COPY.zh[key] ?? fallbackText ?? key;
+  ].map((source) => source.en ?? {}));
+  return (key, fallbackText) => coreLabelCopy[key] ?? repairCopy[key] ?? specializedCopy[key] ?? exportOptionsCopy[key] ?? EXPORT_OPTIONS_COPY.en[key] ?? exportExtraStatusCopy[key] ?? EXPORT_EXTRA_STATUS_COPY.en[key] ?? projectChromeCopy[key] ?? PROJECT_CHROME_COPY.en[key] ?? captionAudioLinkCopy[key] ?? CAPTION_AUDIO_LINK_COPY.en[key] ?? ttsBackendCopy[key] ?? TTS_BACKEND_COPY.en[key] ?? mobileStickerCopy[key] ?? MOBILE_STICKER_COPY.en[key] ?? mobileClipActionCopy[key] ?? MOBILE_CLIP_ACTION_COPY.en[key] ?? mobileDrawerCopy[key] ?? MOBILE_DRAWER_COPY.en[key] ?? srtImportCopy[key] ?? exportCopy[key] ?? EXPORT_RENDER_COPY.en[key] ?? assetPreviewCopy[key] ?? ASSET_PREVIEW_COPY.en[key] ?? assetDropCopy[key] ?? ASSET_DROP_COPY.en[key] ?? autoCaptionStatusCopy[key] ?? AUTO_CAPTION_STATUS_COPY.en[key] ?? completionCopy[key] ?? copy[key] ?? fallback[key] ?? UI_COPY.en[key] ?? fallbackText ?? key;
 }
 
 export function translateOptionName(languageId, name) {
-  const copyLanguage = getCopyLanguage(languageId);
-  return OPTION_COPY[copyLanguage]?.[name] ?? OPTION_COPY.en?.[name] ?? name;
+  return OPTION_COPY.en?.[name] ?? name;
 }
 
 export function saveLanguagePreference(languageId) {
   try {
-    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, languageId);
+    window.localStorage.setItem(LANGUAGE_STORAGE_KEY, "en");
   } catch {
-    // localStorage may be unavailable in private browsing; keep the in-memory language.
+    // localStorage may be unavailable in private browsing
   }
 }

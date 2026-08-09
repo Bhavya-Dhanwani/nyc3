@@ -502,7 +502,7 @@ export function AiClipGeneratorPanel({
                   cursor: runningPipeline ? "not-allowed" : "pointer"
                 }}
               >
-                <option value="auto">âš¡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
+                <option value="auto">⚡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
                 <option value="groq">Groq Whisper (Ultra Fast, Large-v3)</option>
                 <option value="openai">OpenAI Whisper Cloud</option>
                 <option value="deepgram">Deepgram Nova-2</option>
@@ -529,7 +529,7 @@ export function AiClipGeneratorPanel({
                 cursor: runningPipeline ? "not-allowed" : "pointer",
                 background: runningPipeline ? "rgba(99, 102, 241, 0.25)" : undefined,
                 border: runningPipeline ? "1px solid rgba(99, 102, 241, 0.4)" : undefined,
-                color: runningPipeline ? "#c4b5fd" : "#ffffff",
+                color: runningPipeline ? "#c4b5fd" : undefined,
                 transition: "all 0.2s ease"
               }}
             >
@@ -779,7 +779,7 @@ export function AiClipGeneratorPanel({
                   cursor: generatingCaptions ? "not-allowed" : "pointer"
                 }}
               >
-                <option value="auto">âš¡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
+                <option value="auto">⚡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
                 <option value="groq">Groq Whisper (Ultra Fast, Large-v3)</option>
                 <option value="openai">OpenAI Whisper Cloud</option>
                 <option value="deepgram">Deepgram Nova-2</option>
@@ -806,7 +806,7 @@ export function AiClipGeneratorPanel({
                 cursor: generatingCaptions ? "not-allowed" : "pointer",
                 background: generatingCaptions ? "rgba(99, 102, 241, 0.25)" : undefined,
                 border: generatingCaptions ? "1px solid rgba(99, 102, 241, 0.4)" : undefined,
-                color: generatingCaptions ? "#c4b5fd" : "#ffffff",
+                color: generatingCaptions ? "#c4b5fd" : undefined,
                 transition: "all 0.2s ease"
               }}
             >
