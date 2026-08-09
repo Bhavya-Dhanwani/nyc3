@@ -1,0 +1,46 @@
+# Node dependencies & builds
+node_modules
+**/node_modules
+dist
+**/dist
+build
+**/build
+
+# Environment files and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Version control & IDE
+.git
+.gitignore
+.github
+.idea
+.vscode
+
+# Temporary & Media uploads (local processing artifacts)
+temp
+**/temp
+uploads
+**/uploads
+*.mp4
+*.mov
+*.mkv
+*.avi
+*.wav
+*.mp3
+*.aac
+*.srt
+
+# Logs & coverage
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+coverage
+
+# OS generated files
+.DS_Store
+Thumbs.db

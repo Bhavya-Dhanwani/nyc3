@@ -1,0 +1,59 @@
+services:
+  mongodb:
+    image: mongo:6.0
+    container_name: nyc2-mongodb
+    command: mongod --quiet --logpath /dev/null
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh localhost:27017/test --quiet"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    restart: unless-stopped
+    
+  server:
+    image: node:22-alpine
+    container_name: nyc2-server
+    working_dir: /app/server
+    command: sh -c "apk add --no-cache ffmpeg chromium fontconfig udev ttf-freefont && node ../scripts/watcher.js npm run dev"
+    volumes:
+      - .:/app
+      - server_node_modules:/app/server/node_modules
+    ports:
+      - "5000:5000"
+    env_file:
+      - ./server/.env
+    environment:
+      - NODE_ENV=development
+      - MONGO_URI=mongodb://mongodb:27017/nyc2
+      - CHROMIUM_PATH=/usr/bin/chromium
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    restart: always
+
+  client:
+    image: node:22-alpine
+    container_name: nyc2-client
+    working_dir: /app/client
+    command: node ../scripts/watcher.js npm run dev -- --host 0.0.0.0
+    volumes:
+      - .:/app
+      - client_node_modules:/app/client/node_modules
+    ports:
+      - "127.0.0.1:5173:5173"
+    environment:
+      - BACKEND_URL=http://server:5000
+    depends_on:
+      - server
+    restart: always
+
+volumes:
+  mongodb_data:
+  server_node_modules:
+  client_node_modules:
