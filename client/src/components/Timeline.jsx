@@ -2032,16 +2032,6 @@ export function Timeline({
           <IconButton label={t("zoomOut")} onClick={() => adjustTimelineZoom((zoom) => zoom / TIMELINE_BUTTON_ZOOM_RATIO)}>
             <MagnifyingGlassMinus size={17} />
           </IconButton>
-          <input 
-            type="range" 
-            className="timeline-zoom-slider"
-            min={1} 
-            max={300} 
-            step={0.1}
-            value={localTimelineZoom} 
-            onChange={(e) => adjustTimelineZoom(parseFloat(e.target.value))}
-            title={t?.("zoomTimeline") || "Zoom Timeline"}
-          />
           <span ref={zoomReadoutRef} className="zoom-readout" data-testid="timeline-zoom-readout">{zoomReadout}</span>
           <IconButton
             label={t("fitTimeline")}
@@ -2190,20 +2180,16 @@ export function Timeline({
               ) : null}
               {!imageSrc ? (
                 <button
-                  className="empty-timeline-entry"
+                  className="mobile-empty-visual-entry"
                   type="button"
-                  aria-label={t?.("importFirstVideo") || "Import your first video"}
+                  aria-label={t("mobileAddMedia", "添加素材")}
                   onClick={(event) => {
                     event.stopPropagation();
-                    if (window.matchMedia?.("(max-width: 760px)").matches && openMobileFilePicker) {
-                      openMobileFilePicker();
-                    } else {
-                      document.querySelector('input[type="file"].sr-only')?.click();
-                    }
+                    openMobileFilePicker?.();
                   }}
                 >
-                  <PlusCircle size={24} weight="bold" />
-                  <span>{t?.("importFirstVideo") || "Import your first video"}</span>
+                  <PlusCircle size={20} weight="bold" />
+                  <span>{t("mobileAddMedia", "添加素材")}</span>
                 </button>
               ) : null}
               {imageSrc
@@ -2489,10 +2475,6 @@ export function Timeline({
                           clearClipSelections("caption");
                           setSelectedSegmentId(segment.id);
                           seekTo(segmentRange?.start ?? getSegmentStartTime(displayedCaptionSegments, index, captionTargetDuration));
-                        }}
-                        onDoubleClick={(event) => {
-                          event.stopPropagation();
-                          setTimeout(() => document.getElementById("caption-context-input")?.focus(), 50);
                         }}
                       >
                         <span

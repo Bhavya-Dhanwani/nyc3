@@ -9,38 +9,38 @@ export function createTimelineClipboardActions(d) {
     return selected >= 0 ? selected : d.currentStickerSegmentIndex >= 0 ? d.currentStickerSegmentIndex : 0;
   };
   const deleteSticker = () => {
-    if (d.trackLocks.sticker) return void d.notify(d.t?.("trackLocked") || "Track is locked");
-    const index = focusedStickerIndex(); if (index < 0) return void d.notify(d.t?.("noStickerToDelete") || "No sticker segment to delete");
+    if (d.trackLocks.sticker) return void d.notify("贴纸轨已锁定，无法删除");
+    const index = focusedStickerIndex(); if (index < 0) return void d.notify("当前没有贴纸片段可删除");
     const next = d.stickerSegments.filter((_, position) => position !== index);
-    d.commitStickerSegments(next, next.length ? (d.t?.("deletedStickerSegment") || "Deleted sticker segment") : (d.t?.("deletedLastStickerSegment") || "Deleted last sticker segment"), next[Math.max(0, index - 1)]?.id ?? "");
+    d.commitStickerSegments(next, next.length ? "已删除当前贴纸片段" : "已删除最后一个贴纸片段", next[Math.max(0, index - 1)]?.id ?? "");
   };
   const handleDeleteTrack = () => {
-    if (d.trackLocks[d.selectedTrack]) return void d.notify(d.t?.("trackLocked") || "Track is locked");
+    if (d.trackLocks[d.selectedTrack]) return void d.notify("当前轨道已锁定，无法删除");
     if (d.selectedTrack === "caption") return void d.handleRemoveSegment();
     if (d.selectedTrack === "overlay") {
-      if (!d.selectedVisualOverlayId) return void d.notify(d.t?.("selectPipToDelete") || "Select a picture-in-picture segment first");
+      if (!d.selectedVisualOverlayId) return void d.notify("请先选择一个画中画片段");
       const next = d.visualOverlaySegments.filter((segment) => segment.id !== d.selectedVisualOverlayId);
       d.setVisualOverlaySegments(next);
       d.setSelectedVisualOverlayId("");
-      return void d.notify(d.t?.("deletedPipSegment") || "Deleted PIP segment");
+      return void d.notify("已删除画中画片段");
     }
     if (d.selectedTrack === "sticker") return void deleteSticker();
     if (d.selectedTrack === "image") {
-      if (!d.imageSrc || d.imageClipCount === 0) return void d.notify(d.t?.("noVisualSegmentToDelete") || "No visual segment to delete");
+      if (!d.imageSrc || d.imageClipCount === 0) return void d.notify("当前没有视觉片段可删除");
       const source = d.visualSegments.length ? d.visualSegments : [createVisualSegment(d.imageDuration || 0, d.getCurrentVisualAssetSnapshot())];
       const index = d.selectedVisualSegmentId && source.some((segment) => segment.id === d.selectedVisualSegmentId)
         ? d.selectedVisualSegmentIndex : d.currentVisualSegmentIndex >= 0 ? d.currentVisualSegmentIndex : 0;
       const next = source.filter((_, position) => position !== index);
-      return void (next.length ? d.commitVisualSegments(next, d.t?.("deletedVisualSegment") || "Deleted visual segment", Math.max(0, index - 1)) : d.clearImageTrack(d.t?.("deletedVisualSegment") || "Deleted visual segment"));
+      return void (next.length ? d.commitVisualSegments(next, "已删除当前视觉片段", Math.max(0, index - 1)) : d.clearImageTrack("已删除当前视觉片段"));
     }
     if (d.selectedTrack === "audio") {
       const id = d.selectedAudioSegmentId || d.selectedAudioSegment?.id;
-      return id ? void d.deleteAudioSegment(id) : void d.notify(d.t?.("noAudioSegmentToDelete") || "No audio segment selected");
+      return id ? void d.deleteAudioSegment(id) : void d.notify("当前没有选中的配音片段");
     }
     if (d.selectedTrack === "source") {
       if (d.sourceAudioLinked && d.selectedSourceAudioSegmentId && d.selectedSourceAudioSegmentId !== "source-audio") {
         const index = d.visualSegments.findIndex((segment) => segment.id === d.selectedSourceAudioSegmentId);
-        if (index < 0) return void d.notify(d.t?.("noSourceAudioSegmentToDelete") || "No source audio segment selected");
+        if (index < 0) return void d.notify("当前没有选中的原声音频片段");
         const next = d.visualSegments.map((segment, position) => {
           if (position !== index) return segment;
           const detached = { ...segment, sourceAudioDisabled: false };
@@ -49,14 +49,14 @@ export function createTimelineClipboardActions(d) {
         });
         const hasRemainingLinkedAudio = (d.linkedSourceAudioSegments ?? [])
           .some((segment) => segment.id !== d.selectedSourceAudioSegmentId);
-        d.commitVisualSegments(next, d.t?.("deletedSourceAudioSegment") || "Deleted source audio segment", Math.max(0, index));
+        d.commitVisualSegments(next, "已删除当前原声音频片段", Math.max(0, index));
         if (!hasRemainingLinkedAudio) d.clearSourceAudioTrack("");
         d.setSelectedSourceAudioSegmentId("");
         return;
       }
-      if (!d.selectedSourceAudioSegmentId) return void d.notify(d.t?.("noSourceAudioSegmentToDelete") || "No source audio segment selected");
+      if (!d.selectedSourceAudioSegmentId) return void d.notify("当前没有选中的原声音频片段");
       d.setSelectedSourceAudioSegmentId("");
-      return void d.clearSourceAudioTrack(d.t?.("deletedSourceAudioSegment") || "Deleted source audio segment");
+      return void d.clearSourceAudioTrack("已删除当前原声音频片段");
     }
     if (d.selectedTrack === "music") return void d.clearMusicTrack();
     d.clearImageTrack();
