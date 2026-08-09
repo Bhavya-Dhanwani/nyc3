@@ -24,21 +24,21 @@ export default function TheTutors({
 			className="w-full min-h-screen bg-[#010101] sticky top-0 left-0">
 			<div className="w-full flex items-center justify-between gap-2 pt-60 px-10">
 				<AnimatedText
-					text="Why Buisnesses Love Us"
+					text="Why Creators Love Us"
 					className="text-[200px] uppercase leading-none font-humaneMedium text-white"
 				/>
 				<h1 className="text-[22px] font-helveticaNeue leading-[0.9] text-white uppercase text-right">
 	Built to
 	<span className="text-[32px] font-bodoniseventytwo lowercase">
-		simplify
+		accelerate
 	</span>
 	<br />
-	your finances with
+	your editing with
 	<span className="text-[32px] font-bodoniseventytwo lowercase">
-		intelligent
+		local-first
 	</span>
 	<br />
-	automation.
+	AI automation.
 </h1>
 			</div>
 			<div className="slider-container w-full flex flex-col gap-10">
@@ -109,37 +109,37 @@ export default function TheTutors({
 			<div className="w-full flex items-center justify-center px-10 py-40 gap-20">
 	<div className="flex items-end">
 		<h2 className="text-[120px] uppercase leading-[0.8] text-[#5546FF] font-humaneMedium">
-			SAVE
+			10X
 		</h2>
 		<p className="text-white/50 uppercase text-[16px] py-2 px-4">
-			Hours<br />Every Week
+			Faster<br />Production
 		</p>
 	</div>
 
 	<div className="flex items-end">
 		<h2 className="text-[120px] uppercase leading-[0.8] text-[#FF7BCA] font-humaneMedium">
-			SMART
+			14+
 		</h2>
 		<p className="text-white/50 uppercase text-[16px] py-2 px-4">
-			AI<br />Automation
+			AI Voice<br />Languages
 		</p>
 	</div>
 
 	<div className="flex items-end">
 		<h2 className="text-[120px] uppercase leading-[0.8] text-[#BFFF0A] font-humaneMedium">
-			TRACK
+			2-HRS
 		</h2>
 		<p className="text-white/50 uppercase text-[16px] py-2 px-4">
-			Payments<br />Instantly
+			Stream Clip<br />Auto Detection
 		</p>
 	</div>
 
 	<div className="flex items-end">
 		<h2 className="text-[120px] uppercase leading-[0.8] text-white font-humaneMedium">
-			GROW
+			100%
 		</h2>
 		<p className="text-white/50 uppercase text-[16px] py-2 px-4">
-			Your<br />Business
+			Browser<br />Privacy
 		</p>
 	</div>
 </div>

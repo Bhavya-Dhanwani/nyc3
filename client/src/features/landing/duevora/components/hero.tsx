@@ -16,7 +16,7 @@ export default function Hero({
 		>
 			<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
 				<h1 className="text-[45vw] uppercase leading-none tracking-[-5] font-humaneMedium text-white relative">
-					duevora
+					katitor
 					<div className="absolute bottom-28 -right-16">
 						<div className="relative">
 							<motion.img
@@ -29,14 +29,14 @@ export default function Hero({
 									},
 								}}
 								src={"/duevora/circlerotation.svg"}
-								alt="Duevora"
+								alt="Katitor"
 								width={250}
 								height={250}
 								className="w-[250px] h-[250px]"
 							/>
 
 							<h1 className="text-[46px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 uppercase leading-tight font-humaneMedium text-black tracking-wide">
-								DUEvora
+								KATITOR
 							</h1>
 						</div>
 					</div>
@@ -47,17 +47,17 @@ export default function Hero({
 
 <div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-center">
 	<h1 className="text-[18px] font-helveticaNeue leading-tight text-white uppercase">
-		The complete business operating system for{" "}
+		The browser-first AI video studio for{" "}
 		<span className="text-[24px] font-bodoniseventytwo leading-tight lowercase">
-			MSMEs
+			creators
 		</span>
 		.
 		<br />
-		Manage inventory, sales, purchases, and{" "}
+		Generate voiceovers, auto-captions, 9:16 shorts, and{" "}
 		<span className="text-[24px] font-bodoniseventytwo leading-tight lowercase">
-			grow
+			export
 		</span>{" "}
-		your business.
+		instantly.
 	</h1>
 </div>
 

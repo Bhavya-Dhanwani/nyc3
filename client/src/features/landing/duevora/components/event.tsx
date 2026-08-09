@@ -34,19 +34,19 @@ export default function Workflow({
 				</span>
 
 				<h1 className="text-[22px] font-helveticaNeue leading-[0.9] text-white uppercase text-right">
-	Streamline every business
+	Create stunning videos
 	<br />
 	with{" "}
 	<span className="text-[32px] font-bodoniseventytwo lowercase">
 		smart
 	</span>{" "}
-	workflows
+	AI tools
 	<br />
 	and{" "}
 	<span className="text-[32px] font-bodoniseventytwo lowercase">
-		complete
+		total
 	</span>{" "}
-	control.
+	creative freedom.
 </h1>
 			</div>
 

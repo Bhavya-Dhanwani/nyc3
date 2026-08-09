@@ -1,4 +1,3 @@
-import React from "react";
 import {
   ArrowClockwise,
   ArrowCounterClockwise,
@@ -14,7 +13,6 @@ import {
   FloppyDisk,
   House,
   Question,
-  CloudCheck
 } from "@phosphor-icons/react";
 
 import { RATIO_OPTIONS } from "../config/editor.js";
@@ -68,58 +66,35 @@ export function Topbar({
 }) {
   return (
     <header className="topbar">
-      {/* Left Project & Breadcrumb Cluster */}
-      <div className="project-cluster" style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+      <div className="project-cluster">
         {onBackToDashboard && (
           <button
             type="button"
             className="ghost-action"
             onClick={onBackToDashboard}
             title={t("backToDashboard") === "backToDashboard" ? "Back to Dashboard" : t("backToDashboard")}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              fontWeight: 700,
-              padding: "6px 12px",
-              borderRadius: "10px",
-              background: "rgba(255, 255, 255, 0.05)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
-              color: "#ffffff"
-            }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 600 }}
           >
-            <House size={15} weight="bold" />
-            <span style={{ fontSize: "12px", letterSpacing: "0.5px" }}>Projects</span>
+            <House size={16} />
+            <span>{t("dashboard") === "dashboard" ? "Dashboard" : t("dashboard")}</span>
           </button>
         )}
-
         <IconButton label={t("collapseSidebar")} active={compactRail} onClick={() => setCompactRail((v) => !v)}>
-          <SlidersHorizontal size={18} />
+          <SlidersHorizontal size={19} />
         </IconButton>
-
-        <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-          <div className="project-title-row" style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ color: "var(--as-text-muted)", fontSize: "12px" }}>/</span>
-            <div className="project-title" style={{ fontWeight: 700, fontSize: "13px", color: "#ffffff" }}>
-              {currentProject?.name || t("projectTitle")}
-            </div>
-
+        <div>
+          <div className="project-title-row">
+            <div className="project-title">{currentProject?.name || t("projectTitle")}</div>
             <div className="menu-anchor">
-              <button
-                className="project-file-button"
-                type="button"
-                onClick={() => setShowFileMenu((open) => !open)}
-                style={{ fontSize: "11px", opacity: 0.8 }}
-              >
-                {t("fileMenu")} <CaretDown size={11} />
+              <button className="project-file-button" type="button" onClick={() => setShowFileMenu((open) => !open)}>
+                {t("fileMenu")} <CaretDown size={13} />
               </button>
-
               {showFileMenu ? (
                 <Popover className="project-file-popover" closeLabel={t("close")} onClose={() => setShowFileMenu(false)}>
                   <div className="file-menu-card">
                     <div className="file-menu-heading">
                       <span>{t("projectMenuHeading")}</span>
-                      <small>Duevora AutoShorts</small>
+                      <small>Katitor Studio</small>
                     </div>
                     <button className="file-menu-action file-menu-new" type="button" onClick={handleNewProject}>
                       <span className="file-menu-icon"><FilePlus size={17} /></span>
@@ -142,54 +117,31 @@ export function Topbar({
               <input ref={projectFileInputRef} className="project-file-input" type="file" accept="application/zip,.timeline" onChange={(event) => event.target.files?.[0] && handleImportProject(event.target.files[0])} />
             </div>
           </div>
-
-          <div className="autosave" style={{ fontSize: "10.5px", color: "var(--as-text-muted)", display: "flex", alignItems: "center", gap: "5px" }}>
-            <ShieldCheck size={12} weight="fill" color="#34d399" />
-            <span>Saved {lastSaved}</span>
-            <span style={{ color: "rgba(255,255,255,0.2)" }}>•</span>
-            <span style={{ color: "#34d399", fontWeight: 600, display: "flex", alignItems: "center", gap: "3px" }}>
-              <CloudCheck size={12} weight="bold" /> Drive Ready
-            </span>
+          <div className="autosave">
+            <ShieldCheck size={13} weight="fill" />
+            {t("autosave")} · {lastSaved}
           </div>
         </div>
       </div>
 
-      {/* Center Ratio & Timeline Controls */}
-      <div className="topbar-center" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-        <button className="ghost-action" type="button" onClick={undo} title="Undo (Ctrl+Z)">
-          <ArrowCounterClockwise size={15} />
-          <span>{t("undo")}</span>
+      <div className="topbar-center">
+        <button className="ghost-action" type="button" onClick={undo}>
+          <ArrowCounterClockwise size={16} />
+          {t("undo")}
         </button>
-        <button className="ghost-action" type="button" onClick={redo} title="Redo (Ctrl+Y)">
-          <ArrowClockwise size={15} />
-          <span>{t("redo")}</span>
+        <button className="ghost-action" type="button" onClick={redo}>
+          <ArrowClockwise size={16} />
+          {t("redo")}
         </button>
-
-        <span className="divider" style={{ width: "1px", height: "18px", background: "rgba(255, 255, 255, 0.1)" }} />
-
-        {/* Aspect Ratio Selector */}
+        <span className="divider" />
         <div className="menu-anchor">
           <button
             className="ratio-select"
             type="button"
             onClick={() => setShowRatioMenu((open) => !open)}
-            style={{
-              padding: "5px 12px",
-              borderRadius: "8px",
-              background: "rgba(85, 70, 255, 0.12)",
-              border: "1px solid rgba(85, 70, 255, 0.35)",
-              color: "#c4b5fd",
-              fontWeight: 700,
-              fontSize: "12px",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px"
-            }}
           >
-            <span>{ratio.label}</span>
-            <CaretDown size={12} />
+            {ratio.label} <CaretDown size={14} />
           </button>
-
           {showRatioMenu ? (
             <Popover closeLabel={t("close")} onClose={() => setShowRatioMenu(false)}>
               <div className="menu-list">
@@ -214,72 +166,35 @@ export function Topbar({
         </div>
       </div>
 
-      {/* Right Action Buttons */}
-      <div className="topbar-actions" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+      <div className="topbar-actions">
         {onSaveToBackend && (
           <button
             className="ghost-action"
             type="button"
             onClick={onSaveToBackend}
             disabled={isSavingToBackend}
-            style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 600, fontSize: "12px" }}
+            style={{ display: "flex", alignItems: "center", gap: "6px", fontWeight: 600 }}
           >
-            <FloppyDisk size={15} />
-            <span>{isSavingToBackend ? "Saving..." : "Save"}</span>
+            <FloppyDisk size={16} />
+            <span>{isSavingToBackend ? (t("saving") === "saving" ? "Saving..." : t("saving")) : (t("saveProject") === "saveProject" ? "Save Project" : t("saveProject"))}</span>
           </button>
         )}
 
-        {/* Play / Pause Scrubber Bar */}
-        <button
-          className="play-toggle"
-          type="button"
-          onClick={handlePlayToggle}
-          disabled={!imageSrc}
-          style={{
-            padding: "6px 14px",
-            borderRadius: "10px",
-            background: isPlaying ? "rgba(239, 68, 68, 0.15)" : "rgba(255, 255, 255, 0.08)",
-            border: isPlaying ? "1px solid rgba(239, 68, 68, 0.4)" : "1px solid rgba(255, 255, 255, 0.15)",
-            color: isPlaying ? "#f87171" : "#ffffff",
-            fontWeight: 600,
-            fontSize: "12px",
-            display: "flex",
-            alignItems: "center",
-            gap: "6px"
-          }}
-        >
-          {isPlaying ? <Pause size={15} weight="fill" /> : <Play size={15} weight="fill" />}
+        <button className="play-toggle" type="button" onClick={handlePlayToggle} disabled={!imageSrc}>
+          {isPlaying ? <Pause size={17} weight="fill" /> : <Play size={17} weight="fill" />}
           <span>{isPlaying ? t("pause") : t("play")}</span>
         </button>
 
-        {/* Glow Export Button */}
         <div className="menu-anchor">
           <button
             className="export-trigger"
             type="button"
             onClick={() => setShowExportMenu((open) => !open)}
             disabled={exporting || !imageSrc}
-            style={{
-              padding: "7px 18px",
-              borderRadius: "12px",
-              background: "linear-gradient(135deg, #5546ff 0%, #7062ff 100%)",
-              border: "1px solid rgba(255, 255, 255, 0.25)",
-              color: "#ffffff",
-              fontWeight: 700,
-              fontSize: "12px",
-              letterSpacing: "0.5px",
-              textTransform: "uppercase",
-              boxShadow: "0 4px 20px -2px rgba(85, 70, 255, 0.5)",
-              display: "flex",
-              alignItems: "center",
-              gap: "6px",
-              cursor: "pointer"
-            }}
           >
-            <span>{exporting ? t("exporting") : t("export")}</span>
-            <CaretDown size={12} />
+            {exporting ? t("exporting") : t("export")}
+            <CaretDown size={13} />
           </button>
-
           {showExportMenu ? (
             <Popover className="export-settings-popover" closeLabel={t("close")} onClose={() => setShowExportMenu(false)}>
               <ExportSettingsPanel
@@ -298,8 +213,11 @@ export function Topbar({
         </div>
 
         {onOpenTutorial && (
-          <IconButton label="Tips & Tutorial" onClick={onOpenTutorial}>
-            <Question size={18} />
+          <IconButton
+            label="Tips & Tutorial"
+            onClick={onOpenTutorial}
+          >
+            <Question size={19} />
           </IconButton>
         )}
 
@@ -311,9 +229,8 @@ export function Topbar({
             else setShowSettings((open) => !open);
           }}
         >
-          <GearSix size={18} />
+          <GearSix size={19} />
         </IconButton>
-
         {!onOpenSettingsModal && showSettings ? (
           <Popover closeLabel={t("close")} onClose={() => setShowSettings(false)}>
             <div className="settings-panel">
@@ -377,5 +294,3 @@ export function Topbar({
     </header>
   );
 }
-
-export default Topbar;

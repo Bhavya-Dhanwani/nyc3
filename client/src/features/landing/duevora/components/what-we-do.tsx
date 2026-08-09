@@ -15,9 +15,9 @@ export default function WhatWeDo() {
 						One platform to
 						<br />
 						<span className="text-[32px] font-bodoniseventytwo lowercase">
-							manage
+							create
 						</span>{" "}
-						your finances,
+						viral videos,
 						<br />
 						powered by AI.
 					</h1>
@@ -37,11 +37,11 @@ export default function WhatWeDo() {
 
 		<div className="absolute bottom-0">
 			<h2 className="text-[130px] uppercase leading-[0.8] text-[#1c1c1c] font-humaneMedium">
-				BUSINESSES
+				STREAMERS
 			</h2>
 
 			<p className="text-lg uppercase text-[#1c1c1c] mb-8 max-w-xs">
-				From local shops to growing companies, simplify everyday finances.
+				Extract funny moments, reactions, and top plays from 2-hour livestreams automatically.
 			</p>
 		</div>
 	</div>
@@ -58,11 +58,11 @@ export default function WhatWeDo() {
 
 		<div className="absolute bottom-0">
 			<h2 className="text-[130px] uppercase leading-[0.8] text-white font-humaneMedium">
-				FREELANCERS
+				CREATORS
 			</h2>
 
 			<p className="text-lg uppercase text-white/80 mb-8 max-w-xs">
-				Track invoices, payments and expenses without spreadsheets.
+				Turn podcasts, interviews, and long broadcasts into viral 9:16 Shorts & Reels.
 			</p>
 		</div>
 	</div>
@@ -79,11 +79,11 @@ export default function WhatWeDo() {
 
 		<div className="absolute bottom-0">
 			<h2 className="text-[130px] uppercase leading-[0.8] text-[#1c1c1c] font-humaneMedium">
-				STARTUPS
+				EDITORS
 			</h2>
 
 			<p className="text-lg uppercase text-[#1c1c1c] mb-8 max-w-xs">
-				Automate financial operations so your team can focus on growth.
+				Full multi-track timeline control with Whisper captions, AI voices, and keyframes.
 			</p>
 		</div>
 	</div>

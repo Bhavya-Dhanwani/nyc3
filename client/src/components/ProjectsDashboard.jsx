@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import React, { useState, useEffect } from "react";
 import api from "../lib/api.js";
 import {
   Film,
@@ -13,14 +12,8 @@ import {
   ArrowRight,
   LogOut,
   Settings,
-  X,
-  Search,
-  Sparkles,
-  Play,
-  FileVideo,
-  AlertCircle
+  X
 } from "lucide-react";
-import { logo } from "../features/landing/duevora/assets";
 
 export function ProjectsDashboard({
   user,
@@ -30,7 +23,6 @@ export function ProjectsDashboard({
 }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -38,8 +30,6 @@ export function ProjectsDashboard({
   const [creating, setCreating] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState(null);
-  const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const fileInputRef = useRef(null);
 
   useEffect(() => {
     loadProjects();
@@ -61,9 +51,9 @@ export function ProjectsDashboard({
     }
   };
 
-  const handleCreateProject = async (fileToUpload = selectedFile, customName = projectName) => {
-    const file = fileToUpload || selectedFile;
-    if (!file) {
+  const handleCreateProject = async (e) => {
+    e.preventDefault();
+    if (!selectedFile) {
       setError("Please select a video file to upload");
       return;
     }
@@ -71,15 +61,17 @@ export function ProjectsDashboard({
     try {
       setCreating(true);
       setError(null);
-      const name = (customName || projectName).trim() || file.name.replace(/\.[^/.]+$/, "");
+      const name = projectName.trim() || selectedFile.name.replace(/\.[^/.]+$/, "");
       const initResponse = await api.post("/api/projects/init-upload", { name, captionStyle });
       const projectId = initResponse.data?.data?._id || initResponse.data?.data?.id;
       if (!projectId) throw new Error("Could not initialize the project upload");
 
       const formData = new FormData();
-      formData.append("media", file);
+      formData.append("media", selectedFile);
 
       const res = await api.post(`/api/projects/${projectId}/upload-media`, formData, {
+        // The server uploads the finished file to Drive after the browser has
+        // reached 100%, so this request must not use the short auth timeout.
         timeout: 0,
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
@@ -107,6 +99,7 @@ export function ProjectsDashboard({
   const handleDeleteProject = async (projectId, e) => {
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this project?")) return;
+
     try {
       await api.delete(`/api/projects/${projectId}`);
       setProjects((prev) => prev.filter((p) => (p._id || p.id) !== projectId));
@@ -115,262 +108,170 @@ export function ProjectsDashboard({
     }
   };
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDraggingOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0];
-      if (file.type.startsWith("video/")) {
-        setSelectedFile(file);
-        setProjectName(file.name.replace(/\.[^/.]+$/, ""));
-        setIsCreateModalOpen(true);
-      } else {
-        setError("Please drop a valid video file (MP4, MOV, WEBM)");
-      }
-    }
-  };
-
-  const filteredProjects = projects.filter((p) => {
-    const name = (p.name || p.originalName || "").toLowerCase();
-    return name.includes(searchQuery.toLowerCase());
-  });
-
-  const isDriveConnected = !!user?.googleAccessToken;
-
   return (
-    <div
-      className="min-h-screen w-full bg-[#08090d] text-white flex flex-col font-helveticaNeue"
-      onDragOver={(e) => {
-        e.preventDefault();
-        setIsDraggingOver(true);
-      }}
-      onDragLeave={(e) => {
-        if (e.currentTarget.contains(e.relatedTarget)) return;
-        setIsDraggingOver(false);
-      }}
-      onDrop={handleDrop}
-    >
-      {/* Full-Screen Drag-and-Drop Overlay */}
-      <AnimatePresence>
-        {isDraggingOver && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#0e1017]/95 backdrop-blur-xl flex flex-col items-center justify-center p-8 border-4 border-dashed border-[#5546ff] text-center pointer-events-none"
-          >
-            <Upload size={54} className="text-[#5546ff] animate-bounce mb-4" />
-            <h2 className="text-3xl font-bold font-helveticaNeue text-white tracking-tight">
-              Drop Video to Create Project
-            </h2>
-            <p className="text-xs uppercase tracking-widest text-white/70 mt-2 font-medium">
-              MP4, MOV, WEBM auto-ingest
-            </p>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Top Navbar */}
-      <header className="sticky top-0 z-40 w-full h-16 bg-[#0c0d14] border-b border-white/10 px-6 sm:px-10 flex items-center justify-between">
-        {/* Brand */}
-        <div className="flex items-center gap-3">
-          <img
-            src={logo}
-            alt="Duevora"
-            width={34}
-            height={34}
-            className="brightness-125"
-          />
-          <div className="flex flex-col">
-            <span className="font-bold text-base leading-tight tracking-tight text-white">
-              Duevora Studio
-            </span>
-            <span className="text-[10px] uppercase tracking-wider text-white/50 font-medium">
-              AI Video & Short-Form Automation
-            </span>
+    <div className="dashboard-root">
+      {/* Top Navigation */}
+      <header className="dashboard-nav">
+        <div className="dashboard-brand">
+          <div className="dashboard-logo">
+            <img src="https://ik.imagekit.io/iwuj3a7is/katitor%20logo%20HD.png" alt="Katitor Logo" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
+          </div>
+          <div>
+            <div style={{ fontWeight: 700, fontSize: "15px", color: "#ffffff", lineHeight: 1.2 }}>Katitor Studio</div>
+            <div style={{ fontSize: "11px", color: "var(--as-text-muted)" }}>AI Timeline Editor & Automation Platform</div>
           </div>
         </div>
 
-        {/* Right Controls */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          {/* Cloud Storage Pill */}
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs">
-            <Cloud size={14} className={isDriveConnected ? "text-emerald-400" : "text-white/40"} />
-            <span className="text-white/80 text-[11px] font-semibold uppercase tracking-wider">
-              {isDriveConnected ? "Drive: Synced" : "Local Storage"}
-            </span>
-            {isDriveConnected && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
-          </div>
-
-          {/* Settings Trigger */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <button
             type="button"
             onClick={onOpenSettings}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-semibold uppercase tracking-wider text-white transition-colors cursor-pointer"
-            title="Configure AI API Keys & Cloud Settings"
+            className="btn-secondary"
           >
-            <Settings size={13} />
-            <span>Settings</span>
+            <Settings size={14} />
+            <span>Settings & AI Keys</span>
           </button>
 
-          {/* User Profile & Logout */}
-          <div className="flex items-center gap-2.5 pl-3 border-l border-white/10">
-            <div className="w-7 h-7 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-white text-xs font-bold uppercase">
-              {user?.name?.[0] || user?.email?.[0] || "U"}
-            </div>
+          <div style={{ height: "18px", width: "1px", background: "var(--as-card-border)" }} />
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--as-text-secondary)" }}>
+              {user?.name || user?.email}
+            </span>
+            {user?.googleAccessToken && (
+              <span style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "2px 8px",
+                borderRadius: "999px",
+                fontSize: "10px",
+                fontWeight: 600,
+                background: "rgba(16, 185, 129, 0.12)",
+                color: "#34d399",
+                border: "1px solid rgba(16, 185, 129, 0.25)"
+              }}>
+                <CheckCircle2 size={11} />
+                <span>Drive</span>
+              </span>
+            )}
 
             <button
-              type="button"
               onClick={onLogout}
-              className="p-1.5 rounded-lg text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors cursor-pointer"
+              className="btn-secondary"
+              style={{ padding: "6px", borderRadius: "8px" }}
               title="Sign Out"
             >
-              <LogOut size={15} />
+              <LogOut size={14} />
             </button>
           </div>
         </div>
       </header>
 
-      {/* Main Content Container */}
-      <main className="flex-1 w-full max-w-6xl mx-auto px-4 sm:px-8 py-8 flex flex-col gap-6">
-        {/* Banner Card */}
-        <section className="w-full rounded-2xl p-6 sm:p-8 bg-[#0f1118] border border-white/10 shadow-lg flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="max-w-xl flex flex-col gap-1.5">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
-              <span className="text-[11px] uppercase tracking-wider font-bold text-emerald-400">
-                Workspace Dashboard
-              </span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold font-helveticaNeue tracking-tight text-white">
-              Projects & AI Shorts
-            </h1>
-            <p className="text-xs sm:text-sm text-white/60 font-normal leading-relaxed">
-              Upload long-form footage to detect viral hooks, generate auto-subtitles, and assemble multi-track 9:16 Shorts with Google Drive sync.
+      {/* Main Studio Dashboard Content */}
+      <main className="dashboard-main">
+        {/* Banner & Action Bar */}
+        <div className="dashboard-hero-card">
+          <div>
+            <h2 className="dashboard-hero-title">Projects Studio</h2>
+            <p className="dashboard-hero-desc">
+              Create video projects, run automated AI moment detection, and edit in the full timeline editor.
             </p>
           </div>
 
-          <div className="flex items-center gap-3 w-full sm:w-auto shrink-0">
-            <button
-              type="button"
-              onClick={() => setIsCreateModalOpen(true)}
-              className="w-full sm:w-auto px-6 py-3 bg-white hover:bg-neutral-100 text-black font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2 transition-all shadow-md cursor-pointer"
-            >
-              <Plus size={16} className="text-black stroke-[3]" />
-              <span className="text-black font-bold">New Video Project</span>
-            </button>
-          </div>
-        </section>
-
-        {/* Quick Search & Count */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="relative w-full sm:w-80">
-            <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-white/40" />
-            <input
-              type="text"
-              placeholder="Search projects..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 bg-[#0e1017] border border-white/10 focus:border-white/30 rounded-xl text-xs text-white placeholder-white/30 outline-none transition-colors"
-            />
-          </div>
-
-          <div className="text-xs text-white/50 uppercase tracking-wider font-semibold">
-            <span>{filteredProjects.length} Project{filteredProjects.length !== 1 ? "s" : ""}</span>
-          </div>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="btn-primary-gradient"
+          >
+            <Plus size={16} />
+            <span>New Video Project</span>
+          </button>
         </div>
 
-        {/* Projects Grid / Content */}
+        {/* Projects Grid */}
         {loading ? (
-          <div className="py-20 flex flex-col items-center justify-center gap-3 text-white/50">
-            <Loader2 size={30} className="animate-spin text-[#5546ff]" />
-            <p className="text-xs uppercase tracking-wider">Loading your projects...</p>
+          <div style={{ padding: "60px 0", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "12px", color: "var(--as-text-muted)" }}>
+            <Loader2 size={32} style={{ animation: "spin 1s linear infinite", color: "var(--as-accent-primary)" }} />
+            <p style={{ fontSize: "13px" }}>Loading your projects...</p>
           </div>
-        ) : filteredProjects.length === 0 ? (
-          <div
-            onClick={() => setIsCreateModalOpen(true)}
-            className="py-16 px-6 rounded-2xl border-2 border-dashed border-white/10 hover:border-white/20 bg-[#0e1017] transition-all flex flex-col items-center justify-center text-center cursor-pointer"
-          >
-            <div className="w-14 h-14 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center mb-3.5 text-white/60">
-              <Upload size={24} />
+        ) : projects.length === 0 ? (
+          <div style={{
+            padding: "60px 24px",
+            border: "1px dashed var(--as-card-border)",
+            borderRadius: "var(--as-radius-lg)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            textAlign: "center",
+            background: "rgba(255, 255, 255, 0.01)"
+          }}>
+            <div style={{ width: "56px", height: "56px", background: "rgba(255, 255, 255, 0.05)", borderRadius: "14px", display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "16px" }}>
+              <Film size={26} color="var(--as-text-muted)" />
             </div>
-            <h3 className="text-base font-bold text-white mb-1">
-              {searchQuery ? "No matching projects found" : "No video projects yet"}
-            </h3>
-            <p className="text-xs text-white/50 max-w-sm mb-5 leading-relaxed">
-              Drag & drop any video file here or click to create your first project.
+            <h3 style={{ fontSize: "15px", fontWeight: 600, color: "#ffffff", margin: "0 0 6px 0" }}>No Projects Yet</h3>
+            <p style={{ fontSize: "13px", color: "var(--as-text-muted)", maxWidth: "360px", margin: "0 0 18px 0" }}>
+              Upload a long-form video to start generating AI short clips and editing on the timeline.
             </p>
             <button
-              type="button"
-              className="px-5 py-2.5 bg-white text-black text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 shadow-md cursor-pointer hover:bg-neutral-100"
+              onClick={() => setIsCreateModalOpen(true)}
+              className="btn-primary-gradient"
             >
-              <Plus size={14} className="text-black stroke-[3]" />
-              <span className="text-black">Upload Video</span>
+              <Plus size={16} />
+              <span>Create Your First Project</span>
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {filteredProjects.map((project) => {
+          <div className="projects-grid">
+            {projects.map((project) => {
               const pId = project._id || project.id;
-              const durationFormatted = project.sourceDuration
-                ? `${Math.floor(project.sourceDuration / 60)}:${String(Math.floor(project.sourceDuration % 60)).padStart(2, "0")}`
-                : null;
-
               return (
                 <div
                   key={pId}
                   onClick={() => onOpenProject(project)}
-                  className="group bg-[#0e1017] hover:bg-[#12141e] border border-white/10 hover:border-white/25 rounded-2xl p-4 flex flex-col justify-between gap-4 transition-all shadow-md cursor-pointer relative"
+                  className="project-card"
                 >
-                  {/* Thumbnail / Header Frame */}
-                  <div className="relative w-full aspect-video rounded-xl overflow-hidden bg-black/60 border border-white/10 flex items-center justify-center">
-                    <Film size={32} className="text-white/20 group-hover:scale-105 transition-transform" />
-
-                    {/* Play Badge on Hover */}
-                    <div className="absolute z-20 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all shadow-lg">
-                      <Play size={16} className="fill-black ml-0.5" />
-                    </div>
-
-                    {/* Duration Badge */}
-                    {durationFormatted && (
-                      <span className="absolute bottom-2 right-2 z-20 px-2 py-0.5 rounded bg-black/80 text-[10px] font-mono text-white font-semibold border border-white/10">
-                        {durationFormatted}
-                      </span>
-                    )}
-
-                    {/* Status Pill */}
-                    <span className="absolute top-2 left-2 z-20 px-2 py-0.5 rounded bg-white/10 backdrop-blur-md text-[10px] uppercase font-bold tracking-wider text-white border border-white/15">
-                      {project.status || "Ready"}
-                    </span>
-                  </div>
-
-                  {/* Project Info */}
-                  <div className="flex flex-col gap-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-bold text-sm text-white group-hover:text-white transition-colors line-clamp-1">
+                  <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
+                    <div style={{ minWidth: 0 }}>
+                      <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {project.name || project.originalName || "Untitled Project"}
                       </h3>
-
-                      <button
-                        type="button"
-                        onClick={(e) => handleDeleteProject(pId, e)}
-                        className="p-1 rounded text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                        title="Delete project"
-                      >
-                        <Trash2 size={13} />
-                      </button>
+                      <p style={{ fontSize: "11px", color: "var(--as-text-muted)", margin: "4px 0 0 0", display: "flex", alignItems: "center", gap: "4px" }}>
+                        <Clock size={12} />
+                        <span>{project.sourceDuration ? `${project.sourceDuration.toFixed(1)}s` : "Video Project"}</span>
+                      </p>
                     </div>
 
-                    <p className="text-[11px] text-white/40 flex items-center gap-1.5">
-                      <Clock size={11} />
-                      <span>{new Date(project.updatedAt || project.createdAt || Date.now()).toLocaleDateString()}</span>
-                    </p>
+                    <button
+                      onClick={(e) => handleDeleteProject(pId, e)}
+                      style={{ background: "transparent", border: "none", color: "var(--as-text-muted)", cursor: "pointer", padding: "4px", borderRadius: "4px" }}
+                      title="Delete project"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
 
-                  {/* Action Footer */}
-                  <div className="pt-3 border-t border-white/5 flex items-center justify-between text-xs font-semibold text-white/60 group-hover:text-white">
-                    <span className="uppercase tracking-wider text-[11px]">Open In Editor</span>
-                    <ArrowRight size={13} className="group-hover:translate-x-1 transition-transform" />
+                  <div className="project-card-thumb">
+                    <Film size={32} />
+                    <div className="project-card-thumb-overlay">
+                      <span style={{ padding: "6px 14px", background: "var(--as-accent-primary)", color: "#ffffff", borderRadius: "6px", fontSize: "12px", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
+                        <span>Open in Editor</span>
+                        <ArrowRight size={14} />
+                      </span>
+                    </div>
+                  </div>
+
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "8px", borderTop: "1px solid var(--as-card-border)", fontSize: "11px", color: "var(--as-text-muted)" }}>
+                    <span style={{ textTransform: "capitalize", padding: "2px 8px", borderRadius: "4px", background: "rgba(255, 255, 255, 0.05)", color: "var(--as-text-secondary)" }}>
+                      {project.status || "Ready"}
+                    </span>
+
+                    {project.driveFolderId && (
+                      <span style={{ display: "flex", alignItems: "center", gap: "4px", color: "#34d399" }}>
+                        <Cloud size={12} />
+                        <span>Drive Synced</span>
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -379,154 +280,111 @@ export function ProjectsDashboard({
         )}
       </main>
 
-      {/* New Project Creation Modal */}
-      <AnimatePresence>
-        {isCreateModalOpen && (
-          <div
-            className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4"
-            onClick={() => {
-              if (!creating) setIsCreateModalOpen(false);
-            }}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-lg bg-[#0e1017] border border-white/15 rounded-2xl p-6 sm:p-7 shadow-2xl relative"
-            >
-              <div className="flex items-center justify-between mb-5">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-white/10 border border-white/15 flex items-center justify-center text-white">
-                    <FileVideo size={16} />
-                  </div>
-                  <h3 className="text-base font-bold text-white">
-                    New Video Project
-                  </h3>
-                </div>
-                {!creating && (
-                  <button
-                    type="button"
-                    onClick={() => setIsCreateModalOpen(false)}
-                    className="p-1 rounded-lg text-white/50 hover:text-white hover:bg-white/10"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
-              </div>
-
-              {error && (
-                <div className="mb-4 p-3 bg-red-500/15 border border-red-500/30 rounded-xl text-red-300 text-xs flex items-center gap-2">
-                  <AlertCircle size={14} className="shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleCreateProject();
-                }}
-                className="space-y-4"
+      {/* Create Project Modal */}
+      {isCreateModalOpen && (
+        <div className="modal-backdrop">
+          <div className="modal-card" style={{ maxWidth: "460px" }}>
+            <div className="modal-header">
+              <h3 style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", margin: 0 }}>Create New Project</h3>
+              <button
+                onClick={() => setIsCreateModalOpen(false)}
+                disabled={creating}
+                style={{ background: "transparent", border: "none", color: "var(--as-text-muted)", cursor: "pointer" }}
               >
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-white/70 font-semibold mb-1.5">
-                    Project Title
-                  </label>
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateProject}>
+              <div className="modal-body" style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                {error && (
+                  <div className="auth-error-banner">
+                    <span>{error}</span>
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label className="form-label">Project Title</label>
                   <input
                     type="text"
-                    placeholder="e.g. Podcast Ep 12 Viral Hooks"
+                    placeholder="e.g. Podcast Episode #1"
                     value={projectName}
                     onChange={(e) => setProjectName(e.target.value)}
-                    className="w-full h-10 px-3.5 bg-white/5 border border-white/10 focus:border-white/30 rounded-xl text-xs text-white placeholder-white/30 outline-none"
+                    className="form-input"
                   />
                 </div>
 
-                {/* File Drop Area */}
-                <div>
-                  <label className="block text-xs uppercase tracking-wider text-white/70 font-semibold mb-1.5">
-                    Source Video File
-                  </label>
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    accept="video/*"
-                    onChange={(e) => {
-                      if (e.target.files?.[0]) {
-                        setSelectedFile(e.target.files[0]);
-                        if (!projectName) {
-                          setProjectName(e.target.files[0].name.replace(/\.[^/.]+$/, ""));
+                <div className="form-group">
+                  <label className="form-label">Source Video</label>
+                  <div style={{
+                    border: "2px dashed var(--as-input-border)",
+                    borderRadius: "var(--as-radius-md)",
+                    padding: "24px 16px",
+                    textAlign: "center",
+                    background: "var(--as-input-bg)",
+                    cursor: "pointer",
+                    position: "relative"
+                  }}>
+                    <input
+                      type="file"
+                      accept="video/*,audio/*"
+                      required
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          setSelectedFile(e.target.files[0]);
+                          if (!projectName) {
+                            setProjectName(e.target.files[0].name.replace(/\.[^/.]+$/, ""));
+                          }
                         }
-                      }
-                    }}
-                    className="hidden"
-                  />
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="p-6 border-2 border-dashed border-white/15 hover:border-white/30 rounded-xl bg-white/[0.02] hover:bg-white/[0.04] text-center cursor-pointer transition-colors"
-                  >
-                    {selectedFile ? (
-                      <div className="flex items-center justify-center gap-2.5 text-white">
-                        <CheckCircle2 size={16} className="text-emerald-400" />
-                        <span className="text-xs font-semibold truncate max-w-[240px]">
-                          {selectedFile.name}
-                        </span>
-                        <span className="text-[10px] text-white/40">
-                          ({(selectedFile.size / (1024 * 1024)).toFixed(1)} MB)
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-1.5">
-                        <Upload size={20} className="text-white/50" />
-                        <span className="text-xs font-semibold text-white/80 uppercase tracking-wider">
-                          Choose Video File or Drop Here
-                        </span>
-                        <span className="text-[10px] text-white/40">MP4, MOV, WEBM</span>
-                      </div>
-                    )}
+                      }}
+                      style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }}
+                    />
+                    <Upload size={24} style={{ color: "var(--as-text-muted)", margin: "0 auto 8px auto" }} />
+                    <p style={{ fontSize: "12px", fontWeight: 500, color: "#ffffff", margin: 0 }}>
+                      {selectedFile ? selectedFile.name : "Click or drag video to upload"}
+                    </p>
+                    <p style={{ fontSize: "10px", color: "var(--as-text-muted)", margin: "4px 0 0 0" }}>MP4, MOV, WEBM, MKV up to 2GB</p>
                   </div>
                 </div>
 
-                {/* Upload Progress */}
                 {creating && (
-                  <div className="space-y-1 pt-1">
-                    <div className="flex justify-between text-xs text-white/70">
-                      <span>Uploading video...</span>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--as-text-secondary)" }}>
+                      <span>{uploadProgress === 100 ? "Syncing to Google Drive..." : "Uploading to server..."}</span>
                       <span>{uploadProgress}%</span>
                     </div>
-                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div style={{ width: "100%", height: "6px", background: "rgba(255, 255, 255, 0.1)", borderRadius: "999px", overflow: "hidden" }}>
                       <div
-                        className="h-full bg-white transition-all duration-200"
-                        style={{ width: `${uploadProgress}%` }}
+                        style={{ height: "100%", background: "var(--as-accent-primary)", width: `${uploadProgress}%`, transition: "width 0.2s ease" }}
                       />
                     </div>
                   </div>
                 )}
+              </div>
 
-                {/* Actions */}
-                <div className="pt-3 flex justify-end gap-2.5">
-                  <button
-                    type="button"
-                    disabled={creating}
-                    onClick={() => setIsCreateModalOpen(false)}
-                    className="px-4 py-2 rounded-xl border border-white/10 hover:bg-white/5 text-xs font-semibold uppercase tracking-wider text-white transition-colors cursor-pointer"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={creating || !selectedFile}
-                    className="px-5 py-2 rounded-xl bg-white hover:bg-neutral-100 disabled:opacity-50 text-xs font-bold uppercase tracking-wider text-black transition-colors flex items-center gap-1.5 shadow cursor-pointer"
-                  >
-                    {creating ? <Loader2 size={13} className="animate-spin text-black" /> : <Plus size={13} className="text-black stroke-[3]" />}
-                    <span className="text-black font-bold">{creating ? "Uploading..." : "Create Project"}</span>
-                  </button>
-                </div>
-              </form>
-            </motion.div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(false)}
+                  disabled={creating}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={creating}
+                  className="btn-primary-gradient"
+                >
+                  {creating ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <Upload size={14} />}
+                  <span>{creating ? "Uploading..." : "Create Project"}</span>
+                </button>
+              </div>
+            </form>
           </div>
-        )}
-      </AnimatePresence>
+        </div>
+      )}
     </div>
   );
 }
