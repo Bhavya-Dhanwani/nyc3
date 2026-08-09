@@ -12,7 +12,8 @@ import {
   ArrowRight,
   LogOut,
   Settings,
-  X
+  X,
+  Download
 } from "lucide-react";
 
 export function ProjectsDashboard({
@@ -23,6 +24,45 @@ export function ProjectsDashboard({
 }) {
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [deferredPrompt, setDeferredPrompt] = useState(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Check if already running in standalone mode
+    if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
+      setIsInstallable(false);
+      return;
+    }
+
+    const handleBeforeInstallPrompt = (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    window.addEventListener("appinstalled", () => {
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+    });
+
+    return () => {
+      window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    };
+  }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === "accepted") {
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+    }
+  };
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [projectName, setProjectName] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
@@ -123,6 +163,27 @@ export function ProjectsDashboard({
         </div>
 
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          {isInstallable && (
+            <button
+              type="button"
+              onClick={handleInstallClick}
+              className="btn-primary-gradient"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                fontSize: "13px",
+                fontWeight: 500,
+                cursor: "pointer"
+              }}
+            >
+              <Download size={14} />
+              <span>Install App</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={onOpenSettings}
