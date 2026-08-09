@@ -492,25 +492,17 @@ export function AiClipGeneratorPanel({
                 disabled={runningPipeline}
                 onChange={(e) => setTranscriptionProvider(e.target.value)}
                 style={{
-                  background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))",
-                  border: "1px solid rgba(139, 92, 246, 0.3)",
+                  background: "rgba(0, 0, 0, 0.4)",
+                  border: "1px solid rgba(255, 255, 255, 0.12)",
                   color: "#f4f4f5",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                  fontWeight: 500,
+                  padding: "8px",
+                  borderRadius: "6px",
+                  fontSize: "11px",
                   outline: "none",
-                  cursor: runningPipeline ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease",
-                  boxShadow: "0 2px 8px rgba(139, 92, 246, 0.15)",
-                  appearance: "none",
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 12px center",
-                  paddingRight: "32px"
+                  cursor: runningPipeline ? "not-allowed" : "pointer"
                 }}
               >
-                <option value="auto">⚡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
+                <option value="auto">âš¡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
                 <option value="groq">Groq Whisper (Ultra Fast, Large-v3)</option>
                 <option value="openai">OpenAI Whisper Cloud</option>
                 <option value="deepgram">Deepgram Nova-2</option>
@@ -777,25 +769,17 @@ export function AiClipGeneratorPanel({
                 disabled={generatingCaptions}
                 onChange={(e) => setTranscriptionProvider(e.target.value)}
                 style={{
-                  background: "linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15))",
-                  border: "1px solid rgba(139, 92, 246, 0.3)",
+                  background: "rgba(0, 0, 0, 0.4)",
+                  border: "1px solid rgba(255, 255, 255, 0.12)",
                   color: "#f4f4f5",
-                  padding: "10px 12px",
-                  borderRadius: "8px",
-                  fontSize: "12px",
-                  fontWeight: 500,
+                  padding: "8px",
+                  borderRadius: "6px",
+                  fontSize: "11px",
                   outline: "none",
-                  cursor: generatingCaptions ? "not-allowed" : "pointer",
-                  transition: "all 0.2s ease",
-                  boxShadow: "0 2px 8px rgba(139, 92, 246, 0.15)",
-                  appearance: "none",
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23a1a1aa' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E")`,
-                  backgroundRepeat: "no-repeat",
-                  backgroundPosition: "right 12px center",
-                  paddingRight: "32px"
+                  cursor: generatingCaptions ? "not-allowed" : "pointer"
                 }}
               >
-                <option value="auto">⚡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
+                <option value="auto">âš¡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
                 <option value="groq">Groq Whisper (Ultra Fast, Large-v3)</option>
                 <option value="openai">OpenAI Whisper Cloud</option>
                 <option value="deepgram">Deepgram Nova-2</option>
