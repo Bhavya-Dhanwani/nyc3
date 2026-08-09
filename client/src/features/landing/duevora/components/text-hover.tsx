@@ -20,3 +20,4 @@ export default function TextHover({ titile1, titile2 }: TtextHoverProps) {
 		</div>
 	);
 }
+
