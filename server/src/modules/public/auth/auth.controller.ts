@@ -1,4 +1,4 @@
-// Importing modules
+﻿// Importing modules
 import { Request, Response } from "express";
 import { AuthenticatedRequest, SignupRequest, LoginRequest, SessionRequest, GoogleLoginRequest, ForgotPasswordRequest, ResetPasswordRequest } from "./auth.types.js";
 import env from "../../../shared/config/env.config.js";
@@ -370,7 +370,7 @@ class AuthController {
 
         sendMail(
             email,
-            "AutoShorts — Reset Your Password",
+            "AutoShorts â€” Reset Your Password",
             `<p>Click the link below to reset your password. This link expires in ${RESET_PASSWORD_TOKEN_EXPIRY_TIME / 60000} minutes.</p>
              <p><a href="${env.FRONTEND_URL}/?resetToken=${resetToken}">Reset Password</a></p>`,
         );
@@ -462,3 +462,5 @@ class AuthController {
 }
 
 export default AuthController;
+
+

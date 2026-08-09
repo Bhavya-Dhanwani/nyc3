@@ -1,4 +1,4 @@
-// Importing module
+﻿// Importing module
 import mongoose from "mongoose";
 import { hashPassword, comparePassword } from "../utils/hashing.util.js";
 
@@ -129,3 +129,5 @@ const User = mongoose.model("User", userSchema);
 
 // exporting the user model
 export default User;
+
+
