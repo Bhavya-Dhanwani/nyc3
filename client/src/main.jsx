@@ -1,14 +1,15 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { App } from "./App.jsx";
+import AppRoot from "./AppRoot.jsx";
 import { registerModelCacheServiceWorker } from "./lib/serviceWorker.js";
 import "./styles.css";
 import "./saas.css";
+import "./landing.css";
 
 registerModelCacheServiceWorker();
 
 createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <App />
+    <AppRoot />
   </React.StrictMode>,
 );
