@@ -1,0 +1,49 @@
+{
+  "name": "autoshorts-client",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@diffusionstudio/vits-web": "^1.0.3",
+    "@ffmpeg/core": "^0.12.10",
+    "@ffmpeg/ffmpeg": "^0.12.15",
+    "@ffmpeg/util": "^0.12.2",
+    "@huggingface/transformers": "^3.8.1",
+    "@libav.js/variant-webcodecs": "^6.9.8",
+    "@mediabunny/aac-encoder": "^1.50.8",
+    "@mediapipe/tasks-vision": "^1.0.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "@tailwindcss/vite": "^4.3.3",
+    "axios": "^1.19.0",
+    "fflate": "^0.8.3",
+    "framer-motion": "^11.15.0",
+    "gsap": "^3.12.5",
+    "hangul-romanization": "^1.0.1",
+    "kokoro-js": "^1.2.1",
+    "lenis": "^1.1.18",
+    "lucide-react": "^1.30.0",
+    "mediabunny": "^1.50.8",
+    "onnxruntime-web": "^1.27.0",
+    "onnxruntime-web-migan": "npm:onnxruntime-web@^1.16.3",
+    "react": "19.2.0",
+    "react-dom": "19.2.0",
+    "react-icons": "^5.4.0",
+    "react-router": "^7.1.1",
+    "swiper": "^11.1.14",
+    "tailwindcss": "^4.3.3"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.4",
+    "typescript": "^5.3.3",
+    "vite": "^6.4.2"
+  },
+  "overrides": {
+    "sharp": "^0.35.3"
+  }
+}
