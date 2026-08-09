@@ -30,17 +30,17 @@ export default function WhoWeAre() {
 
 	return (
 		<>
-			<div className="w-full h-auto min-h-screen md:h-screen bg-greenColor pt-10 md:pt-20">
-				<div className="w-full flex flex-col md:flex-row items-center justify-between gap-5 p-10 h-full">
-					<div className="w-full md:w-1/2 flex flex-col justify-between gap-5 relative h-full">
+			<div className="w-full flex flex-col h-auto min-h-screen md:h-screen bg-greenColor pt-10 md:pt-20">
+				<div className="w-full flex-1 flex flex-col md:flex-row items-center justify-between gap-5 p-10">
+					<div className="w-full md:w-1/2 flex flex-col justify-between gap-10 md:gap-5 relative h-auto md:h-full">
 						<div className="flex flex-col">
 							<AnimatedText
     text="Why Choose"
-    className="text-[70px] sm:text-[100px] md:text-[180px] lg:text-[250px] text-[#1c1c1c] overflow-hidden leading-[0.85]"
+    className="text-[50px] sm:text-[80px] md:text-[180px] lg:text-[250px] text-[#1c1c1c] overflow-hidden leading-[0.85]"
 />
 <AnimatedText
     text="Katitor"
-    className="text-[70px] sm:text-[100px] md:text-[180px] lg:text-[250px] text-[#1c1c1c] overflow-hidden leading-[0.85]"
+    className="text-[50px] sm:text-[80px] md:text-[180px] lg:text-[250px] text-[#1c1c1c] overflow-hidden leading-[0.85]"
 />
 						</div>
 						<div className="hidden md:block absolute top-1/2 -left-1/4 -translate-y-1/2 overflow-hidden">
@@ -101,8 +101,8 @@ export default function WhoWeAre() {
 					</div>
 				</div>
 			</div>
-			<div className="w-full h-auto min-h-screen md:h-screen bg-greenColor py-10 md:py-20">
-				<div className="w-full flex flex-col md:flex-row h-full relative">
+			<div className="w-full flex flex-col h-auto min-h-screen md:h-screen bg-greenColor py-10 md:py-20">
+				<div className="w-full flex-1 flex flex-col md:flex-row relative">
 					<div
 						ref={container2Ref}
 						className="hidden md:flex w-1/4 flex-col justify-between gap-5 relative h-full">
