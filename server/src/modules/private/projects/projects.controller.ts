@@ -1,4 +1,4 @@
-// Importing modules
+﻿// Importing modules
 import fs from "fs";
 import path from "path";
 import env from "../../../shared/config/env.config.js";
@@ -772,7 +772,7 @@ class ProjectsController {
                     transcriptData = await this.transcriptionService.transcribeDeepgram(audioPath, apiKey);
                 } catch (dgErr: any) {
                     if (dgErr.response?.status === 401) {
-                        throw new BadRequest("Deepgram returned 401 Unauthorized — your API key is invalid. Please check and re-enter your Deepgram key in Settings.");
+                        throw new BadRequest("Deepgram returned 401 Unauthorized â€” your API key is invalid. Please check and re-enter your Deepgram key in Settings.");
                     }
                     throw dgErr;
                 }
@@ -1857,3 +1857,5 @@ class ProjectsController {
 }
 
 export default ProjectsController;
+
+
