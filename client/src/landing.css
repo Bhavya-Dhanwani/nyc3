@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+*{
+  scrollbar-width: none;
+}
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+@font-face {
+  font-family: "helveticaNeue";
+  src: url("/duevora/fonts/63bf3e1c32ea7b11e01bdf94_HelveticaNeue-Light.otf")
+    format("opentype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "bodoniseventytwo";
+  src: url("/duevora/fonts/63bf3e1c32ea7b80ef1bdf9f_bodoni-seventytwo-itc-book-italic.ttf")
+    format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "humaneMedium";
+  src: url("/duevora/fonts/63bf3e1c32ea7bb19e1bdfad_Humane-Medium.otf")
+    format("opentype");
+  font-display: swap;
+}
+
+.duevora-page {
+  overflow-x: hidden;
+  background-color: #000000;
+}
+
+.bg-heroColor {
+  background-color: #5546ff;
+}
+
+.bg-greenColor {
+  background-color: #b3eb16;
+}
+
+.bg-eventBgColor {
+  background-color: #1c1c1c;
+}
+
+.font-helveticaNeue {
+  font-family: "helveticaNeue", sans-serif;
+}
+
+.font-bodoniseventytwo {
+  font-family: "bodoniseventytwo", serif;
+}
+
+.font-humaneMedium {
+  font-family: "humaneMedium", sans-serif;
+}
+
+@keyframes loading {
+  from {
+    transform: translateX(-120%);
+  }
+  to {
+    transform: translateX(420%);
+  }
+}
+
+.hide-scrollbar,
+.hide-scrollbar * {
+  scrollbar-width: none !important;
+}
+.hide-scrollbar::-webkit-scrollbar,
+.hide-scrollbar *::-webkit-scrollbar {
+  display: none !important;
+}
