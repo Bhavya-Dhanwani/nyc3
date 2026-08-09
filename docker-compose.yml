@@ -46,7 +46,7 @@ services:
       - .:/app
       - client_node_modules:/app/client/node_modules
     ports:
-      - "127.0.0.1:5173:5173"
+      - "5173:5173"
     environment:
       - BACKEND_URL=http://server:5000
     depends_on:

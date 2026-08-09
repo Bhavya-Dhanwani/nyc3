@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useParams, useLocation } from "react-router";
 import { setGoogleToken } from "./lib/googleDriveClient.js";
 
 import { AuthScreen } from "./components/AuthScreen.jsx";
+import { ApiKeySetupGate } from "./components/ApiKeySetupGate.jsx";
 import { ProjectsDashboard } from "./components/ProjectsDashboard.jsx";
 import { SettingsModal } from "./components/SettingsModal.jsx";
 import { AiClipGeneratorPanel } from "./components/AiClipGeneratorPanel.jsx";
@@ -98,6 +100,11 @@ import { getMobileClipPanelOrigin } from "./lib/mobileClipActions.js";
 import { getVisualPropertyTabIds } from "./lib/visualPropertyTabs.js";
 
 export function App() {
+  const navigate = useNavigate();
+  const { projectId } = useParams();
+  const location = useLocation();
+  const isEditorRoute = location.pathname.startsWith("/editor");
+
   const [user, setUser] = useState(null);
   const [authChecking, setAuthChecking] = useState(true);
   const [currentProject, setCurrentProject] = useState(null);
@@ -128,6 +135,50 @@ export function App() {
     checkSession();
     return () => { isMounted = false; };
   }, []);
+
+  // Check URL params for OAuth callback token
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (token) {
+      setAccessToken(token);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      api.get("/api/auth/me").then((res) => {
+        if (res.data?.data) {
+          const userData = res.data.data.user || res.data.data;
+          setUser(userData);
+          if (userData?.googleAccessToken) {
+            setGoogleToken(userData.googleAccessToken);
+          }
+        }
+      }).catch(() => {});
+    }
+  }, []);
+
+  // Sync project when navigating directly to /editor/:projectId
+  useEffect(() => {
+    if (isEditorRoute) {
+      if (!projectId || projectId === "undefined") {
+        navigate("/dashboard");
+        return;
+      }
+      if (user) {
+        const currentId = currentProject?._id || currentProject?.id;
+        if (currentId !== projectId) {
+          api.get(`/api/projects/${projectId}`)
+            .then((res) => {
+              if (res.data?.data) {
+                setCurrentProject(res.data.data);
+              }
+            })
+            .catch((err) => {
+              console.error("Failed to load project from URL:", err);
+              navigate("/dashboard");
+            });
+        }
+      }
+    }
+  }, [isEditorRoute, projectId, user, navigate, currentProject]);
 
   const [uiLanguage, setUiLanguage] = useState(() => getStoredLanguage());
   const [mobilePanel, setMobilePanel] = useState("");
@@ -1180,14 +1231,12 @@ export function App() {
     visualOverlaySegments, setVisualOverlaySegments, setSelectedVisualOverlayId, trackScrollRef,
   });  // When currentProject is selected, load its media and timeline
   useEffect(() => {
-    if (!currentProject) return;
+    const pId = currentProject?._id || currentProject?.id || (projectId && projectId !== "undefined" ? projectId : null);
+    if (!pId || pId === "undefined") return;
+
     let isMounted = true;
     async function loadProjectDetails() {
       try {
-        const pId = currentProject._id || currentProject.id;
-        // The preview must not wait for Google Drive. Drive listing can take
-        // much longer than the timeline request and previously left the video
-        // state empty whenever it stalled.
         const timelineRes = await api.get(`/api/projects/${pId}/timeline`);
 
         if (isMounted && timelineRes.data?.data) {
@@ -1214,7 +1263,6 @@ export function App() {
           .catch(() => {});
 
         if (isMounted) {
-          // Trigger first visual guide/tutorial if eligible
           requestFirstVisualGuide();
         }
       } catch (err) {
@@ -1223,7 +1271,7 @@ export function App() {
     }
     loadProjectDetails();
     return () => { isMounted = false; };
-  }, [currentProject]);
+  }, [currentProject, projectId]);
   const handleSaveProjectToBackend = async () => {
     if (!currentProject) return;
     try {
@@ -1351,10 +1399,43 @@ export function App() {
     }
   };
 
+  const hasConfiguredKeys = useMemo(() => {
+    if (!user) return false;
+    const keyFields = [
+      "groqKeys", "mistralKeys", "openaiKeys", "deepgramKeys",
+      "openrouterKeys", "anthropicKeys", "deepseekKeys", "geminiKeys",
+      "groqKey", "mistralKey", "openaiKey", "deepgramKey",
+      "openrouterKey", "anthropicKey", "deepseekKey", "geminiKey"
+    ];
+    for (const f of keyFields) {
+      if (Array.isArray(user[f]) && user[f].some(k => typeof k === "string" && k.trim())) {
+        return true;
+      }
+      if (typeof user[f] === "string" && user[f].trim()) {
+        return true;
+      }
+    }
+    try {
+      const cached = localStorage.getItem("autoshorts_user_keys");
+      if (cached) {
+        const parsed = JSON.parse(cached);
+        for (const f of keyFields) {
+          if (Array.isArray(parsed[f]) && parsed[f].some(k => typeof k === "string" && k.trim())) {
+            return true;
+          }
+          if (typeof parsed[f] === "string" && parsed[f].trim()) {
+            return true;
+          }
+        }
+      }
+    } catch {}
+    return false;
+  }, [user]);
+
   if (authChecking) {
     return (
-      <div style={{ display: "flex", height: "100vh", width: "100vw", alignItems: "center", justifyContent: "center", background: "#09090b", color: "#a1a1aa", fontFamily: "sans-serif" }}>
-        <span>Loading AutoShorts Studio...</span>
+      <div style={{ display: "flex", height: "100vh", width: "100vw", alignItems: "center", justifyContent: "center", background: "#07080d", color: "#a1a1aa", fontFamily: "sans-serif" }}>
+        <span>Loading Duevora Studio...</span>
       </div>
     );
   }
@@ -1368,12 +1449,41 @@ export function App() {
     }} />;
   }
 
-  if (!currentProject) {
+  if (!hasConfiguredKeys) {
+    return (
+      <ApiKeySetupGate
+        user={user}
+        onSetupComplete={(updatedKeys) => {
+          setUser((prev) => ({ ...prev, ...updatedKeys }));
+        }}
+        onLogout={() => {
+          setAccessToken(null);
+          setUser(null);
+        }}
+      />
+    );
+  }
+
+  // If user is on /dashboard or editor project not loaded
+  if (!isEditorRoute || !currentProject) {
+    if (isEditorRoute && projectId && !currentProject) {
+      return (
+        <div style={{ minHeight: "100vh", background: "#07080d", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "16px", color: "white" }}>
+          <div style={{ width: "42px", height: "42px", border: "3px solid rgba(85,70,255,0.2)", borderTopColor: "#5546ff", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+          <p style={{ fontSize: "13px", textTransform: "uppercase", letterSpacing: "1px", color: "rgba(255,255,255,0.7)" }}>Loading Studio Editor...</p>
+        </div>
+      );
+    }
+
     return (
       <>
         <ProjectsDashboard
           user={user}
-          onOpenProject={(proj) => setCurrentProject(proj)}
+          onOpenProject={(proj) => {
+            setCurrentProject(proj);
+            const pId = proj._id || proj.id;
+            navigate(`/editor/${pId}`);
+          }}
           onOpenSettings={() => setIsSettingsModalOpen(true)}
           onLogout={() => { setAccessToken(null); setUser(null); }}
         />
@@ -1459,7 +1569,10 @@ export function App() {
         handleImportProject={handleImportProject}
         projectFileInputRef={projectFileInputRef}
         currentProject={currentProject}
-        onBackToDashboard={() => setCurrentProject(null)}
+        onBackToDashboard={() => {
+          setCurrentProject(null);
+          navigate("/dashboard");
+        }}
         onSaveToBackend={handleSaveProjectToBackend}
         isSavingToBackend={isSavingToBackend}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}

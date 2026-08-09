@@ -1,4 +1,4 @@
-﻿// Importing module
+// Importing module
 import mongoose from "mongoose";
 import { hashPassword, comparePassword } from "../utils/hashing.util.js";
 
@@ -56,46 +56,45 @@ const userSchema = new mongoose.Schema({
     },
 
     // User-provided API keys (stored securely on the user document)
-    deepgramKey: {
-        type: String,
-        default: null
+    deepgramKeys: {
+        type: [String],
+        default: []
     },
 
-    anthropicKey: {
-        type: String,
-        default: null
+    anthropicKeys: {
+        type: [String],
+        default: []
     },
 
-    deepseekKey: {
-        type: String,
-        default: null
+    deepseekKeys: {
+        type: [String],
+        default: []
     },
 
-    geminiKey: {
-        type: String,
-        default: null
+    geminiKeys: {
+        type: [String],
+        default: []
     },
 
-    openaiKey: {
-        type: String,
-        default: null
+    openaiKeys: {
+        type: [String],
+        default: []
     },
 
-    openrouterKey: {
-        type: String,
-        default: null
+    openrouterKeys: {
+        type: [String],
+        default: []
     },
 
-    groqKey: {
-        type: String,
-        default: null
+    groqKeys: {
+        type: [String],
+        default: []
     },
 
-    mistralKey: {
-        type: String,
-        default: null
+    mistralKeys: {
+        type: [String],
+        default: []
     }
-
 
 
 }, {
@@ -104,6 +103,28 @@ const userSchema = new mongoose.Schema({
 
 // adding a pre-save hook to hash the password before saving the user
 userSchema.pre("save", async function() {
+
+    // Migrate old string keys to new array fields for backward compatibility
+    const keyMap = [
+        { old: 'deepgramKey', new: 'deepgramKeys' },
+        { old: 'anthropicKey', new: 'anthropicKeys' },
+        { old: 'deepseekKey', new: 'deepseekKeys' },
+        { old: 'geminiKey', new: 'geminiKeys' },
+        { old: 'openaiKey', new: 'openaiKeys' },
+        { old: 'openrouterKey', new: 'openrouterKeys' },
+        { old: 'groqKey', new: 'groqKeys' },
+        { old: 'mistralKey', new: 'mistralKeys' }
+    ];
+
+    for (const { old, new: newField } of keyMap) {
+        if (this.get(old) && typeof this.get(old) === 'string') {
+            const arr = this.get(newField) || [];
+            if (!arr.includes(this.get(old))) {
+                this.set(newField, [...arr, this.get(old)]);
+            }
+            this.set(old, undefined);
+        }
+    }
 
     // checking if the password is modified or exists
     if (!this.isModified("password") || !this.password) return;

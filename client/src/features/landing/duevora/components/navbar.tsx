@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Link } from "react-router";
 import { motion } from "framer-motion";
 import { logo } from "../assets";
 import Button from "./button";
@@ -26,7 +27,6 @@ export default function Navbar() {
 		};
 
 		window.addEventListener("scroll", handleScroll);
-
 		return () => window.removeEventListener("scroll", handleScroll);
 	}, []);
 
@@ -38,35 +38,40 @@ export default function Navbar() {
 				duration: 0.4,
 				ease: [0.25, 1, 0.5, 1],
 			}}
-			className="fixed top-0 left-0 z-[100] w-full px-10 py-5 backdrop-blur-sm"
+			className="fixed top-0 left-0 z-[100] w-full px-6 sm:px-10 py-5 backdrop-blur-md bg-black/10"
 		>
 			<div className="relative flex items-center justify-between">
-				<div className="flex flex-col gap-2">
+				<Link to="/" className="flex flex-col gap-1">
 					<img
 						src={logo}
 						alt="Duevora Logo"
-						width={50}
-						height={50}
+						width={48}
+						height={48}
 						className="brightness-125"
 					/>
 
-					<p className="font-helveticaNeue text-sm uppercase tracking-tight text-white">
+					<p className="font-helveticaNeue text-xs sm:text-sm uppercase tracking-tight text-white hidden xs:block">
 						Your AI Business Copilot
 					</p>
-				</div>
+				</Link>
 
-				<div className="absolute left-1/2 -translate-x-1/2">
+				<div className="absolute left-1/2 -translate-x-1/2 hidden md:block">
 					<Menu />
 				</div>
 
-				<div className="ml-auto flex items-center gap-2">
+				<div className="ml-auto flex items-center gap-3 sm:gap-4">
 					<Button
-						title="Get Started"
+						title="Sign In"
+						to="/login"
+						variant="outline"
+					/>
+					<Button
+						title="Sign Up"
 						to="/register"
+						variant="solid"
 					/>
 				</div>
 			</div>
 		</motion.nav>
 	);
 }
-

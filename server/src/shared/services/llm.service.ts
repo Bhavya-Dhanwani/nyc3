@@ -1,4 +1,4 @@
-﻿// Importing modules
+// Importing modules
 import { ChatOpenAI } from "@langchain/openai";
 import { ChatAnthropic } from "@langchain/anthropic";
 import { ChatGroq } from "@langchain/groq";
@@ -387,11 +387,11 @@ ${compactedTranscript}`;
     async detectMomentsWithFallbackChain(
         transcript: any,
         primaryProvider: string,
-        primaryKey?: string,
+        primaryKey?: string | string[],
         modelName?: string,
         durationStyle = "mixed",
         targetCount = 6,
-        userKeys: Record<string, string> = {}
+        userKeys: Record<string, string[]> = {}
     ): Promise<CandidateResult[]> {
         const fallbackList = (env.LLM_FALLBACK_PROVIDERS || "groq,openrouter,ollama,deepseek,openai,gemini,claude")
             .split(",")
@@ -402,19 +402,34 @@ ${compactedTranscript}`;
         let lastError: Error | null = null;
 
         for (const provider of providersToTry) {
-            try {
-                const key = provider === primaryProvider.toLowerCase() ? primaryKey : userKeys[provider];
-                logger.info(`Attempting moment detection with LLM provider "${provider}"...`);
-                const model = this.createModelInstance(provider, key, modelName);
-                const candidates = await this.runLangchainModel(model, transcript, durationStyle, targetCount);
-
-                if (candidates && candidates.length > 0) {
-                    logger.info(`Successfully generated ${candidates.length} moment candidates using provider "${provider}"`);
-                    return candidates;
+            const keysForProvider = provider === primaryProvider.toLowerCase() 
+                ? (Array.isArray(primaryKey) ? primaryKey : primaryKey ? [primaryKey] : [])
+                : (userKeys[provider] || []);
+            
+            // Ensure we have at least one attempt even without keys (for ollama etc.)
+            const keysToTry = keysForProvider.length > 0 ? keysForProvider : [undefined];
+            
+            for (let ki = 0; ki < keysToTry.length; ki++) {
+                try {
+                    const key = keysToTry[ki];
+                    logger.info(`Attempting moment detection with provider "${provider}" (key ${ki + 1}/${keysToTry.length})...`);
+                    const model = this.createModelInstance(provider, key, modelName);
+                    const candidates = await this.runLangchainModel(model, transcript, durationStyle, targetCount);
+                    if (candidates && candidates.length > 0) {
+                        logger.info(`Successfully generated ${candidates.length} candidates using provider "${provider}" (key ${ki + 1})`);
+                        return candidates;
+                    }
+                } catch (err: any) {
+                    lastError = err;
+                    const is429 = err.status === 429 || err.response?.status === 429 || 
+                                  err.message?.includes('429') || err.message?.toLowerCase().includes('rate limit');
+                    if (is429 && ki < keysToTry.length - 1) {
+                        logger.warn(`Provider "${provider}" key ${ki + 1} rate-limited (429). Trying next key...`);
+                        continue;
+                    }
+                    logger.warn(`Provider "${provider}" failed: ${err.message}. Trying next fallback...`);
+                    break;
                 }
-            } catch (err: any) {
-                lastError = err;
-                logger.warn(`Provider "${provider}" failed: ${err.message}. Trying next fallback...`);
             }
         }
 

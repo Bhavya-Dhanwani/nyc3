@@ -1,23 +1,29 @@
 /* ==========================================================================
-   AutoShorts Studio — SaaS Premium Design System & Components
+   AutoShorts Studio — Duevora Creative Design System & Tokens
    ========================================================================== */
 
 :root {
-  --as-bg: #090a0f;
-  --as-card-bg: rgba(18, 20, 29, 0.85);
-  --as-card-border: rgba(255, 255, 255, 0.08);
-  --as-input-bg: rgba(10, 12, 18, 0.9);
-  --as-input-border: rgba(255, 255, 255, 0.12);
-  --as-text-primary: #f4f4f5;
-  --as-text-secondary: #a1a1aa;
-  --as-text-muted: #71717a;
-  --as-accent-primary: #6366f1;
-  --as-accent-hover: #4f46e5;
-  --as-accent-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --as-glow: rgba(99, 102, 241, 0.35);
+  --as-bg: #07080d;
+  --as-surface: #0e1019;
+  --as-surface-hover: #161926;
+  --as-card-bg: rgba(14, 16, 25, 0.88);
+  --as-card-border: rgba(255, 255, 255, 0.09);
+  --as-card-border-hover: rgba(255, 255, 255, 0.22);
+  --as-input-bg: rgba(10, 12, 18, 0.95);
+  --as-input-border: rgba(255, 255, 255, 0.14);
+  --as-text-primary: #f4f4f6;
+  --as-text-secondary: #a1a1b0;
+  --as-text-muted: #717182;
+  --as-accent-primary: #5546ff;
+  --as-accent-hover: #4334f5;
+  --as-accent-neon: #b3eb16;
+  --as-accent-gradient: linear-gradient(135deg, #5546ff 0%, #7062ff 100%);
+  --as-neon-gradient: linear-gradient(135deg, #b3eb16 0%, #c8f830 100%);
+  --as-glow: rgba(85, 70, 255, 0.4);
+  --as-neon-glow: rgba(179, 235, 22, 0.35);
   --as-radius-sm: 8px;
   --as-radius-md: 12px;
-  --as-radius-lg: 18px;
+  --as-radius-lg: 20px;
 }
 
 /* ==========================================================================

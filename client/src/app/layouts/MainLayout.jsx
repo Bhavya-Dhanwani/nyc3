@@ -1,9 +1,5 @@
-import { Outlet } from "react-router";
+import PageTransition from "../../components/PageTransition";
 
 export default function MainLayout() {
-  return (
-    <>
-      <Outlet />
-    </>
-  );
+  return <PageTransition />;
 }

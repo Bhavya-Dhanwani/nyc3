@@ -1,4 +1,4 @@
-﻿// Importing modules
+// Importing modules
 import fs from "fs";
 import path from "path";
 import env from "../../../shared/config/env.config.js";
@@ -745,24 +745,25 @@ class ProjectsController {
             let transcriptData = null;
 
             if (provider === "groq") {
-                const apiKey = customApiKey || user?.groqKey || process.env.GROQ_API_KEY;
-                if (!apiKey) {
+                const apiKeys = [customApiKey, ...(user?.groqKeys || []), process.env.GROQ_API_KEY].filter(Boolean);
+                if (apiKeys.length === 0) {
                     throw new BadRequest("Groq API Key is missing. Please configure it in settings.");
                 }
-                transcriptData = await this.transcriptionService.transcribeGroq(audioPath, apiKey);
+                transcriptData = await this.transcriptionService.transcribeGroq(audioPath, apiKeys[0] as string);
             }
             else if (provider === "openai") {
-                const apiKey = customApiKey || user?.openaiKey || process.env.OPENAI_API_KEY;
-                if (!apiKey) {
+                const apiKeys = [customApiKey, ...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean);
+                if (apiKeys.length === 0) {
                     throw new BadRequest("OpenAI API Key is missing. Please configure it in settings.");
                 }
-                transcriptData = await this.transcriptionService.transcribeOpenAI(audioPath, apiKey);
+                transcriptData = await this.transcriptionService.transcribeOpenAI(audioPath, apiKeys[0] as string);
             }
             else if (provider === "deepgram") {
-                const apiKey = customApiKey || user?.deepgramKey || process.env.DEEPGRAM_API_KEY;
-                if (!apiKey) {
+                const apiKeys = [customApiKey, ...(user?.deepgramKeys || []), process.env.DEEPGRAM_API_KEY].filter(Boolean);
+                if (apiKeys.length === 0) {
                     throw new BadRequest("Deepgram API Key is missing. Please configure it in settings.");
                 }
+                const apiKey = apiKeys[0] as string;
                 if (apiKey.length < 20) {
                     throw new BadRequest(
                         `Your Deepgram API key appears to be corrupted or truncated (${apiKey.length} chars). Please re-enter your full API key in Settings.`
@@ -783,9 +784,9 @@ class ProjectsController {
                     transcriptData = await this.transcriptionService.transcribeLocal(audioPath, projectDir);
                 } else {
                     const keys = {
-                        groq: user?.groqKey || process.env.GROQ_API_KEY,
-                        openai: user?.openaiKey || process.env.OPENAI_API_KEY,
-                        deepgram: user?.deepgramKey || process.env.DEEPGRAM_API_KEY
+                        groq: [...(user?.groqKeys || []), process.env.GROQ_API_KEY].filter(Boolean) as string[],
+                        openai: [...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean) as string[],
+                        deepgram: [...(user?.deepgramKeys || []), process.env.DEEPGRAM_API_KEY].filter(Boolean) as string[]
                     };
                     transcriptData = await this.transcriptionService.transcribeAuto(audioPath, keys, projectDir);
                 }
@@ -793,9 +794,9 @@ class ProjectsController {
             else {
                 // "auto" mode
                 const keys = {
-                    groq: customApiKey || user?.groqKey || process.env.GROQ_API_KEY,
-                    openai: user?.openaiKey || process.env.OPENAI_API_KEY,
-                    deepgram: user?.deepgramKey || process.env.DEEPGRAM_API_KEY
+                    groq: [customApiKey, ...(user?.groqKeys || []), process.env.GROQ_API_KEY].filter(Boolean) as string[],
+                    openai: [...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean) as string[],
+                    deepgram: [...(user?.deepgramKeys || []), process.env.DEEPGRAM_API_KEY].filter(Boolean) as string[]
                 };
                 transcriptData = await this.transcriptionService.transcribeAuto(audioPath, keys, projectDir);
             }
@@ -917,20 +918,25 @@ class ProjectsController {
         try {
             const user = await this.userDao.findUserById(userId);
 
-            const userKeys: Record<string, string> = {
-                mistral: user?.mistralKey || process.env.MISTRAL_API_KEY || env.MISTRAL_API_KEY,
-                groq: user?.groqKey || process.env.GROQ_API_KEY || env.GROQ_API_KEY,
-                openrouter: user?.openrouterKey || process.env.OPENROUTER_API_KEY || env.OPENROUTER_API_KEY,
-                deepseek: user?.deepseekKey || process.env.DEEPSEEK_API_KEY,
-                openai: user?.openaiKey || process.env.OPENAI_API_KEY,
-                claude: user?.anthropicKey || process.env.ANTHROPIC_API_KEY,
-                gemini: user?.geminiKey || process.env.GEMINI_API_KEY
+            const userKeys: Record<string, string[]> = {
+                mistral: [...(user?.mistralKeys || []), process.env.MISTRAL_API_KEY, env.MISTRAL_API_KEY].filter(Boolean) as string[],
+                groq: [...(user?.groqKeys || []), process.env.GROQ_API_KEY, env.GROQ_API_KEY].filter(Boolean) as string[],
+                openrouter: [...(user?.openrouterKeys || []), process.env.OPENROUTER_API_KEY, env.OPENROUTER_API_KEY].filter(Boolean) as string[],
+                deepseek: [...(user?.deepseekKeys || []), process.env.DEEPSEEK_API_KEY].filter(Boolean) as string[],
+                openai: [...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean) as string[],
+                claude: [...(user?.anthropicKeys || []), process.env.ANTHROPIC_API_KEY].filter(Boolean) as string[],
+                gemini: [...(user?.geminiKeys || []), process.env.GEMINI_API_KEY].filter(Boolean) as string[]
             };
+
+            // Deduplicate keys for each provider
+            for (const p of Object.keys(userKeys)) {
+                userKeys[p] = [...new Set(userKeys[p])];
+            }
 
             const drafts = await this.llmService.detectMomentsWithFallbackChain(
                 transcript,
                 provider,
-                customApiKey || userKeys[provider.toLowerCase()],
+                customApiKey ? [customApiKey] : userKeys[provider.toLowerCase()],
                 modelName,
                 durationStyle,
                 clipCount,
@@ -1060,12 +1066,12 @@ class ProjectsController {
                     const audioPath = await this.mediaService.extractAudio(localVideoPath, projectDir);
 
                     const keys = {
-                        groq: req.body?.groqKey || req.body?.keys?.groqKey || user?.groqKey || process.env.GROQ_API_KEY,
-                        openai: req.body?.openaiKey || req.body?.keys?.openaiKey || user?.openaiKey || process.env.OPENAI_API_KEY,
-                        deepgram: req.body?.deepgramKey || req.body?.keys?.deepgramKey || user?.deepgramKey || process.env.DEEPGRAM_API_KEY
+                        groq: [req.body?.groqKey, req.body?.keys?.groqKey, ...(user?.groqKeys || []), process.env.GROQ_API_KEY].filter(Boolean) as string[],
+                        openai: [req.body?.openaiKey, req.body?.keys?.openaiKey, ...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean) as string[],
+                        deepgram: [req.body?.deepgramKey, req.body?.keys?.deepgramKey, ...(user?.deepgramKeys || []), process.env.DEEPGRAM_API_KEY].filter(Boolean) as string[]
                     };
 
-                    logger.info(`AutoPipeline: Resolved keys for user ${user?.email || effectiveUserId} - Groq: ${!!keys.groq}, OpenAI: ${!!keys.openai}, Deepgram: ${!!keys.deepgram}`);
+                    logger.info(`AutoPipeline: Resolved keys for user ${user?.email || effectiveUserId} - Groq: ${keys.groq.length > 0}, OpenAI: ${keys.openai.length > 0}, Deepgram: ${keys.deepgram.length > 0}`);
 
                     const progressCallback = async (msg: string, percent: number) => {
                         await updateProgress("transcribing", msg, percent);
@@ -1073,13 +1079,13 @@ class ProjectsController {
 
                     const languagePref = req.body?.language || "hinglish";
 
-                    if (transcriptionMode === "groq" && keys.groq) {
-                        transcriptData = await this.transcriptionService.transcribeGroq(audioPath, keys.groq, progressCallback, languagePref);
-                    } else if (transcriptionMode === "openai" && keys.openai) {
-                        transcriptData = await this.transcriptionService.transcribeOpenAI(audioPath, keys.openai, progressCallback, languagePref);
-                    } else if (transcriptionMode === "deepgram" && keys.deepgram) {
+                    if (transcriptionMode === "groq" && keys.groq.length > 0) {
+                        transcriptData = await this.transcriptionService.transcribeGroq(audioPath, keys.groq[0], progressCallback, languagePref);
+                    } else if (transcriptionMode === "openai" && keys.openai.length > 0) {
+                        transcriptData = await this.transcriptionService.transcribeOpenAI(audioPath, keys.openai[0], progressCallback, languagePref);
+                    } else if (transcriptionMode === "deepgram" && keys.deepgram.length > 0) {
                         await updateProgress("transcribing", "Transcribing via Deepgram Nova-2...", 20);
-                        transcriptData = await this.transcriptionService.transcribeDeepgram(audioPath, keys.deepgram);
+                        transcriptData = await this.transcriptionService.transcribeDeepgram(audioPath, keys.deepgram[0]);
                     } else if (transcriptionMode === "local") {
                         const hasLocal = await this.transcriptionService.isWhisperCliAvailable();
                         if (hasLocal) {
@@ -1089,8 +1095,8 @@ class ProjectsController {
                             transcriptData = await this.transcriptionService.transcribeAuto(audioPath, keys, projectDir);
                         }
                     } else {
-                        if (keys.groq) {
-                            transcriptData = await this.transcriptionService.transcribeGroq(audioPath, keys.groq, progressCallback, languagePref);
+                        if (keys.groq.length > 0) {
+                            transcriptData = await this.transcriptionService.transcribeGroq(audioPath, keys.groq[0], progressCallback, languagePref);
                         } else {
                             transcriptData = await this.transcriptionService.transcribeAuto(audioPath, keys, projectDir);
                         }
@@ -1137,15 +1143,20 @@ class ProjectsController {
                 await project.save();
 
                 await updateProgress("analyzing_moments", `Analyzing viral hooks and scoring moments with ${provider} AI...`, 72);
-                const userKeys: Record<string, string> = {
-                    mistral: req.body?.mistralKey || req.body?.keys?.mistralKey || user?.mistralKey || process.env.MISTRAL_API_KEY || env.MISTRAL_API_KEY,
-                    groq: req.body?.groqKey || req.body?.keys?.groqKey || user?.groqKey || process.env.GROQ_API_KEY || env.GROQ_API_KEY,
-                    openrouter: req.body?.openrouterKey || user?.openrouterKey || process.env.OPENROUTER_API_KEY || env.OPENROUTER_API_KEY,
-                    deepseek: req.body?.deepseekKey || user?.deepseekKey || process.env.DEEPSEEK_API_KEY,
-                    openai: req.body?.openaiKey || req.body?.keys?.openaiKey || user?.openaiKey || process.env.OPENAI_API_KEY,
-                    claude: req.body?.anthropicKey || user?.anthropicKey || process.env.ANTHROPIC_API_KEY,
-                    gemini: req.body?.geminiKey || user?.geminiKey || process.env.GEMINI_API_KEY
+                const userKeys: Record<string, string[]> = {
+                    mistral: [req.body?.mistralKey, req.body?.keys?.mistralKey, ...(user?.mistralKeys || []), process.env.MISTRAL_API_KEY, env.MISTRAL_API_KEY].filter(Boolean) as string[],
+                    groq: [req.body?.groqKey, req.body?.keys?.groqKey, ...(user?.groqKeys || []), process.env.GROQ_API_KEY, env.GROQ_API_KEY].filter(Boolean) as string[],
+                    openrouter: [req.body?.openrouterKey, ...(user?.openrouterKeys || []), process.env.OPENROUTER_API_KEY, env.OPENROUTER_API_KEY].filter(Boolean) as string[],
+                    deepseek: [req.body?.deepseekKey, ...(user?.deepseekKeys || []), process.env.DEEPSEEK_API_KEY].filter(Boolean) as string[],
+                    openai: [req.body?.openaiKey, req.body?.keys?.openaiKey, ...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean) as string[],
+                    claude: [req.body?.anthropicKey, ...(user?.anthropicKeys || []), process.env.ANTHROPIC_API_KEY].filter(Boolean) as string[],
+                    gemini: [req.body?.geminiKey, ...(user?.geminiKeys || []), process.env.GEMINI_API_KEY].filter(Boolean) as string[]
                 };
+
+                // Deduplicate keys for each provider
+                for (const p of Object.keys(userKeys)) {
+                    userKeys[p] = [...new Set(userKeys[p])];
+                }
 
                 const drafts = await this.llmService.detectMomentsWithFallbackChain(
                     transcriptData,

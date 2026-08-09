@@ -1,4 +1,4 @@
-﻿// Importing modules
+// Importing modules
 import axios from "axios";
 import fs from "fs";
 import path from "path";
@@ -395,40 +395,67 @@ class TranscriptionService {
     // function to transcribe audio with automatic smart provider resolution
     async transcribeAuto(
         audioPath: string,
-        keys: { groq?: string; openai?: string; deepgram?: string },
+        keys: { groq?: string | string[]; openai?: string | string[]; deepgram?: string | string[] },
         projectDir?: string
     ) {
-        const groqKey = keys.groq || process.env.GROQ_API_KEY;
-        const openaiKey = keys.openai || process.env.OPENAI_API_KEY;
-        const deepgramKey = keys.deepgram || process.env.DEEPGRAM_API_KEY;
+        const normalizeKeys = (keyParam: string | string[] | undefined, envKey: string | undefined): string[] => {
+            const arr = Array.isArray(keyParam) ? keyParam : keyParam ? [keyParam] : [];
+            if (envKey && !arr.includes(envKey)) arr.push(envKey);
+            return arr.filter(Boolean);
+        };
+
+        const groqKeys = normalizeKeys(keys.groq, process.env.GROQ_API_KEY);
+        const openaiKeys = normalizeKeys(keys.openai, process.env.OPENAI_API_KEY);
+        const deepgramKeys = normalizeKeys(keys.deepgram, process.env.DEEPGRAM_API_KEY);
 
         // 1. Prefer Groq Whisper (ultra fast, high quality whisper-large-v3)
-        if (groqKey) {
+        for (let i = 0; i < groqKeys.length; i++) {
             try {
-                logger.info("Using Groq Whisper API for transcription...");
-                return await this.transcribeGroq(audioPath, groqKey);
+                logger.info(`Using Groq Whisper API for transcription (key ${i + 1}/${groqKeys.length})...`);
+                return await this.transcribeGroq(audioPath, groqKeys[i]);
             } catch (err: any) {
+                const is429 = err.status === 429 || err.response?.status === 429 || 
+                              err.message?.includes('429') || err.message?.toLowerCase().includes('rate limit');
+                if (is429 && i < groqKeys.length - 1) {
+                    logger.warn(`Groq key ${i + 1} rate-limited (429). Trying next key...`);
+                    continue;
+                }
                 logger.warn(`Groq transcription failed (${err.message}). Trying next available provider...`);
+                break;
             }
         }
 
         // 2. OpenAI Whisper API
-        if (openaiKey) {
+        for (let i = 0; i < openaiKeys.length; i++) {
             try {
-                logger.info("Using OpenAI Whisper API for transcription...");
-                return await this.transcribeOpenAI(audioPath, openaiKey);
+                logger.info(`Using OpenAI Whisper API for transcription (key ${i + 1}/${openaiKeys.length})...`);
+                return await this.transcribeOpenAI(audioPath, openaiKeys[i]);
             } catch (err: any) {
+                const is429 = err.status === 429 || err.response?.status === 429 || 
+                              err.message?.includes('429') || err.message?.toLowerCase().includes('rate limit');
+                if (is429 && i < openaiKeys.length - 1) {
+                    logger.warn(`OpenAI key ${i + 1} rate-limited (429). Trying next key...`);
+                    continue;
+                }
                 logger.warn(`OpenAI transcription failed (${err.message}). Trying next available provider...`);
+                break;
             }
         }
 
         // 3. Deepgram API
-        if (deepgramKey) {
+        for (let i = 0; i < deepgramKeys.length; i++) {
             try {
-                logger.info("Using Deepgram API for transcription...");
-                return await this.transcribeDeepgram(audioPath, deepgramKey);
+                logger.info(`Using Deepgram API for transcription (key ${i + 1}/${deepgramKeys.length})...`);
+                return await this.transcribeDeepgram(audioPath, deepgramKeys[i]);
             } catch (err: any) {
+                const is429 = err.status === 429 || err.response?.status === 429 || 
+                              err.message?.includes('429') || err.message?.toLowerCase().includes('rate limit');
+                if (is429 && i < deepgramKeys.length - 1) {
+                    logger.warn(`Deepgram key ${i + 1} rate-limited (429). Trying next key...`);
+                    continue;
+                }
                 logger.warn(`Deepgram transcription failed (${err.message}). Trying local whisper...`);
+                break;
             }
         }
 

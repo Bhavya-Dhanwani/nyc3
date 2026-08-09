@@ -1,29 +1,33 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link, useNavigate, useLocation } from "react-router";
 import { motion } from "framer-motion";
 import gsap from "gsap";
-import { AlertCircle, ArrowRight } from "lucide-react";
-import { logo } from "../features/landing/duevora/assets";
-import api, { setAccessToken } from "../lib/api.js";
+import { ArrowLeft, AlertCircle, ArrowRight, UserPlus, LogIn } from "lucide-react";
+import { logo } from "../duevora/assets";
+import { setAccessToken } from "../../../lib/api.js";
 
-export function AuthScreen({ onAuthSuccess }) {
+export default function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Mode: login or signup
+  const isRegister = location.pathname === "/register" || location.pathname === "/signup";
   const [error, setError] = useState(null);
-  const [isReversed, setIsReversed] = useState(false);
 
+  // Check URL params for OAuth callback or errors
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     if (token) {
       setAccessToken(token);
       window.history.replaceState({}, document.title, window.location.pathname);
-      api.get("/api/auth/me").then((res) => {
-        if (res.data?.data) onAuthSuccess(res.data.data);
-      }).catch(() => {});
+      navigate("/dashboard");
     }
     if (params.get("googleError")) {
       setError("Google authentication was canceled or encountered an issue.");
       window.history.replaceState({}, document.title, window.location.pathname);
     }
-  }, [onAuthSuccess]);
+  }, [navigate]);
 
   const handleGoogleLogin = () => {
     window.location.href = "/api/auth/google";
@@ -78,7 +82,7 @@ export function AuthScreen({ onAuthSuccess }) {
     <div className="relative w-full h-screen bg-[#07080d] overflow-hidden flex flex-col font-helveticaNeue text-white select-none">
       {/* Floating Top Navbar */}
       <header className="fixed top-0 left-0 z-50 w-full px-6 sm:px-12 py-5 flex items-center justify-between pointer-events-auto">
-        <a href="/" className="flex items-center gap-3 group">
+        <Link to="/" className="flex items-center gap-3 group">
           <img
             src={logo}
             alt="Duevora Logo"
@@ -94,22 +98,42 @@ export function AuthScreen({ onAuthSuccess }) {
               AI Video & Business Copilot
             </span>
           </div>
-        </a>
+        </Link>
 
-        <div className="flex items-center gap-3">
-          <a
-            href="/"
-            className="px-5 py-2 border-[2px] border-white/70 hover:border-white hover:bg-white hover:text-black rounded-full text-xs uppercase font-medium font-helveticaNeue tracking-tight text-white transition-all duration-300 flex items-center gap-2 cursor-pointer bg-black/30 backdrop-blur-md"
+        <div className="flex items-center gap-3 sm:gap-4">
+          {/* Direct Switcher to Sign In or Sign Up */}
+          {isRegister ? (
+            <Link
+              to="/login"
+              className="px-4 sm:px-5 py-2 rounded-full border border-white/60 hover:border-white bg-white/10 hover:bg-white hover:text-black text-xs uppercase tracking-wider text-white transition-all duration-200 flex items-center gap-1.5 cursor-pointer font-medium"
+            >
+              <LogIn size={13} />
+              <span>Sign In</span>
+            </Link>
+          ) : (
+            <Link
+              to="/register"
+              className="px-4 sm:px-5 py-2 rounded-full bg-white text-black hover:bg-neutral-100 text-xs uppercase tracking-wider font-bold transition-all duration-200 flex items-center gap-1.5 cursor-pointer shadow-md"
+            >
+              <UserPlus size={13} />
+              <span>Sign Up</span>
+            </Link>
+          )}
+
+          <Link
+            to="/"
+            className="px-4 sm:px-5 py-2 border-[2px] border-white/40 hover:border-white text-white hover:bg-white/10 rounded-full text-xs uppercase font-medium font-helveticaNeue tracking-tight transition-all duration-300 flex items-center gap-2 cursor-pointer backdrop-blur-md"
           >
-            <span>Home</span>
-          </a>
+            <ArrowLeft size={14} />
+            <span className="hidden xs:inline">Home</span>
+          </Link>
         </div>
       </header>
 
       {/* 2-Part Split Layout Container */}
       <main
         className={`flex-1 w-full h-full flex flex-col ${
-          isReversed ? "lg:flex-row-reverse" : "lg:flex-row"
+          isRegister ? "lg:flex-row-reverse" : "lg:flex-row"
         } transition-all duration-500 overflow-hidden`}
       >
         {/* ======================================================== */}
@@ -236,7 +260,7 @@ export function AuthScreen({ onAuthSuccess }) {
 
                 {/* Single-line Guaranteed Text */}
                 <span className="font-helveticaNeue font-bold text-[11.5px] xs:text-xs sm:text-sm md:text-sm uppercase tracking-[0.08em] sm:tracking-[0.11em] text-black whitespace-nowrap text-center flex-1 select-none">
-                  Continue with Google & Drive
+                  {isRegister ? "Sign Up with Google & Drive" : "Continue with Google & Drive"}
                 </span>
 
                 {/* Arrow Button */}
@@ -246,10 +270,30 @@ export function AuthScreen({ onAuthSuccess }) {
               </motion.button>
             </div>
 
-            {/* Clean Tagline */}
-            <p className="text-[11px] sm:text-xs font-helveticaNeue text-white/80 uppercase tracking-wider mt-5 max-w-sm">
-              Instant access • Google Drive sync • AI timeline automation
-            </p>
+            {/* Switcher Link Underneath Button */}
+            <div className="mt-5 text-xs text-white/80 flex items-center gap-1.5">
+              {isRegister ? (
+                <>
+                  <span>Already have an account?</span>
+                  <Link
+                    to="/login"
+                    className="font-bold text-white underline hover:text-[#b3eb16] transition-colors"
+                  >
+                    Log In
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <span>Don't have an account?</span>
+                  <Link
+                    to="/register"
+                    className="font-bold text-white underline hover:text-[#b3eb16] transition-colors"
+                  >
+                    Sign Up
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -293,5 +337,3 @@ export function AuthScreen({ onAuthSuccess }) {
     </div>
   );
 }
-
-export default AuthScreen;

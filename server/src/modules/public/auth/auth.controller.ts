@@ -7,6 +7,8 @@ import SessionDao from "../../../shared/dao/session.dao.js";
 import TokenDao from "../../../shared/dao/token.dao.js";
 import NotFound from "../../../shared/errors/NotFound.error.js";
 import Unauthorized from "../../../shared/errors/Unauthorized.error.js";
+import Conflict from "../../../shared/errors/Conflict.error.js";
+import BadRequest from "../../../shared/errors/BadRequest.error.js";
 import Ok from "../../../shared/responses/Ok.response.js";
 import createSession from "../../../shared/utils/createSession.util.js";
 import { getGoogleAuthorizationUrl, getGoogleUserFromCode, verifyGoogleToken } from "../../../shared/utils/googleAuth.util.js";
@@ -27,6 +29,57 @@ class AuthController {
         this.tokenDao = new TokenDao();
 
     }
+
+    // signup with name, email, and password
+    signup = async (req: Request, res: Response) => {
+
+        const { name, email, password } = req.body;
+
+        const existingUser = await this.userDao.findUserByEmail(email);
+        if (existingUser) {
+            throw new Conflict("An account with this email already exists");
+        }
+
+        const user = await this.userDao.createUser({
+            name,
+            email,
+            password,
+            providers: ["local"],
+            isVerified: true
+        });
+
+        const { sanitizedUser, accessToken } = await createSession(user, res);
+
+        return Ok(res, "Account created successfully", {
+            user: sanitizedUser,
+            accessToken: accessToken,
+        });
+
+    };
+
+    // login with email and password
+    login = async (req: Request, res: Response) => {
+
+        const { email, password } = req.body;
+
+        const user = await this.userDao.findUserByEmail(email);
+        if (!user || !(user as any).password) {
+            throw new Unauthorized("Invalid email or password");
+        }
+
+        const isPasswordMatch = await (user as any).comparePassword(password);
+        if (!isPasswordMatch) {
+            throw new Unauthorized("Invalid email or password");
+        }
+
+        const { sanitizedUser, accessToken } = await createSession(user, res);
+
+        return Ok(res, "Logged in successfully", {
+            user: sanitizedUser,
+            accessToken: accessToken,
+        });
+
+    };
 
     // get authenticated user profile
     me = async (req: AuthenticatedRequest, res: Response) => {
@@ -195,7 +248,7 @@ class AuthController {
     googleCallback = async (req: Request, res: Response) => {
         const cookies = (req.cookies as Record<string, string>);
         const clientOrigin = cookies?.googleOAuthOrigin || env.FRONTEND_URL || "http://localhost:5173";
-        const redirectToLogin = `${clientOrigin}/?googleError=1`;
+        const redirectToLogin = `${clientOrigin}/login?googleError=1`;
 
         try {
             const { code, state, error } = req.query;
@@ -245,7 +298,7 @@ class AuthController {
             const session = await createSession(user!, res);
 
             // returning redirect to dashboard with token
-            return res.redirect(`${clientOrigin}/?token=${session.accessToken}&googleSuccess=1`);
+            return res.redirect(`${clientOrigin}/dashboard?token=${session.accessToken}&googleSuccess=1`);
         } catch (err) {
             return res.redirect(redirectToLogin);
         }
@@ -256,14 +309,14 @@ class AuthController {
         try {
             const user = req.user;
             if (!user) {
-                return res.redirect(`${env.FRONTEND_URL}/?googleError=1`);
+                return res.redirect(`${env.FRONTEND_URL}/login?googleError=1`);
             }
 
             const session = await createSession(user, res);
-            const redirectUrl = `${env.FRONTEND_URL}/?token=${session.accessToken}&googleSuccess=1`;
+            const redirectUrl = `${env.FRONTEND_URL}/dashboard?token=${session.accessToken}&googleSuccess=1`;
             return res.redirect(redirectUrl);
         } catch (err) {
-            return res.redirect(`${env.FRONTEND_URL}/?googleError=1`);
+            return res.redirect(`${env.FRONTEND_URL}/login?googleError=1`);
         }
     };
 
@@ -275,17 +328,40 @@ class AuthController {
 
         const updateData: any = {};
         const allowedKeys = [
+            "deepgramKeys", "anthropicKeys", "deepseekKeys", "geminiKeys",
+            "openaiKeys", "openrouterKeys", "groqKeys", "mistralKeys"
+        ];
+        const oldSingularKeys = [
             "deepgramKey", "anthropicKey", "deepseekKey", "geminiKey",
             "openaiKey", "openrouterKey", "groqKey", "mistralKey"
         ];
 
+        // Process plural keys
         for (const k of allowedKeys) {
             if (keys[k] !== undefined) {
+                if (Array.isArray(keys[k])) {
+                    updateData[k] = keys[k].filter((val: any) => typeof val === "string" && val.trim() !== "").map((val: string) => val.trim());
+                } else if (typeof keys[k] === "string") {
+                    const trimmed = keys[k].trim();
+                    updateData[k] = trimmed === "" ? [] : [trimmed];
+                } else {
+                    updateData[k] = [];
+                }
+            }
+        }
+        
+        // Process old singular keys for backward compatibility
+        for (const k of oldSingularKeys) {
+            if (keys[k] !== undefined) {
+                const pluralKey = k + "s";
                 if (typeof keys[k] === "string") {
                     const trimmed = keys[k].trim();
-                    updateData[k] = trimmed === "" ? null : trimmed;
-                } else {
-                    updateData[k] = keys[k] || null;
+                    if (trimmed !== "") {
+                        if (!updateData[pluralKey]) updateData[pluralKey] = [];
+                        if (!updateData[pluralKey].includes(trimmed)) {
+                            updateData[pluralKey].push(trimmed);
+                        }
+                    }
                 }
             }
         }
@@ -307,14 +383,24 @@ class AuthController {
         const uDoc = user as any;
 
         return Ok(res, "API keys retrieved successfully", {
-            deepgramKey: uDoc.deepgramKey || "",
-            anthropicKey: uDoc.anthropicKey || "",
-            deepseekKey: uDoc.deepseekKey || "",
-            geminiKey: uDoc.geminiKey || "",
-            openaiKey: uDoc.openaiKey || "",
-            openrouterKey: uDoc.openrouterKey || "",
-            groqKey: uDoc.groqKey || "",
-            mistralKey: uDoc.mistralKey || "",
+            // New array fields
+            deepgramKeys: uDoc.deepgramKeys || [],
+            anthropicKeys: uDoc.anthropicKeys || [],
+            deepseekKeys: uDoc.deepseekKeys || [],
+            geminiKeys: uDoc.geminiKeys || [],
+            openaiKeys: uDoc.openaiKeys || [],
+            openrouterKeys: uDoc.openrouterKeys || [],
+            groqKeys: uDoc.groqKeys || [],
+            mistralKeys: uDoc.mistralKeys || [],
+            // Old singular fields for backward compatibility
+            deepgramKey: (uDoc.deepgramKeys || [])[0] || "",
+            anthropicKey: (uDoc.anthropicKeys || [])[0] || "",
+            deepseekKey: (uDoc.deepseekKeys || [])[0] || "",
+            geminiKey: (uDoc.geminiKeys || [])[0] || "",
+            openaiKey: (uDoc.openaiKeys || [])[0] || "",
+            openrouterKey: (uDoc.openrouterKeys || [])[0] || "",
+            groqKey: (uDoc.groqKeys || [])[0] || "",
+            mistralKey: (uDoc.mistralKeys || [])[0] || "",
         });
 
     };

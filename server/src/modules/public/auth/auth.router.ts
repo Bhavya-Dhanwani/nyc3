@@ -1,7 +1,7 @@
 // Importing modules
 import express from "express";
 import AuthController from "./auth.controller.js";
-import { googleLoginValidators } from "./auth.validator.js";
+import { googleLoginValidators, signupValidators, loginValidators } from "./auth.validator.js";
 import authMiddleware from "../../../shared/middlewares/auth.middleware.js";
 import refreshMiddleware from "../../../shared/middlewares/refresh.middleware.js";
 
@@ -10,6 +10,21 @@ const router = express.Router();
 
 // creating a auth controller instance
 const authController = new AuthController();
+
+/*
+    @route POST /api/auth/signup
+    @desc Register a new user with email and password
+    @access Public
+*/
+router.post("/signup", signupValidators, authController.signup);
+router.post("/register", signupValidators, authController.signup);
+
+/*
+    @route POST /api/auth/login
+    @desc Log in with email and password
+    @access Public
+*/
+router.post("/login", loginValidators, authController.login);
 
 /*
     @route GET /api/auth/me

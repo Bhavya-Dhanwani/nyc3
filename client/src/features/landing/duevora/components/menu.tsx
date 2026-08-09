@@ -49,10 +49,9 @@ export default function Menu() {
 							className="flex items-center justify-between rounded-2xl border border-black/15 bg-white/20 px-5 py-4 transition-all duration-300 hover:bg-white/30"
 						>
 							<div className="flex items-center gap-4">
-								<FaGithub
-									size={28}
-									className="text-black"
-								/>
+								<span className="text-black text-[28px] flex items-center">
+									<FaGithub />
+								</span>
 
 								<span className="font-helveticaNeue text-lg uppercase text-black">
 									{dev.name}
