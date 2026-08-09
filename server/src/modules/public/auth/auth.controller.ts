@@ -1,24 +1,16 @@
-﻿// Importing modules
+// Importing modules
 import { Request, Response } from "express";
-import { AuthenticatedRequest, SignupRequest, LoginRequest, SessionRequest, GoogleLoginRequest, ForgotPasswordRequest, ResetPasswordRequest } from "./auth.types.js";
+import { AuthenticatedRequest, SessionRequest, GoogleLoginRequest } from "./auth.types.js";
 import env from "../../../shared/config/env.config.js";
 import UserDao from "../../../shared/dao/user.dao.js";
 import SessionDao from "../../../shared/dao/session.dao.js";
 import TokenDao from "../../../shared/dao/token.dao.js";
 import NotFound from "../../../shared/errors/NotFound.error.js";
 import Unauthorized from "../../../shared/errors/Unauthorized.error.js";
-import Created from "../../../shared/responses/Created.response.js";
 import Ok from "../../../shared/responses/Ok.response.js";
 import createSession from "../../../shared/utils/createSession.util.js";
 import { getGoogleAuthorizationUrl, getGoogleUserFromCode, verifyGoogleToken } from "../../../shared/utils/googleAuth.util.js";
-import sendMail from "../../../shared/utils/sendMail.util.js";
-import { generateOTPToken, generateResetPasswordToken } from "../../../shared/utils/token.util.js";
-
-// OTP expiry: 10 minutes
-const OTP_EXPIRY_TIME = 10 * 60 * 1000;
-
-// Reset token expiry: 10 minutes
-const RESET_PASSWORD_TOKEN_EXPIRY_TIME = 10 * 60 * 1000;
+import { generateResetPasswordToken } from "../../../shared/utils/token.util.js";
 
 // class to handle public authentication operations
 class AuthController {
@@ -35,83 +27,6 @@ class AuthController {
         this.tokenDao = new TokenDao();
 
     }
-
-    // signup a new user
-    signup = async (req: SignupRequest, res: Response) => {
-
-        // getting the user from the request body
-        const { name, email, password, token } = req.body;
-
-        // creating a new user using the user dao
-        const user = await this.userDao.createUser({
-            name,
-            email,
-            password,
-            providers: ["local"],
-            isVerified: token ? true : false,
-        });
-
-        // creating session and tokens
-        const { sanitizedUser, accessToken } = await createSession(user, res);
-
-        // generating the otp to verify the user email
-        const otp = generateOTPToken();
-
-        // setting otp in the database using the token dao
-        await this.tokenDao.createToken({
-            email: user.email,
-            type: "otp",
-            value: otp,
-            expiresAt: new Date(Date.now() + OTP_EXPIRY_TIME),
-        });
-
-        sendMail(
-            user.email,
-            "Verify your AutoShorts email",
-            `Your OTP is <strong>${otp}</strong>. It will expire in ${OTP_EXPIRY_TIME / 60000} minutes.`,
-        );
-
-        // returning otp verification response with access token
-        return Created(res, "Account created. OTP sent to your email for verification.", {
-            user: sanitizedUser,
-            accessToken: accessToken,
-        });
-
-    };
-
-    // login an existing user
-    login = async (req: LoginRequest, res: Response) => {
-
-        // getting the user from the request body
-        const { email, password } = req.body;
-
-        // finding the user using the user dao
-        const user = await this.userDao.findUserByEmail(email);
-
-        // checking if the user exists
-        if (!user) {
-            throw new NotFound("User not found");
-        }
-
-        // checking if the password is valid
-        const userWithAuth = user as unknown as { comparePassword(password: string): Promise<boolean> };
-        const isPasswordValid = await userWithAuth.comparePassword(password || "");
-
-        // if the password is not valid, throw an unauthorized error
-        if (!isPasswordValid) {
-            throw new Unauthorized("Invalid email or password");
-        }
-
-        // creating session and tokens
-        const { sanitizedUser, accessToken } = await createSession(user, res);
-
-        // returning the logged in user with access token
-        return Ok(res, "Logged in successfully", {
-            user: sanitizedUser,
-            accessToken: accessToken,
-        });
-
-    };
 
     // get authenticated user profile
     me = async (req: AuthenticatedRequest, res: Response) => {
@@ -350,61 +265,6 @@ class AuthController {
         } catch (err) {
             return res.redirect(`${env.FRONTEND_URL}/?googleError=1`);
         }
-    };
-
-    // send password reset email
-    forgotPassword = async (req: ForgotPasswordRequest, res: Response) => {
-
-        const { email } = req.body;
-
-        await this.tokenDao.deleteTokenByEmail(email, "reset");
-
-        const resetToken = generateResetPasswordToken();
-
-        await this.tokenDao.createToken({
-            email: email,
-            type: "reset",
-            value: resetToken,
-            expiresAt: new Date(Date.now() + RESET_PASSWORD_TOKEN_EXPIRY_TIME),
-        });
-
-        sendMail(
-            email,
-            "AutoShorts â€” Reset Your Password",
-            `<p>Click the link below to reset your password. This link expires in ${RESET_PASSWORD_TOKEN_EXPIRY_TIME / 60000} minutes.</p>
-             <p><a href="${env.FRONTEND_URL}/?resetToken=${resetToken}">Reset Password</a></p>`,
-        );
-
-        return Ok(res, "Password reset email sent successfully");
-
-    };
-
-    // reset password using token
-    resetPassword = async (req: ResetPasswordRequest, res: Response) => {
-
-        const { token, password } = req.body;
-
-        const resetToken = await this.tokenDao.findTokenByValue(token);
-
-        if (!resetToken) {
-            throw new NotFound("Reset token not found or expired.");
-        }
-
-        const tokenEmail = (resetToken as unknown as { email: string }).email;
-        const user = await this.userDao.findUserByEmail(tokenEmail);
-
-        if (!user) {
-            throw new NotFound("User not found.");
-        }
-
-        const userDoc = user as unknown as { password?: string; save(): Promise<unknown> };
-        userDoc.password = password;
-        await userDoc.save();
-
-        await this.tokenDao.deleteTokenByValue(token);
-
-        return Ok(res, "Password reset successfully");
-
     };
 
     // update user personal API keys
