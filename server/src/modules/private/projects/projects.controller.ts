@@ -1,6 +1,7 @@
 // Importing modules
 import fs from "fs";
 import path from "path";
+import os from "os";
 import env from "../../../shared/config/env.config.js";
 import logger from "../../../shared/config/logger.config.js";
 import ProjectDao from "../../../shared/dao/project.dao.js";
@@ -773,7 +774,7 @@ class ProjectsController {
                     transcriptData = await this.transcriptionService.transcribeDeepgram(audioPath, apiKey);
                 } catch (dgErr: any) {
                     if (dgErr.response?.status === 401) {
-                        throw new BadRequest("Deepgram returned 401 Unauthorized â€” your API key is invalid. Please check and re-enter your Deepgram key in Settings.");
+                        throw new BadRequest("Deepgram returned 401 Unauthorized ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â your API key is invalid. Please check and re-enter your Deepgram key in Settings.");
                     }
                     throw dgErr;
                 }
@@ -815,7 +816,9 @@ class ProjectsController {
             try {
                 const words = transcriptData.words || [];
                 const srtContent = generateSrt(words, 0, transcriptData.duration || 999999);
-                const srtPath = path.join(projectDir, "transcription.srt");
+                const sourceVideoName = path.basename(String(project.originalName || project.name || "video"));
+                const srtFilename = `${path.parse(sourceVideoName).name}.srt`;
+                const srtPath = path.join(projectDir, srtFilename);
                 fs.writeFileSync(srtPath, srtContent);
                 logger.info(`Full transcription SRT file saved to ${srtPath}`);
 
@@ -825,7 +828,7 @@ class ProjectsController {
                     await this.googleDriveService.uploadFile(
                         drive,
                         srtPath,
-                        "transcription.srt",
+                        srtFilename,
                         "text/plain",
                         "AutoShorts Studio",
                         undefined,
@@ -1113,7 +1116,9 @@ class ProjectsController {
                     try {
                         const words = transcriptData.words || [];
                         const srtContent = generateSrt(words, 0, transcriptData.duration || 999999);
-                        const srtPath = path.join(projectDir, "transcription.srt");
+                        const sourceVideoName = path.basename(String(project.originalName || project.name || "video"));
+                        const srtFilename = `${path.parse(sourceVideoName).name}.srt`;
+                        const srtPath = path.join(projectDir, srtFilename);
                         fs.writeFileSync(srtPath, srtContent);
 
                         if (drive) {
@@ -1122,7 +1127,7 @@ class ProjectsController {
                             await this.googleDriveService.uploadFile(
                                 drive,
                                 srtPath,
-                                "transcription.srt",
+                                srtFilename,
                                 "text/plain",
                                 "AutoShorts Studio",
                                 undefined,
@@ -1478,6 +1483,67 @@ class ProjectsController {
     }
 
     // get project timeline state (or initialize default timeline from source video + transcript)
+    // Persist editor-only state as one JSON file in the project Google Drive folder.
+    saveDriveTimeline = async (req: Request, res: Response) => {
+        const { projectId } = req.params;
+        const userId = (req as any).user?.userId;
+        const { timelineState } = req.body;
+        if (!timelineState) throw new BadRequest("timelineState is required");
+
+        const project = await this.projectDao.findProjectById(projectId);
+        if (!project) throw new NotFound("Project not found");
+        if (project.userId && project.userId.toString() !== userId) throw new Forbidden("You do not have access to this resource");
+
+        const user = await this.userDao.findUserById(userId);
+        const driveToken = user ? await this.googleDriveService.getValidUserToken(user) : null;
+        if (!user || !driveToken) throw new BadRequest("Google Drive must be connected to save project edits");
+
+        const drive = this.googleDriveService.getUserDriveClient(driveToken, user.googleRefreshToken);
+        const folderId = await this.googleDriveService.getOrCreateProjectFolder(drive, project.name || "Untitled Project", project.driveFolderId);
+        if (!project.driveFolderId || project.driveFolderId !== folderId) await this.projectDao.updateProjectDriveFolder(projectId, folderId);
+
+        const sourceName = path.basename(String(project.originalName || project.name || "video"));
+        const timelineFilename = `${path.parse(sourceName).name}.timeline.json`;
+        const existingFiles = await this.googleDriveService.listFilesInFolder(drive, folderId);
+        await Promise.all(existingFiles.filter((file: any) => file.name === timelineFilename).map((file: any) => this.googleDriveService.deleteFile(drive, file.id)));
+
+        const tempPath = path.join(os.tmpdir(), `katitor-timeline-${projectId}-${Date.now()}.json`);
+        try {
+            fs.writeFileSync(tempPath, JSON.stringify({ version: 1, savedAt: new Date().toISOString(), timeline: timelineState }));
+            const upload = await this.googleDriveService.uploadFile(drive, tempPath, timelineFilename, "application/json", "AutoShorts Studio", undefined, folderId);
+            if (!upload) throw new BadRequest("Could not save project edits to Google Drive");
+            return Ok(res, "Timeline saved to Google Drive", { fileId: upload.fileId, filename: timelineFilename });
+        } finally {
+            try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch {}
+        }
+    };
+
+    loadDriveTimeline = async (req: Request, res: Response) => {
+        const { projectId } = req.params;
+        const userId = (req as any).user?.userId;
+        const project = await this.projectDao.findProjectById(projectId);
+        if (!project) throw new NotFound("Project not found");
+        if (project.userId && project.userId.toString() !== userId) throw new Forbidden("You do not have access to this resource");
+
+        const user = await this.userDao.findUserById(userId);
+        const driveToken = user ? await this.googleDriveService.getValidUserToken(user) : null;
+        if (!user || !driveToken) return Ok(res, "Drive not connected", { timeline: null });
+
+        const drive = this.googleDriveService.getUserDriveClient(driveToken, user.googleRefreshToken);
+        const folderId = await this.googleDriveService.getOrCreateProjectFolder(drive, project.name || "Untitled Project", project.driveFolderId);
+        const sourceName = path.basename(String(project.originalName || project.name || "video"));
+        const timelineFilename = `${path.parse(sourceName).name}.timeline.json`;
+        const file = (await this.googleDriveService.listFilesInFolder(drive, folderId)).find((item: any) => item.name === timelineFilename);
+        if (!file) return Ok(res, "No saved Drive timeline", { timeline: null });
+
+        try {
+            const response = await drive.files.get({ fileId: file.id, alt: "media" }, { responseType: "text" });
+            const saved = typeof response.data === "string" ? JSON.parse(response.data) : response.data;
+            return Ok(res, "Timeline loaded from Google Drive", { timeline: saved?.timeline || saved, filename: timelineFilename });
+        } catch (err: any) {
+            throw new BadRequest(`Could not load saved timeline from Google Drive: ${err.message}`);
+        }
+    };
     getTimeline = async (req: Request, res: Response) => {
 
         const { projectId } = req.params;
@@ -1865,14 +1931,50 @@ class ProjectsController {
 
     }
 
+    // download/stream text or binary content of a file from the project's Google Drive folder
+    getProjectDriveFileContent = async (req: Request, res: Response) => {
+
+        const { projectId, fileId } = req.params;
+        const userId = (req as any).user?.userId;
+        const project = await this.projectDao.findProjectById(projectId);
+
+        if (!project) {
+            throw new NotFound("Project not found");
+        }
+
+        if (project.userId && project.userId.toString() !== userId) {
+            throw new Forbidden("You do not have access to this resource");
+        }
+
+        const user = await this.userDao.findUserById(userId);
+        let drive = null;
+        let driveToken = null;
+
+        if (user && user.googleAccessToken) {
+            driveToken = await this.googleDriveService.getValidUserToken(user);
+            drive = this.googleDriveService.getUserDriveClient(driveToken, user.googleRefreshToken);
+        } else {
+            drive = this.googleDriveService.getCentralDriveClient();
+        }
+
+        if (!drive) {
+            throw new BadRequest("Google Drive service not available");
+        }
+
+        try {
+            const driveRes = await drive.files.get(
+                { fileId: fileId, alt: "media" },
+                { responseType: "stream" }
+            );
+            res.setHeader("Content-Type", "text/plain; charset=utf-8");
+            driveRes.data.pipe(res);
+        } catch (err: any) {
+            logger.error(`Failed to stream Google Drive file ${fileId}: ${err.message}`);
+            throw new BadRequest(`Failed to read file from Google Drive: ${err.message}`);
+        }
+
+    }
+
 }
 
 export default ProjectsController;
-
-
-
-
-
-
-
-

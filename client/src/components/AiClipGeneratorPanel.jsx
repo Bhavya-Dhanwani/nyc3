@@ -974,7 +974,8 @@ export function AiClipGeneratorPanel({
                           start,
                           end,
                           title: candidate.title,
-                          aspectRatio: "vertical"
+                          aspectRatio: "vertical",
+                          rank: candidate.rank || index + 1
                         })}
                         className="btn-secondary"
                         style={{

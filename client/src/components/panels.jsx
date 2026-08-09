@@ -146,24 +146,32 @@ export function MediaPanel({
     if (downloadingDriveFileId) return;
     try {
       setDownloadingDriveFileId(df.id);
+      const isSrt = df.name?.toLowerCase().endsWith(".srt") || df.name?.toLowerCase().endsWith(".vtt");
+      let fileBlob;
       const token = getGoogleToken();
-      if (!token) {
-        alert("Google Drive token not found. Please reconnect Google Drive.");
-        return;
-      }
-      
-      const res = await axios.get(`https://www.googleapis.com/drive/v3/files/${df.id}?alt=media`, {
-        headers: { Authorization: `Bearer ${token}` },
-        responseType: "blob"
-      });
 
-      const fileBlob = res.data;
-      const file = new File([fileBlob], df.name, { type: df.mimeType });
-      handleFiles([file]);
-      setMediaTab("upload"); // switch to upload tab to see processing/read progress
+      if (token) {
+        const res = await axios.get(`https://www.googleapis.com/drive/v3/files/${df.id}?alt=media`, {
+          headers: { Authorization: `Bearer ${token}` },
+          responseType: "blob"
+        });
+        fileBlob = res.data;
+      } else {
+        const currentPId = (typeof window !== "undefined" && window.location.pathname.split("/").pop()) || "";
+        const res = await api.get(`/api/projects/${currentPId}/drive-files/${df.id}/content`, {
+          responseType: "blob"
+        });
+        fileBlob = res.data;
+      }
+
+      const file = new File([fileBlob], df.name, { type: isSrt ? "application/x-subrip" : (df.mimeType || "application/octet-stream") });
+      await handleFiles([file]);
+      if (!isSrt) {
+        setMediaTab("upload");
+      }
     } catch (err) {
       console.error("Failed to download Google Drive file:", err);
-      alert("Failed to retrieve file from Google Drive: " + (err.message || err));
+      alert("Failed to retrieve file from Google Drive: " + (err.response?.data?.message || err.message || err));
     } finally {
       setDownloadingDriveFileId(null);
     }
@@ -275,7 +283,9 @@ export function MediaPanel({
                 <div className="asset-row-wrap" key={df.id} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px", background: "rgba(255, 255, 255, 0.03)", borderRadius: "8px", marginBottom: "8px" }}>
                   <div style={{ flex: 1, minWidth: 0, marginRight: "8px" }}>
                     <p style={{ fontSize: "13px", fontWeight: 500, margin: 0, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap", color: "#e4e4e7" }}>{df.name}</p>
-                    <p style={{ fontSize: "10px", color: "#a1a1aa", margin: "2px 0 0 0" }}>{df.mimeType?.split("/")[1] || "media"}</p>
+                    <p style={{ fontSize: "10px", color: df.name?.toLowerCase().endsWith(".srt") ? "#38bdf8" : "#a1a1aa", margin: "2px 0 0 0" }}>
+                      {df.name?.toLowerCase().endsWith(".srt") ? "SRT Subtitles" : (df.mimeType?.split("/")[1] || "media")}
+                    </p>
                   </div>
                   
                   <button

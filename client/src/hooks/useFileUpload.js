@@ -3,6 +3,7 @@ import { MAX_TIMELINE_DURATION_SECONDS, SUPPORTED_MEDIA_TYPES } from "../config/
 import { decodeWaveform, extractVideoThumbnail, extractVideoTrackFrames, normalizeVideoForEditing } from "../lib/media.js";
 import { getMediaFileKind, isSupportedMediaFile, MEDIA_BACKENDS, probeMediaCompatibility, selectMediaBackends, shouldProbeWithLibav } from "../lib/mediaCompatibility.js";
 import { formatClock, formatTime } from "../lib/timeline.js";
+import { parseSrt } from "../lib/subtitles.js";
 
 export function shouldAutoAddImportedVisual(assets, visualSegments) {
   return Boolean(
@@ -11,10 +12,48 @@ export function shouldAutoAddImportedVisual(assets, visualSegments) {
 }
 
 export function useFileUpload(deps) {
-  return useCallback((files) => {
-    const mediaFiles = Array.from(files ?? []).filter((file) =>
+  return useCallback(async (files) => {
+    const allFiles = Array.from(files ?? []);
+    if (!allFiles.length) return;
+
+    // Check for SRT / VTT subtitle files
+    const srtFiles = allFiles.filter((file) => {
+      const name = String(file?.name || "").toLowerCase();
+      return name.endsWith(".srt") || name.endsWith(".vtt") || file.type === "application/x-subrip";
+    });
+
+    if (srtFiles.length > 0) {
+      for (const srtFile of srtFiles) {
+        try {
+          const text = await srtFile.text();
+          const result = parseSrt(text);
+          if (result.captions && result.captions.length > 0) {
+            if (deps.importCaptionSegments) {
+              deps.importCaptionSegments(result.captions, "replace", result.skipped);
+            } else {
+              deps.setCaptionsEnabled?.(true);
+              deps.setTrackVisibility?.((prev) => ({ ...prev, caption: true }));
+              deps.setCaptionSegments?.(result.captions);
+              deps.setSelectedSegmentId?.(result.captions[0]?.id || "");
+              deps.setScript?.(result.captions.map((c) => c.text).join("\n"));
+              deps.notify?.(`Loaded ${result.captions.length} captions from ${srtFile.name}`);
+            }
+          } else {
+            deps.notify?.("No valid subtitles found in SRT file");
+          }
+        } catch (err) {
+          console.warn("Failed to parse SRT file:", err);
+          deps.notify?.("Failed to parse SRT file");
+        }
+      }
+    }
+
+    const mediaFiles = allFiles.filter((file) =>
       SUPPORTED_MEDIA_TYPES.some((type) => file.type.startsWith(type)) || isSupportedMediaFile(file));
-    if (!mediaFiles.length) return void deps.notify("请选择图片、视频或音频素材");
+    if (!mediaFiles.length) {
+      if (!srtFiles.length) deps.notify?.("Please select a video, image, audio, or .srt subtitle file");
+      return;
+    }
     const assets = mediaFiles.map((file) => {
       const src = URL.createObjectURL(file); deps.imageUrlRefs.current.add(src);
       const type = getMediaFileKind(file);
