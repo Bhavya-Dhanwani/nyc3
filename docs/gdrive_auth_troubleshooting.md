@@ -8,13 +8,20 @@ If your application is not prompting users for Google Drive permissions in produ
 
 In Google’s OAuth 2.0 system, if the scopes requested in the code (e.g. `https://www.googleapis.com/auth/drive.file`) are not displayed on the consent screen, it is typically due to one of the following reasons:
 
-### 1. Missing Scopes in Google Cloud Console
+### 1. Google's Two-Screen Granular Consent Flow
+Google utilizes a **two-screen granular consent flow** for applications requesting both sign-in (email, profile) and sensitive/restricted APIs (Google Drive):
+* **Screen 1 (Basic Sign-In):** Prompts the user only for basic identity permissions (name, profile picture, email). **This is the screen shown in your screenshot.**
+* **Screen 2 (API Permissions):** Once the user clicks **"Continue"** on the first screen, Google redirects them to a second page requesting checkboxes for specific **Google Drive** scopes. 
+
+*Note: If clicking "Continue" logs you in directly without showing Screen 2, Google either automatically granted it from a previous login (revoke access at [myaccount.google.com/connections](https://myaccount.google.com/connections) to reset/test), or stripped the scopes due to the configuration issues below.*
+
+### 2. Missing Scopes in Google Cloud Console
 Google dynamically renders the OAuth consent screen based on the client configuration. If you request sensitive or restricted scopes in the code but have not explicitly configured them in your Google Cloud Console project, Google will silently strip/ignore them from the user prompt.
 
-### 2. Google Drive API is Disabled
+### 3. Google Drive API is Disabled
 If the **Google Drive API** is not enabled in the API Library for the production project, the OAuth server will not allow authorization requests for Drive scopes.
 
-### 3. Application Publishing Status (Testing vs. Production)
+### 4. Application Publishing Status (Testing vs. Production)
 * **Testing Mode:** If the app’s publishing status is "Testing," only accounts listed as **Test Users** in the Google Cloud Console can access the requested scopes.
 * **In Production (Unverified):** If the app is set to "In Production" but has not gone through Google’s Verification process for sensitive/restricted scopes, Google will block these scopes or prevent non-test users from authenticating.
 
