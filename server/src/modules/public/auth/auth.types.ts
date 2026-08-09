@@ -27,38 +27,10 @@ export interface SessionRequest extends Request {
     refreshToken?: string;
 }
 
-// Signup request body interface
-export interface SignupRequestBody {
-    name: string;
-    email: string;
-    password?: string;
-    token?: string;
-}
-
-// Login request body interface
-export interface LoginRequestBody {
-    email: string;
-    password?: string;
-}
-
 // Google login request body interface
 export interface GoogleLoginRequestBody {
     credential: string;
 }
 
-// Forgot password request body interface
-export interface ForgotPasswordRequestBody {
-    email: string;
-}
-
-// Reset password request body interface
-export interface ResetPasswordRequestBody {
-    token: string;
-    password?: string;
-}
-
-export type SignupRequest = Request<Record<string, string>, unknown, SignupRequestBody>;
-export type LoginRequest = Request<Record<string, string>, unknown, LoginRequestBody>;
 export type GoogleLoginRequest = Request<Record<string, string>, unknown, GoogleLoginRequestBody>;
-export type ForgotPasswordRequest = Request<Record<string, string>, unknown, ForgotPasswordRequestBody>;
-export type ResetPasswordRequest = Request<Record<string, string>, unknown, ResetPasswordRequestBody>;
+
