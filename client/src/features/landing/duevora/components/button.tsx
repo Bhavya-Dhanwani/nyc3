@@ -21,3 +21,4 @@ export default function Button({ title, to }: ButtonProps) {
 
 	return <button className={className}>{title}</button>;
 }
+
