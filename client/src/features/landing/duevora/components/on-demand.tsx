@@ -16,28 +16,28 @@ export default function ProductShowcase({
 				<div className="w-full flex flex-col items-center justify-center gap-10 overflow-hidden">
 					<AnimatedText
 						className="leading-none text-white text-[200px]"
-						text="Duevora"
+						text="Katitor"
 					/>
 
 					<div className="flex flex-col gap-2 items-center justify-center overflow-hidden text-center">
 						<AnimatedText
 	className="text-white leading-[0.85] text-[120px]"
-	text="Manage inventory with confidence."
+	text="Stream Clip Detection"
 />
 
 <AnimatedText
 	className="text-white leading-[0.85] text-[120px]"
-	text="Streamline sales and purchases."
+	text="Multi-Track Timeline"
 />
 
 <AnimatedText
 	className="text-white leading-[0.85] text-[120px]"
-	text="Track finances and business performance."
+	text="Multilingual AI Voice"
 />
 
 <AnimatedText
 	className="text-white leading-[0.85] text-[120px]"
-	text="Everything your business needs in one platform."
+	text="Whisper Auto Subtitles"
 />
 					</div>
 				</div>
@@ -73,9 +73,9 @@ export default function ProductShowcase({
 							{" "}
 							for{" "}
 						</span>
-						modern businesses
+						streamers, gamers & creators
 						<br />
-						to simplify finances with AI
+						to turn hours of live footage into viral clips
 					</h1>
 				</div>
 			</motion.div>

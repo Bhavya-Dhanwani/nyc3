@@ -114,10 +114,10 @@ export function ProjectsDashboard({
       <header className="dashboard-nav">
         <div className="dashboard-brand">
           <div className="dashboard-logo">
-            <Film size={20} />
+            <img src="https://ik.imagekit.io/iwuj3a7is/katitor%20logo%20HD.png" alt="Katitor Logo" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: "15px", color: "#ffffff", lineHeight: 1.2 }}>AutoShorts Studio</div>
+            <div style={{ fontWeight: 700, fontSize: "15px", color: "#ffffff", lineHeight: 1.2 }}>Katitor Studio</div>
             <div style={{ fontSize: "11px", color: "var(--as-text-muted)" }}>AI Timeline Editor & Automation Platform</div>
           </div>
         </div>

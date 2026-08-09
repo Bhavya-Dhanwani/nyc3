@@ -37,7 +37,7 @@ export default function Footer() {
 						/>
 
 						<h1 className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[60px] uppercase leading-none font-humaneMedium text-black">
-							DUEVORA
+							KATITOR
 						</h1>
 					</div>
 				</div>
@@ -45,8 +45,7 @@ export default function Footer() {
 
 			<div className="w-full flex flex-col items-center justify-center gap-8 py-32">
 				<p className="max-w-3xl text-center text-[22px] leading-relaxed uppercase font-helveticaNeue text-white/70">
-					Automate invoices, organize expenses, track payments and
-					grow your business with one intelligent finance assistant.
+					Turn 2-hour streams and long videos into viral 9:16 Shorts with AI voices and auto-captions.
 				</p>
 
 				<Button
@@ -57,7 +56,7 @@ export default function Footer() {
 
 			<div className="w-full border-t border-white/10 py-8 flex items-center justify-between">
 				<p className="text-[18px] uppercase font-helveticaNeue text-white/50">
-					© 2026 Duevora
+					© 2026 Katitor
 				</p>
 
 				<div className="flex items-center gap-10">

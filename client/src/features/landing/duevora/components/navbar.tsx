@@ -41,18 +41,23 @@ export default function Navbar() {
 			className="fixed top-0 left-0 z-[100] w-full px-10 py-5 backdrop-blur-sm"
 		>
 			<div className="relative flex items-center justify-between">
-				<div className="flex flex-col gap-2">
+				<div className="flex items-center gap-3">
 					<img
 						src={logo}
-						alt="Duevora Logo"
-						width={50}
-						height={50}
-						className="brightness-125"
+						alt="Katitor Logo"
+						width={46}
+						height={46}
+						className="object-contain max-h-[46px]"
 					/>
 
-					<p className="font-helveticaNeue text-sm uppercase tracking-tight text-white">
-						Your AI Business Copilot
-					</p>
+					<div className="flex flex-col">
+						<span className="font-helveticaNeue text-xl font-bold uppercase tracking-wider text-white leading-none">
+							Katitor
+						</span>
+						<span className="font-helveticaNeue text-[10px] uppercase tracking-tight text-white/70">
+							Your AI Business Copilot
+						</span>
+					</div>
 				</div>
 
 				<div className="absolute left-1/2 -translate-x-1/2">

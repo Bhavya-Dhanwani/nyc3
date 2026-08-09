@@ -94,7 +94,7 @@ export function Topbar({
                   <div className="file-menu-card">
                     <div className="file-menu-heading">
                       <span>{t("projectMenuHeading")}</span>
-                      <small>AutoShorts Studio</small>
+                      <small>Katitor Studio</small>
                     </div>
                     <button className="file-menu-action file-menu-new" type="button" onClick={handleNewProject}>
                       <span className="file-menu-icon"><FilePlus size={17} /></span>

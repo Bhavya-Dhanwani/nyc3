@@ -145,7 +145,7 @@ export function SettingsModal({ isOpen, onClose, user, onLogout, onKeysUpdated }
         <div className="modal-header">
           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
             <Sparkles size={18} color="var(--as-accent)" />
-            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600 }}>AutoShorts Settings</h3>
+            <h3 style={{ margin: 0, fontSize: "16px", fontWeight: 600 }}>Katitor Settings</h3>
           </div>
           <button className="btn-icon" onClick={onClose}>
             <X size={18} />

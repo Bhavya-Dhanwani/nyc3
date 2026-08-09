@@ -39,7 +39,7 @@ export default function WhoWeAre() {
     className="text-[250px] text-[#1c1c1c] overflow-hidden leading-[0.85]"
 />
 <AnimatedText
-    text="Duevora"
+    text="Katitor"
     className="text-[250px] text-[#1c1c1c] overflow-hidden leading-[0.85]"
 />
 						</div>
@@ -53,10 +53,7 @@ export default function WhoWeAre() {
 						</div>
 						<div className="w-full flex justify-end items-end">
 							<motion.p className="w-1/2 leading-tight text-lg uppercase font-helveticaNeue text-[#1c1c1c]">
-	Duevora is an all-in-one business management platform
-	built for modern MSMEs. Manage inventory, sales,
-	purchases, employees, and finances from a single,
-	intuitive workspace designed to help your business grow.
+	Turn long streams into viral 9:16 Shorts with AI voices, Whisper captions, and smart framing.
 </motion.p>
 						</div>
 					</div>
@@ -97,7 +94,7 @@ export default function WhoWeAre() {
 									className="w-[250px] h-[250px]"
 								/>
 								<h1 className="text-[50px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 uppercase leading-tight font-humaneMedium text-black">
-									DUE
+									KAT
 								</h1>
 							</div>
 						</div>
@@ -123,27 +120,27 @@ export default function WhoWeAre() {
 					<div className="w-1/2 h-full flex justify-center items-center relative z-50">
 						<div className="flex flex-col gap-14">
 							<motion.p className="text-center leading-tight tracking-tight text-[18px] uppercase font-medium font-bodoniseventytwo text-white flex items-center justify-center gap-3 flex-col">
-								WHY DUEVORA ????
+								WHY KATITOR ????
 							</motion.p>
 							<div className="w-full flex flex-col items-center justify-center overflow-hidden">
 								<AnimatedText
     className="text-[white] leading-[0.85] text-[200px] overflow-hidden"
-   text="Manage Inventory"
+    text="Stream Clips"
 />
 
 <AnimatedText
     className="text-[white] leading-[0.85] text-[200px] overflow-hidden"
-   	text="Track Sales"
+   	text="AI Voices"
 />
 
 <AnimatedText
     className="text-[#1c1c1c] leading-[0.85] text-[200px] overflow-hidden"
-    text="Simplify Operations"
+    text="Auto Subtitles"
 />
 
 <AnimatedText
     className="text-[#1c1c1c] leading-[0.85] text-[200px] overflow-hidden"
-   text="Scale Your Business"
+    text="Smart Crop"
 />
 							</div>
 						</div>

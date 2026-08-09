@@ -31,9 +31,9 @@ export function AuthScreen({ onAuthSuccess }) {
         {/* Logo & Brand Header */}
         <div className="auth-header">
           <div className="auth-logo-badge">
-            <Film size={26} />
+            <img src="https://ik.imagekit.io/iwuj3a7is/katitor%20logo%20HD.png" alt="Katitor Logo" style={{ width: "34px", height: "34px", objectFit: "contain" }} />
           </div>
-          <h1 className="auth-title">AutoShorts Studio</h1>
+          <h1 className="auth-title">Katitor Studio</h1>
           <p className="auth-subtitle">AI Video Editor & Multi-Clip Automation Platform</p>
         </div>
 
