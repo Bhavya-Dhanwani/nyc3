@@ -15,28 +15,28 @@ export default function ProductShowcase({
 			<div className="w-full h-screen flex items-center justify-center">
 				<div className="w-full flex flex-col items-center justify-center gap-10 overflow-hidden">
 					<AnimatedText
-						className="leading-none text-white text-[200px]"
+						className="leading-none text-white text-[100px] sm:text-[140px] md:text-[180px] lg:text-[200px]"
 						text="Katitor"
 					/>
 
 					<div className="flex flex-col gap-2 items-center justify-center overflow-hidden text-center">
 						<AnimatedText
-	className="text-white leading-[0.85] text-[120px]"
+	className="text-white leading-[0.85] text-[60px] sm:text-[80px] md:text-[100px] lg:text-[120px]"
 	text="Stream Clip Detection"
 />
 
 <AnimatedText
-	className="text-white leading-[0.85] text-[120px]"
+	className="text-white leading-[0.85] text-[60px] sm:text-[80px] md:text-[100px] lg:text-[120px]"
 	text="Multi-Track Timeline"
 />
 
 <AnimatedText
-	className="text-white leading-[0.85] text-[120px]"
+	className="text-white leading-[0.85] text-[60px] sm:text-[80px] md:text-[100px] lg:text-[120px]"
 	text="Multilingual AI Voice"
 />
 
 <AnimatedText
-	className="text-white leading-[0.85] text-[120px]"
+	className="text-white leading-[0.85] text-[60px] sm:text-[80px] md:text-[100px] lg:text-[120px]"
 	text="Whisper Auto Subtitles"
 />
 					</div>

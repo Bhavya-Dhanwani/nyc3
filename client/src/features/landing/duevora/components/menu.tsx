@@ -19,7 +19,7 @@ const developers = [
 export default function Menu() {
 	const [hidden, setHidden] = useState(true);
 	const menuRef = useRef<HTMLDivElement | null>(null);
-	const [menuHeight, setMenuHeight] = useState(360);
+	const [menuHeight, setMenuHeight] = useState(272);
 
 	useEffect(() => {
 		if (menuRef.current) {
