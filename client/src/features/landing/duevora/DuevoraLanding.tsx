@@ -17,7 +17,10 @@ export default function DuevoraLanding() {
 	const container = useRef<HTMLDivElement | null>(null);
 	const container1 = useRef<HTMLDivElement | null>(null);
 	useEffect(() => {
-		const lenis = new Lenis();
+		if (typeof window !== "undefined" && window.innerWidth < 768) return;
+		const lenis = new Lenis({
+			syncTouch: true,
+		});
 		function raf(time: number) {
 			lenis.raf(time);
 			requestAnimationFrame(raf);
