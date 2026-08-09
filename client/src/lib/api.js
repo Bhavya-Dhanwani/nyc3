@@ -44,7 +44,14 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url?.includes("/api/auth/")) {
+    const isAuthExclude = originalRequest.url?.includes("/api/auth/login") ||
+                          originalRequest.url?.includes("/api/auth/register") ||
+                          originalRequest.url?.includes("/api/auth/signup") ||
+                          originalRequest.url?.includes("/api/auth/refresh") ||
+                          originalRequest.url?.includes("/api/auth/logout") ||
+                          originalRequest.url?.includes("/api/auth/google");
+
+    if (error.response?.status === 401 && !originalRequest._retry && !isAuthExclude) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });

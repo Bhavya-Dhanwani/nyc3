@@ -174,7 +174,7 @@ export function ApiKeySetupGate({ user, onSetupComplete, onLogout }) {
             <Sparkles size={20} className="text-white" />
           </div>
           <div>
-            <h2 className="font-humaneMedium text-3xl sm:text-4xl uppercase leading-none tracking-tight text-white">
+            <h2 className="font-bold text-xl sm:text-2xl uppercase leading-none tracking-[0.05em] text-white">
               KATITOR STUDIO SETUP
             </h2>
             <p className="text-xs text-white/60 uppercase tracking-wider">

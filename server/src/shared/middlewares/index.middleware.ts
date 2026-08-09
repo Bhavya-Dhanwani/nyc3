@@ -17,9 +17,9 @@ function applyMiddlewares(app) {
     // to parse cookies (required for the httpOnly refresh token)
     app.use(cookieParser());
 
-    app.use(express.json({ limit: "50mb" })); // to parse incoming requests with JSON payloads
-
-    app.use(express.urlencoded({ extended: true, limit: "50mb" })); // to parse incoming requests with URL-encoded payloads
+    app.use(express.json({ limit: "10mb" })); // to parse incoming requests with JSON payloads
+    
+    app.use(express.urlencoded({ extended: true, limit: "10mb" })); // to parse incoming requests with URL-encoded payloads
 
     // initialize passport
     setupPassport();

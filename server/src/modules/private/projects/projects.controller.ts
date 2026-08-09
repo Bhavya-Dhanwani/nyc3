@@ -746,21 +746,21 @@ class ProjectsController {
             let transcriptData = null;
 
             if (provider === "groq") {
-                const apiKeys = [customApiKey, ...(user?.groqKeys || []), process.env.GROQ_API_KEY].filter(Boolean);
+                const apiKeys = [customApiKey, ...(user?.groqKeys || [])].filter(Boolean);
                 if (apiKeys.length === 0) {
                     throw new BadRequest("Groq API Key is missing. Please configure it in settings.");
                 }
                 transcriptData = await this.transcriptionService.transcribeGroq(audioPath, apiKeys[0] as string);
             }
             else if (provider === "openai") {
-                const apiKeys = [customApiKey, ...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean);
+                const apiKeys = [customApiKey, ...(user?.openaiKeys || [])].filter(Boolean);
                 if (apiKeys.length === 0) {
                     throw new BadRequest("OpenAI API Key is missing. Please configure it in settings.");
                 }
                 transcriptData = await this.transcriptionService.transcribeOpenAI(audioPath, apiKeys[0] as string);
             }
             else if (provider === "deepgram") {
-                const apiKeys = [customApiKey, ...(user?.deepgramKeys || []), process.env.DEEPGRAM_API_KEY].filter(Boolean);
+                const apiKeys = [customApiKey, ...(user?.deepgramKeys || [])].filter(Boolean);
                 if (apiKeys.length === 0) {
                     throw new BadRequest("Deepgram API Key is missing. Please configure it in settings.");
                 }
@@ -774,30 +774,35 @@ class ProjectsController {
                     transcriptData = await this.transcriptionService.transcribeDeepgram(audioPath, apiKey);
                 } catch (dgErr: any) {
                     if (dgErr.response?.status === 401) {
-                        throw new BadRequest("Deepgram returned 401 Unauthorized ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â your API key is invalid. Please check and re-enter your Deepgram key in Settings.");
+                        throw new BadRequest("Deepgram returned 401 Unauthorized ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â your API key is invalid. Please check and re-enter your Deepgram key in Settings.");
                     }
                     throw dgErr;
                 }
             }
             else if (provider === "local") {
+                const keys = {
+                    groq: [...(user?.groqKeys || [])].filter(Boolean) as string[],
+                    openai: [...(user?.openaiKeys || [])].filter(Boolean) as string[],
+                    deepgram: [...(user?.deepgramKeys || [])].filter(Boolean) as string[]
+                };
                 const hasLocal = await this.transcriptionService.isWhisperCliAvailable();
                 if (hasLocal) {
-                    transcriptData = await this.transcriptionService.transcribeLocal(audioPath, projectDir);
+                    try {
+                        transcriptData = await this.transcriptionService.transcribeLocal(audioPath, projectDir);
+                    } catch (err: any) {
+                        logger.warn(`Local Whisper failed (${err.message}). Trying Groq backup...`);
+                        transcriptData = await this.transcriptionService.transcribeAuto(audioPath, keys, projectDir);
+                    }
                 } else {
-                    const keys = {
-                        groq: [...(user?.groqKeys || []), process.env.GROQ_API_KEY].filter(Boolean) as string[],
-                        openai: [...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean) as string[],
-                        deepgram: [...(user?.deepgramKeys || []), process.env.DEEPGRAM_API_KEY].filter(Boolean) as string[]
-                    };
                     transcriptData = await this.transcriptionService.transcribeAuto(audioPath, keys, projectDir);
                 }
             }
             else {
                 // "auto" mode
                 const keys = {
-                    groq: [customApiKey, ...(user?.groqKeys || []), process.env.GROQ_API_KEY].filter(Boolean) as string[],
-                    openai: [...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean) as string[],
-                    deepgram: [...(user?.deepgramKeys || []), process.env.DEEPGRAM_API_KEY].filter(Boolean) as string[]
+                    groq: [customApiKey, ...(user?.groqKeys || [])].filter(Boolean) as string[],
+                    openai: [...(user?.openaiKeys || [])].filter(Boolean) as string[],
+                    deepgram: [...(user?.deepgramKeys || [])].filter(Boolean) as string[]
                 };
                 transcriptData = await this.transcriptionService.transcribeAuto(audioPath, keys, projectDir);
             }
@@ -923,10 +928,10 @@ class ProjectsController {
 
             const userKeys: Record<string, string[]> = {
                 mistral: [...(user?.mistralKeys || []), process.env.MISTRAL_API_KEY, env.MISTRAL_API_KEY].filter(Boolean) as string[],
-                groq: [...(user?.groqKeys || []), process.env.GROQ_API_KEY, env.GROQ_API_KEY].filter(Boolean) as string[],
+                groq: [...(user?.groqKeys || [])].filter(Boolean) as string[],
                 openrouter: [...(user?.openrouterKeys || []), process.env.OPENROUTER_API_KEY, env.OPENROUTER_API_KEY].filter(Boolean) as string[],
                 deepseek: [...(user?.deepseekKeys || []), process.env.DEEPSEEK_API_KEY].filter(Boolean) as string[],
-                openai: [...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean) as string[],
+                openai: [...(user?.openaiKeys || [])].filter(Boolean) as string[],
                 claude: [...(user?.anthropicKeys || []), process.env.ANTHROPIC_API_KEY].filter(Boolean) as string[],
                 gemini: [...(user?.geminiKeys || []), process.env.GEMINI_API_KEY].filter(Boolean) as string[]
             };
@@ -1069,9 +1074,9 @@ class ProjectsController {
                     const audioPath = await this.mediaService.extractAudio(localVideoPath, projectDir);
 
                     const keys = {
-                        groq: [req.body?.groqKey, req.body?.keys?.groqKey, ...(user?.groqKeys || []), process.env.GROQ_API_KEY].filter(Boolean) as string[],
-                        openai: [req.body?.openaiKey, req.body?.keys?.openaiKey, ...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean) as string[],
-                        deepgram: [req.body?.deepgramKey, req.body?.keys?.deepgramKey, ...(user?.deepgramKeys || []), process.env.DEEPGRAM_API_KEY].filter(Boolean) as string[]
+                        groq: [req.body?.groqKey, req.body?.keys?.groqKey, ...(user?.groqKeys || [])].filter(Boolean) as string[],
+                        openai: [req.body?.openaiKey, req.body?.keys?.openaiKey, ...(user?.openaiKeys || [])].filter(Boolean) as string[],
+                        deepgram: [req.body?.deepgramKey, req.body?.keys?.deepgramKey, ...(user?.deepgramKeys || [])].filter(Boolean) as string[]
                     };
 
                     logger.info(`AutoPipeline: Resolved keys for user ${user?.email || effectiveUserId} - Groq: ${keys.groq.length > 0}, OpenAI: ${keys.openai.length > 0}, Deepgram: ${keys.deepgram.length > 0}`);
@@ -1150,10 +1155,10 @@ class ProjectsController {
                 await updateProgress("analyzing_moments", `Analyzing viral hooks and scoring moments with ${provider} AI...`, 72);
                 const userKeys: Record<string, string[]> = {
                     mistral: [req.body?.mistralKey, req.body?.keys?.mistralKey, ...(user?.mistralKeys || []), process.env.MISTRAL_API_KEY, env.MISTRAL_API_KEY].filter(Boolean) as string[],
-                    groq: [req.body?.groqKey, req.body?.keys?.groqKey, ...(user?.groqKeys || []), process.env.GROQ_API_KEY, env.GROQ_API_KEY].filter(Boolean) as string[],
+                    groq: [req.body?.groqKey, req.body?.keys?.groqKey, ...(user?.groqKeys || [])].filter(Boolean) as string[],
                     openrouter: [req.body?.openrouterKey, ...(user?.openrouterKeys || []), process.env.OPENROUTER_API_KEY, env.OPENROUTER_API_KEY].filter(Boolean) as string[],
                     deepseek: [req.body?.deepseekKey, ...(user?.deepseekKeys || []), process.env.DEEPSEEK_API_KEY].filter(Boolean) as string[],
-                    openai: [req.body?.openaiKey, req.body?.keys?.openaiKey, ...(user?.openaiKeys || []), process.env.OPENAI_API_KEY].filter(Boolean) as string[],
+                    openai: [req.body?.openaiKey, req.body?.keys?.openaiKey, ...(user?.openaiKeys || [])].filter(Boolean) as string[],
                     claude: [req.body?.anthropicKey, ...(user?.anthropicKeys || []), process.env.ANTHROPIC_API_KEY].filter(Boolean) as string[],
                     gemini: [req.body?.geminiKey, ...(user?.geminiKeys || []), process.env.GEMINI_API_KEY].filter(Boolean) as string[]
                 };

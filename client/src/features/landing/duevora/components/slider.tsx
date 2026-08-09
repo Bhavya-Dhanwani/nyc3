@@ -1,7 +1,6 @@
 "use client";
 import "swiper/css";
 import { useRef } from "react";
-import Sticky from "./sticky";
 import { eventItems } from "../constants";
 import { Navigation } from "swiper/modules";
 import type { Swiper as SwiperType } from "swiper";
@@ -94,7 +93,6 @@ export default function Slider() {
 								</div>
 							</SwiperSlide>
 						))}
-						<Sticky />
 					</Swiper>
 				</div>
 			</div>

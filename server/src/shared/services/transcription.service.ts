@@ -398,17 +398,27 @@ class TranscriptionService {
         keys: { groq?: string | string[]; openai?: string | string[]; deepgram?: string | string[] },
         projectDir?: string
     ) {
-        const normalizeKeys = (keyParam: string | string[] | undefined, envKey: string | undefined): string[] => {
+        const normalizeKeys = (keyParam: string | string[] | undefined): string[] => {
             const arr = Array.isArray(keyParam) ? keyParam : keyParam ? [keyParam] : [];
-            if (envKey && !arr.includes(envKey)) arr.push(envKey);
             return arr.filter(Boolean);
         };
 
-        const groqKeys = normalizeKeys(keys.groq, process.env.GROQ_API_KEY);
-        const openaiKeys = normalizeKeys(keys.openai, process.env.OPENAI_API_KEY);
-        const deepgramKeys = normalizeKeys(keys.deepgram, process.env.DEEPGRAM_API_KEY);
+        const groqKeys = normalizeKeys(keys.groq);
+        const openaiKeys = normalizeKeys(keys.openai);
+        const deepgramKeys = normalizeKeys(keys.deepgram);
 
-        // 1. Prefer Groq Whisper (ultra fast, high quality whisper-large-v3)
+        // Prefer local Whisper so normal transcription works without a cloud key.
+        const hasLocalCli = await this.isWhisperCliAvailable();
+        if (hasLocalCli) {
+            try {
+                logger.info("Using local Whisper CLI for transcription...");
+                return await this.transcribeLocal(audioPath, projectDir);
+            } catch (err: any) {
+                logger.warn(`Local Whisper transcription failed (${err.message}). Trying Groq backup...`);
+            }
+        }
+
+        // 1. Groq Whisper cloud backup
         for (let i = 0; i < groqKeys.length; i++) {
             try {
                 logger.info(`Using Groq Whisper API for transcription (key ${i + 1}/${groqKeys.length})...`);
@@ -459,16 +469,8 @@ class TranscriptionService {
             }
         }
 
-        // 4. Try local CLI if available
-        const hasLocalCli = await this.isWhisperCliAvailable();
-        if (hasLocalCli) {
-            logger.info("Using local Whisper CLI for transcription...");
-            return await this.transcribeLocal(audioPath, projectDir);
-        }
-
-        // 5. If no provider worked
         throw new Error(
-            "Transcription could not start: Local Whisper CLI is not installed in the server environment, and no API Key (Groq, OpenAI, or Deepgram) was found. Please add a Groq, OpenAI, or Deepgram API Key in Settings."
+            "Transcription failed: local Whisper was unavailable or failed, and no working Groq, OpenAI, or Deepgram API key was available."
         );
     }
 
@@ -484,7 +486,8 @@ class TranscriptionService {
             const outputJsonPath = path.join(audioDir, `${audioStem}.json`);
 
             // constructing the whisper CLI command
-            const cmd = `whisper "${audioPathBuf}" --model base --output_format json --output_dir "${audioDir}" --word_timestamps True`;
+            const model = process.env.WHISPER_MODEL || "base";
+            const cmd = `whisper "${audioPathBuf}" --model ${model} --output_format json --output_dir "${audioDir}" --word_timestamps True`;
 
             logger.info(`running local whisper command: ${cmd}`);
 
@@ -609,5 +612,3 @@ class TranscriptionService {
 }
 
 export default TranscriptionService;
-
-
