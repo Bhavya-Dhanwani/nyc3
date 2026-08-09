@@ -14,6 +14,9 @@ export default function Slider() {
 				<div className="overflow-hidden">
 					<Swiper
 						modules={[Navigation]}
+						grabCursor={true}
+						simulateTouch={true}
+						touchStartPreventDefault={false}
 						breakpoints={{
 							0: {
 								slidesPerView: 1,

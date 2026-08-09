@@ -25,7 +25,8 @@ export function AiClipGeneratorPanel({
   project,
   onLoadMomentIntoTimeline,
   onApplyCaptions,
-  captionStyle
+  captionStyle,
+  hasCaptions = false
 }) {
   const [activeTab, setActiveTab] = useState("shorts"); // "shorts" | "captions"
   const [candidates, setCandidates] = useState(project?.candidates || []);
@@ -157,6 +158,7 @@ export function AiClipGeneratorPanel({
 
   const handleRunAutoPipeline = async () => {
     if (runningPipeline) return;
+    let pipelineStarted = false;
     try {
       setRunningPipeline(true);
       setError(null);
@@ -182,7 +184,7 @@ export function AiClipGeneratorPanel({
 
       clearTimeout(stepTimer1);
       clearTimeout(stepTimer2);
-      setPipelineStep(4);
+      pipelineStarted = true;
 
       if (res.data?.data?.candidates) {
         setCandidates(res.data.data.candidates);
@@ -193,7 +195,9 @@ export function AiClipGeneratorPanel({
       setError(err.response?.data?.message || err.message || "Pipeline execution failed");
       setPipelineStep(0);
     } finally {
-      setRunningPipeline(false);
+      // The server runs this pipeline in the background. Keep polling until it
+      // reports completion or an error, rather than hiding progress immediately.
+      if (!pipelineStarted) setRunningPipeline(false);
     }
   };
 
@@ -473,10 +477,10 @@ export function AiClipGeneratorPanel({
                   cursor: runningPipeline ? "not-allowed" : "pointer"
                 }}
               >
-                <option value="hinglish">🇮🇳 Hinglish (Hindi in English/Latin letters)</option>
-                <option value="en">🇺🇸 English</option>
-                <option value="hi">🇮🇳 Hindi (Devanagari script)</option>
-                <option value="auto">🌐 Auto Detect Language</option>
+                <option value="hinglish">ðŸ‡®ðŸ‡³ Hinglish (Hindi in English/Latin letters)</option>
+                <option value="en">ðŸ‡ºðŸ‡¸ English</option>
+                <option value="hi">ðŸ‡®ðŸ‡³ Hindi (Devanagari script)</option>
+                <option value="auto">ðŸŒ Auto Detect Language</option>
               </select>
             </div>
 
@@ -498,7 +502,7 @@ export function AiClipGeneratorPanel({
                   cursor: runningPipeline ? "not-allowed" : "pointer"
                 }}
               >
-                <option value="auto">⚡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
+                <option value="auto">âš¡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
                 <option value="groq">Groq Whisper (Ultra Fast, Large-v3)</option>
                 <option value="openai">OpenAI Whisper Cloud</option>
                 <option value="deepgram">Deepgram Nova-2</option>
@@ -537,7 +541,7 @@ export function AiClipGeneratorPanel({
               ) : (
                 <>
                   <Sparkles size={16} />
-                  <span>Generate AI Shorts</span>
+                  <span>{hasCaptions ? "Generate AI Shorts" : "Generate Captions & Shorts"}</span>
                 </>
               )}
             </button>
@@ -625,7 +629,7 @@ export function AiClipGeneratorPanel({
                       )}
                       <div style={{ display: "flex", flexDirection: "column" }}>
                         <span style={{ fontWeight: isCurrent ? 600 : 400, color: isCurrent ? "#ffffff" : isDone ? "#4ade80" : "#a1a1aa" }}>
-                          {step.title} {isCurrent && <em style={{ fontSize: "10px", color: "#c084fc", fontStyle: "normal" }}>— in progress</em>}
+                          {step.title} {isCurrent && <em style={{ fontSize: "10px", color: "#c084fc", fontStyle: "normal" }}>â€” in progress</em>}
                         </span>
                         <span style={{ fontSize: "10px", color: "#71717a" }}>{step.desc}</span>
                       </div>
@@ -750,10 +754,10 @@ export function AiClipGeneratorPanel({
                   cursor: generatingCaptions ? "not-allowed" : "pointer"
                 }}
               >
-                <option value="hinglish">🇮🇳 Hinglish (Hindi in English/Latin letters)</option>
-                <option value="en">🇺🇸 English</option>
-                <option value="hi">🇮🇳 Hindi (Devanagari script)</option>
-                <option value="auto">🌐 Auto Detect Language</option>
+                <option value="hinglish">ðŸ‡®ðŸ‡³ Hinglish (Hindi in English/Latin letters)</option>
+                <option value="en">ðŸ‡ºðŸ‡¸ English</option>
+                <option value="hi">ðŸ‡®ðŸ‡³ Hindi (Devanagari script)</option>
+                <option value="auto">ðŸŒ Auto Detect Language</option>
               </select>
             </div>
 
@@ -775,7 +779,7 @@ export function AiClipGeneratorPanel({
                   cursor: generatingCaptions ? "not-allowed" : "pointer"
                 }}
               >
-                <option value="auto">⚡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
+                <option value="auto">âš¡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
                 <option value="groq">Groq Whisper (Ultra Fast, Large-v3)</option>
                 <option value="openai">OpenAI Whisper Cloud</option>
                 <option value="deepgram">Deepgram Nova-2</option>

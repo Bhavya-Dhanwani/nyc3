@@ -6,7 +6,7 @@ export default function Workflow({
 }: {
 	scrollYProgress: MotionValue<number>;
 }) {
-	const rotate = useTransform(scrollYProgress, [0, 1], [0, 0]);
+	const rotate = useTransform(scrollYProgress, [0, 1], [5, 0]);
 	const scale = useTransform(scrollYProgress, [0, 1], [0.8, 1]);
 
 	return (

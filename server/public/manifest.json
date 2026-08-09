@@ -1,0 +1,49 @@
+{
+  "id": "/",
+  "name": "Katitor",
+  "short_name": "Katitor",
+  "description": "A local-first browser AI video editor for voiceovers, automatic captions, talking avatars, multi-track editing, and MP4 or WebM export.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "browser"],
+  "orientation": "landscape",
+  "background_color": "#090d13",
+  "theme_color": "#101720",
+  "categories": ["productivity", "photo", "video"],
+  "icons": [
+    {
+      "src": "/duevora/logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/timeline-studio-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/timeline-studio-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New video project",
+      "short_name": "New Project",
+      "description": "Open Katitor to start a new video project.",
+      "url": "/",
+      "icons": [
+        {
+          "src": "/duevora/logo.png",
+          "sizes": "any",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}

@@ -16,7 +16,7 @@ export default function TheTutors({
 	scrollYProgress: MotionValue<number>;
 }) {
 	const swiperRef = useRef<SwiperType | null>(null);
-	const rotate = useTransform(scrollYProgress, [0, 0.8], [0, 0]);
+	const rotate = useTransform(scrollYProgress, [0, 0.8], [8, 0]);
 	const scale = useTransform(scrollYProgress, [0, 0.8], [0.8, 1]);
 	const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -52,6 +52,9 @@ export default function TheTutors({
 					<div className="overflow-hidden">
 						<Swiper
 							modules={[Navigation]}
+							grabCursor={true}
+							simulateTouch={true}
+							touchStartPreventDefault={false}
 							breakpoints={{
 								0: {
 									slidesPerView: 1,
