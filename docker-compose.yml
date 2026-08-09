@@ -24,7 +24,7 @@ services:
       - .:/app
       - server_node_modules:/app/server/node_modules
     ports:
-      - "5000:5000"
+      - "3000:5000"
     env_file:
       - ./server/.env
     environment:
