@@ -1,4 +1,4 @@
-// Importing modules
+﻿// Importing modules
 import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
@@ -776,3 +776,5 @@ class CandidatesController {
 }
 
 export default CandidatesController;
+
+
