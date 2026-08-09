@@ -60,26 +60,9 @@ export default function Footer() {
 				</p>
 
 				<div className="flex items-center gap-10">
-					<a
-						
-						className="text-[18px] uppercase font-helveticaNeue text-white hover:text-white/70 transition-colors"
-					>
-						THANKYOU
-					</a>
-
-					<a
-						
-						className="text-[18px] uppercase font-helveticaNeue text-white hover:text-white/70 transition-colors"
-					>
-						NAMASTE
-					</a>
-
-					<a
-						
-						className="text-[18px] uppercase font-helveticaNeue text-white hover:text-white/70 transition-colors"
-					>
-						DEV
-					</a>
+					<span className="text-[18px] uppercase font-helveticaNeue text-white hover:text-white/80 transition-colors cursor-default">
+						THANKYOU NYC
+					</span>
 				</div>
 			</div>
 		</div>

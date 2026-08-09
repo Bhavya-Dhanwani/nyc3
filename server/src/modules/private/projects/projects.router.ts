@@ -1,4 +1,4 @@
-﻿// Importing modules
+// Importing modules
 import express from "express";
 import ProjectsController from "./projects.controller.js";
 import upload from "../../../shared/utils/multer.util.js";
@@ -106,6 +106,8 @@ router.get("/:projectId/pipeline-status", getProjectValidators, controller.getPi
     @desc Retrieve project timeline state (or generate default)
     @access Private
 */
+router.get("/:projectId/drive-timeline", getProjectValidators, controller.loadDriveTimeline);
+router.put("/:projectId/drive-timeline", getProjectValidators, controller.saveDriveTimeline);
 router.get("/:projectId/timeline", getProjectValidators, controller.getTimeline);
 
 /*
@@ -129,9 +131,12 @@ router.post("/:projectId/export-timeline", getProjectValidators, controller.expo
 */
 router.get("/:projectId/drive-files", getProjectValidators, controller.getProjectDriveFiles);
 
+/*
+    @route GET /api/projects/:projectId/drive-files/:fileId/content
+    @desc Stream/fetch content of a file in project's Google Drive folder
+    @access Private
+*/
+router.get("/:projectId/drive-files/:fileId/content", getProjectValidators, controller.getProjectDriveFileContent);
+
 // exporting the router
 export default router;
-
-
-
-
