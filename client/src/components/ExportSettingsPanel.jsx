@@ -38,6 +38,7 @@ export function ExportSettingsPanel({
   t,
   ratio,
   imageSrc,
+  canExportVideo = Boolean(imageSrc),
   timelineDuration,
   exportSettings,
   setExportSettings,
@@ -154,7 +155,7 @@ export function ExportSettingsPanel({
         <button
           className="export-confirm-button"
           type="button"
-          disabled={!imageSrc || checking || !runtimeAvailable || timelineDuration <= 0}
+          disabled={!canExportVideo || checking || !runtimeAvailable || timelineDuration <= 0}
           onClick={() => {
             onClose();
             handleExportVideo({
@@ -163,7 +164,7 @@ export function ExportSettingsPanel({
           }}
         >
           <FileArrowDown size={17} weight="bold" />
-          {imageSrc ? t("startExport") : t("addVisualBeforeExport")}
+          {canExportVideo ? t("startExport") : t("addVisualBeforeExport")}
         </button>
       </div>
     </>

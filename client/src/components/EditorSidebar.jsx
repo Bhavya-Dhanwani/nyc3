@@ -89,6 +89,7 @@ export function EditorSidebar({ model: d }) {
             mediaTab={d.mediaTab}
             setMediaTab={d.setMediaTab}
             driveFiles={d.driveFiles}
+            projectId={d.currentProject?._id || d.currentProject?.id}
             isDragging={d.isDragging}
             setIsDragging={d.setIsDragging}
             fileInputRef={d.fileInputRef}

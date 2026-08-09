@@ -13,8 +13,35 @@ import {
   LogOut,
   Settings,
   X,
-  Download
+  Download,
+  BarChart3,
+  Calendar as CalendarIcon,
+  Palette,
+  Sparkles,
+  Flame
 } from "lucide-react";
+import { BrandKitModal } from "./BrandKitModal.jsx";
+import { AnalyticsModal } from "./AnalyticsModal.jsx";
+import { ContentCalendarModal } from "./ContentCalendarModal.jsx";
+import { getContentTypeConfig } from "../lib/contentTypes.js";
+
+function formatDuration(seconds = 0) {
+  if (!seconds) return "Video Project";
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
+
+function timeAgo(dateString) {
+  if (!dateString) return "Recently";
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffSec = Math.floor((now.getTime() - date.getTime()) / 1000);
+  if (diffSec < 60) return "Just now";
+  if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+  if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+  return `${Math.floor(diffSec / 86400)}d ago`;
+}
 
 export function ProjectsDashboard({
   user,
@@ -27,10 +54,21 @@ export function ProjectsDashboard({
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [isInstallable, setIsInstallable] = useState(false);
 
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isBrandKitOpen, setIsBrandKitOpen] = useState(false);
+  const [isAnalyticsOpen, setIsAnalyticsOpen] = useState(false);
+  const [isCalendarOpen, setIsCalendarOpen] = useState(false);
+
+  const [projectName, setProjectName] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [captionStyle, setCaptionStyle] = useState("modern-box");
+  const [creating, setCreating] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [error, setError] = useState(null);
+
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    // Check if already running in standalone mode
     if (window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone) {
       setIsInstallable(false);
       return;
@@ -63,13 +101,6 @@ export function ProjectsDashboard({
       setDeferredPrompt(null);
     }
   };
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
-  const [projectName, setProjectName] = useState("");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [captionStyle, setCaptionStyle] = useState("modern-box");
-  const [creating, setCreating] = useState(false);
-  const [uploadProgress, setUploadProgress] = useState(0);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     loadProjects();
@@ -110,8 +141,6 @@ export function ProjectsDashboard({
       formData.append("media", selectedFile);
 
       const res = await api.post(`/api/projects/${projectId}/upload-media`, formData, {
-        // The server uploads the finished file to Drive after the browser has
-        // reached 100%, so this request must not use the short auth timeout.
         timeout: 0,
         onUploadProgress: (progressEvent) => {
           if (progressEvent.total) {
@@ -129,54 +158,54 @@ export function ProjectsDashboard({
         onOpenProject(res.data.data);
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Upload failed");
+      console.error("Failed to create project:", err);
+      setError(err.response?.data?.message || err.message || "Failed to create project");
     } finally {
       setCreating(false);
       setUploadProgress(0);
     }
   };
 
-  const handleDeleteProject = async (projectId, e) => {
+  const handleDeleteProject = async (id, e) => {
     e.stopPropagation();
     if (!window.confirm("Are you sure you want to delete this project?")) return;
-
     try {
-      await api.delete(`/api/projects/${projectId}`);
-      setProjects((prev) => prev.filter((p) => (p._id || p.id) !== projectId));
+      await api.delete(`/api/projects/${id}`);
+      setProjects((prev) => prev.filter((p) => (p._id || p.id) !== id));
     } catch (err) {
+      console.error("Failed to delete project:", err);
       alert(err.response?.data?.message || "Failed to delete project");
     }
   };
 
   return (
-    <div className="dashboard-root">
-      {/* Top Navigation */}
-      <header className="dashboard-nav">
+    <div className="dashboard-container">
+      {/* Top Navbar */}
+      <header className="dashboard-header">
         <div className="dashboard-brand">
-          <div className="dashboard-logo">
-            <img src="/katitor-logo-hd.png" alt="Katitor Logo" style={{ width: "24px", height: "24px", objectFit: "contain" }} />
+          <div className="dashboard-logo-icon">
+            <Film size={18} color="#ffffff" />
           </div>
           <div>
-            <div style={{ fontWeight: 700, fontSize: "15px", color: "#ffffff", lineHeight: 1.2 }}>Katitor Studio</div>
-            <div style={{ fontSize: "11px", color: "var(--as-text-muted)" }}>AI Timeline Editor & Automation Platform</div>
+            <h1 className="dashboard-title">KATETOR</h1>
+            <span className="dashboard-subtitle">AI Video Repurposing & Editor Studio</span>
           </div>
         </div>
 
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           {isInstallable && (
             <button
-              type="button"
               onClick={handleInstallClick}
-              className="btn-primary-gradient"
+              className="btn-secondary"
               style={{
+                fontSize: "12px",
                 display: "flex",
                 alignItems: "center",
                 gap: "6px",
                 padding: "6px 12px",
                 borderRadius: "8px",
-                fontSize: "13px",
-                fontWeight: 500,
-                cursor: "pointer"
+                border: "1px solid rgba(255, 255, 255, 0.15)",
+                background: "rgba(255, 255, 255, 0.05)"
               }}
             >
               <Download size={14} />
@@ -184,19 +213,51 @@ export function ProjectsDashboard({
             </button>
           )}
 
+          {/* Quick Tool Navigation Buttons */}
           <button
             type="button"
-            onClick={onOpenSettings}
+            onClick={() => setIsBrandKitOpen(true)}
             className="btn-secondary"
+            style={{ fontSize: "12px", display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "8px" }}
+            title="Brand Kit Settings"
           >
-            <Settings size={14} />
-            <span>Settings & AI Keys</span>
+            <Palette size={14} color="#a855f7" />
+            <span>Brand Kit</span>
           </button>
 
-          <div style={{ height: "18px", width: "1px", background: "var(--as-card-border)" }} />
+          <button
+            type="button"
+            onClick={() => setIsCalendarOpen(true)}
+            className="btn-secondary"
+            style={{ fontSize: "12px", display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "8px" }}
+            title="Content Calendar"
+          >
+            <CalendarIcon size={14} color="#ec4899" />
+            <span>Calendar</span>
+          </button>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <span style={{ fontSize: "12px", fontWeight: 500, color: "var(--as-text-secondary)" }}>
+          <button
+            type="button"
+            onClick={() => setIsAnalyticsOpen(true)}
+            className="btn-secondary"
+            style={{ fontSize: "12px", display: "flex", alignItems: "center", gap: "5px", padding: "6px 12px", borderRadius: "8px" }}
+            title="Studio Analytics"
+          >
+            <BarChart3 size={14} color="#10b981" />
+            <span>Analytics</span>
+          </button>
+
+          <button
+            onClick={onOpenSettings}
+            className="btn-secondary"
+            style={{ fontSize: "12px", display: "flex", alignItems: "center", gap: "6px", padding: "6px 12px", borderRadius: "8px" }}
+          >
+            <Settings size={14} />
+            <span>API Keys</span>
+          </button>
+
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", borderLeft: "1px solid rgba(255, 255, 255, 0.1)", paddingLeft: "12px" }}>
+            <span style={{ fontSize: "12px", fontWeight: 600, color: "#ffffff" }}>
               {user?.name || user?.email}
             </span>
             {user?.googleAccessToken && (
@@ -236,7 +297,7 @@ export function ProjectsDashboard({
           <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
             <h2 className="dashboard-hero-title" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <span>Projects Studio</span>
-              <span style={{ fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "9999px", background: "rgba(255, 255, 255, 0.08)", color: "#ffffff", border: "1px solid rgba(255, 255, 255, 0.15)", letterSpacing: "0.04em" }}>
+              <span style={{ fontSize: "11px", fontWeight: 700, padding: "3px 10px", borderRadius: "9999px", background: "rgba(99, 102, 241, 0.2)", color: "#a5b4fc", border: "1px solid rgba(99, 102, 241, 0.4)", letterSpacing: "0.04em" }}>
                 AI POWERED
               </span>
             </h2>
@@ -257,6 +318,7 @@ export function ProjectsDashboard({
           <button
             onClick={() => setIsCreateModalOpen(true)}
             className="btn-primary-gradient"
+            style={{ padding: "12px 24px", fontSize: "13px", fontWeight: 700, borderRadius: "10px" }}
           >
             <Plus size={18} />
             <span>New Video Project</span>
@@ -301,6 +363,11 @@ export function ProjectsDashboard({
             {projects.map((project) => {
               const pId = project._id || project.id;
               const isReady = (project.status || "").toLowerCase() === "ready";
+              const candidates = Array.isArray(project.candidates) ? project.candidates : [];
+              const viralCount = candidates.filter((c) => (c.contentType || "Viral").toLowerCase() === "viral").length;
+              const eduCount = candidates.filter((c) => (c.contentType || "").toLowerCase() === "educational").length;
+              const funnyCount = candidates.filter((c) => (c.contentType || "").toLowerCase() === "funny").length;
+
               return (
                 <div
                   key={pId}
@@ -308,13 +375,15 @@ export function ProjectsDashboard({
                   className="project-card"
                 >
                   <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-                    <div style={{ minWidth: 0 }}>
+                    <div style={{ minWidth: 0, flex: 1 }}>
                       <h3 style={{ fontSize: "14px", fontWeight: 700, color: "#ffffff", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                         {project.name || project.originalName || "Untitled Project"}
                       </h3>
-                      <p style={{ fontSize: "11px", color: "var(--as-text-muted)", margin: "4px 0 0 0", display: "flex", alignItems: "center", gap: "4px" }}>
+                      <p style={{ fontSize: "11px", color: "var(--as-text-muted)", margin: "4px 0 0 0", display: "flex", alignItems: "center", gap: "6px" }}>
                         <Clock size={12} />
-                        <span>{project.sourceDuration ? `${project.sourceDuration.toFixed(1)}s` : "Video Project"}</span>
+                        <span>{formatDuration(project.sourceDuration)}</span>
+                        <span>•</span>
+                        <span>{timeAgo(project.updatedAt)}</span>
                       </p>
                     </div>
 
@@ -328,6 +397,27 @@ export function ProjectsDashboard({
                       <Trash2 size={13} />
                     </button>
                   </div>
+
+                  {/* Content Opportunity Badges */}
+                  {candidates.length > 0 && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", margin: "4px 0" }}>
+                      {viralCount > 0 && (
+                        <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: "rgba(249,115,22,0.15)", color: "#fb923c", border: "1px solid rgba(249,115,22,0.3)" }}>
+                          🔥 {viralCount} Viral
+                        </span>
+                      )}
+                      {eduCount > 0 && (
+                        <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: "rgba(234,179,8,0.15)", color: "#fde047", border: "1px solid rgba(234,179,8,0.3)" }}>
+                          💡 {eduCount} Edu
+                        </span>
+                      )}
+                      {funnyCount > 0 && (
+                        <span style={{ fontSize: "10px", fontWeight: 700, padding: "2px 6px", borderRadius: "4px", background: "rgba(236,72,153,0.15)", color: "#f472b6", border: "1px solid rgba(236,72,153,0.3)" }}>
+                          😂 {funnyCount} Funny
+                        </span>
+                      )}
+                    </div>
+                  )}
 
                   <div className="project-card-thumb">
                     <Film size={34} />
@@ -391,6 +481,11 @@ export function ProjectsDashboard({
         )}
       </main>
 
+      {/* Modals */}
+      <BrandKitModal open={isBrandKitOpen} onClose={() => setIsBrandKitOpen(false)} />
+      <AnalyticsModal open={isAnalyticsOpen} onClose={() => setIsAnalyticsOpen(false)} />
+      <ContentCalendarModal open={isCalendarOpen} onClose={() => setIsCalendarOpen(false)} candidates={projects.flatMap((p) => p.candidates || [])} />
+
       {/* Create Project Modal */}
       {isCreateModalOpen && (
         <div className="modal-backdrop">
@@ -413,7 +508,6 @@ export function ProjectsDashboard({
                   borderRadius: "50%",
                   transition: "all 0.2s ease"
                 }}
-                className="hover:bg-white/10 hover:text-white"
               >
                 <X size={16} />
               </button>
@@ -448,31 +542,27 @@ export function ProjectsDashboard({
                       onChange={(e) => {
                         if (e.target.files?.[0]) {
                           setSelectedFile(e.target.files[0]);
-                          if (!projectName) {
-                            setProjectName(e.target.files[0].name.replace(/\.[^/.]+$/, ""));
-                          }
                         }
                       }}
-                      style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer", width: "100%", height: "100%" }}
+                      className="project-upload-input"
                     />
-                    <Upload size={24} style={{ color: "rgba(255, 255, 255, 0.4)", margin: "0 auto 12px auto" }} />
-                    <p style={{ fontSize: "13px", fontWeight: 600, color: "#ffffff", margin: 0 }}>
-                      {selectedFile ? selectedFile.name : "Click or drag video to upload"}
-                    </p>
-                    <p style={{ fontSize: "11px", color: "rgba(255, 255, 255, 0.4)", margin: "6px 0 0 0" }}>MP4, MOV, WEBM, MKV up to 2GB</p>
+                    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", pointerEvents: "none" }}>
+                      <Upload size={24} color="#ffffff" />
+                      <span style={{ fontSize: "12px", color: "var(--as-text-secondary)" }}>
+                        {selectedFile ? selectedFile.name : "Choose a video file or drop it here"}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
-                {creating && (
-                  <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--as-text-secondary)" }}>
-                      <span>{uploadProgress === 100 ? "Syncing to Google Drive..." : "Uploading to server..."}</span>
+                {creating && uploadProgress > 0 && (
+                  <div style={{ marginTop: "12px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "var(--as-text-muted)", marginBottom: "4px" }}>
+                      <span>Uploading media</span>
                       <span>{uploadProgress}%</span>
                     </div>
-                    <div style={{ width: "100%", height: "6px", background: "rgba(255, 255, 255, 0.1)", borderRadius: "999px", overflow: "hidden" }}>
-                      <div
-                        style={{ height: "100%", background: "var(--as-accent-primary)", width: `${uploadProgress}%`, transition: "width 0.2s ease" }}
-                      />
+                    <div style={{ height: "4px", background: "rgba(255,255,255,0.1)", borderRadius: "999px", overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${uploadProgress}%`, background: "linear-gradient(90deg, #6366f1, #a855f7)", transition: "width 0.2s ease" }} />
                     </div>
                   </div>
                 )}
@@ -487,13 +577,12 @@ export function ProjectsDashboard({
                 >
                   Cancel
                 </button>
-
                 <button
                   type="submit"
-                  disabled={creating}
+                  disabled={creating || !selectedFile}
                   className="btn-primary-gradient"
                 >
-                  {creating ? <Loader2 size={14} style={{ animation: "spin 1s linear infinite" }} /> : <Upload size={14} />}
+                  {creating ? <Loader2 size={16} className="spin" /> : <Plus size={16} />}
                   <span>{creating ? "Uploading..." : "Create Project"}</span>
                 </button>
               </div>

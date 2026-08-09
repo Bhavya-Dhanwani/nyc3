@@ -1349,9 +1349,9 @@ export function VoicePanel({
   const isCaptionContext = panelContext === "caption";
   const isSmartContext = panelContext === "smart";
   const isEffectsContext = panelContext === "effects" || mobileInspectorSection === "effects";
-  const isAvatarContext = isSmartContext && smartMode === "avatar" && avatarPanelOpen;
-  const isSmartAutoContext = isSmartContext && smartMode === "auto-edit";
-  const isSmartFrameContext = isSmartContext && smartMode === "smart-frame";
+  const isAvatarContext = false;
+  const isSmartAutoContext = false;
+  const isSmartFrameContext = false;
   const isAiMusicContext = isSmartContext && smartMode === "ai-music";
   const isFaceSwapContext = isEffectsContext && effectsPanelMode === "face-swap";
   const isOpticalFlowContext = isEffectsContext && effectsPanelMode === "vector-tracking";

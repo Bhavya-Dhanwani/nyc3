@@ -385,11 +385,7 @@ class TranscriptionService {
 
     // function to check if whisper cli is installed on host/container
     async isWhisperCliAvailable(): Promise<boolean> {
-        return new Promise((resolve) => {
-            exec("whisper --help", (error) => {
-                resolve(!error);
-            });
-        });
+        return false;
     }
 
     // function to transcribe audio with automatic smart provider resolution
@@ -406,17 +402,6 @@ class TranscriptionService {
         const groqKeys = normalizeKeys(keys.groq);
         const openaiKeys = normalizeKeys(keys.openai);
         const deepgramKeys = normalizeKeys(keys.deepgram);
-
-        // Prefer local Whisper so normal transcription works without a cloud key.
-        const hasLocalCli = await this.isWhisperCliAvailable();
-        if (hasLocalCli) {
-            try {
-                logger.info("Using local Whisper CLI for transcription...");
-                return await this.transcribeLocal(audioPath, projectDir);
-            } catch (err: any) {
-                logger.warn(`Local Whisper transcription failed (${err.message}). Trying Groq backup...`);
-            }
-        }
 
         // 1. Groq Whisper cloud backup
         for (let i = 0; i < groqKeys.length; i++) {
@@ -484,10 +469,9 @@ class TranscriptionService {
             const audioStem = path.basename(audioPathBuf, path.extname(audioPathBuf));
 
             const outputJsonPath = path.join(audioDir, `${audioStem}.json`);
-
             // constructing the whisper CLI command
             const model = process.env.WHISPER_MODEL || "base";
-            const cmd = `whisper "${audioPathBuf}" --model ${model} --output_format json --output_dir "${audioDir}" --word_timestamps True`;
+            const cmd = `whisper "${audioPathBuf}" --model ${model} --output_format json --output_dir "${audioDir}" --word_timestamps True --fp16 False`;
 
             logger.info(`running local whisper command: ${cmd}`);
 

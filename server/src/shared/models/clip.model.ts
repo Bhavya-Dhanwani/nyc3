@@ -38,7 +38,7 @@ const clipSchema = new mongoose.Schema({
     },
 
     captionStyle: {
-        type: String,
+        type: mongoose.Schema.Types.Mixed,
         default: null
     },
 

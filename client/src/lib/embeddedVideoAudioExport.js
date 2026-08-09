@@ -3,6 +3,27 @@ import { isExportAbortError, throwIfExportAborted } from "./exportCancellation.j
 import { getVisualSegmentTimeline } from "./timeline.js";
 
 const getAssetKey = (segment) => segment?.assetId || segment?.src || segment?.id || "";
+const EMBEDDED_AUDIO_TIMEOUT_MS = 45_000;
+
+function createTimeoutError(label) {
+  const error = new Error(`${label} timed out`);
+  error.name = "TimeoutError";
+  return error;
+}
+
+async function withTimeout(task, milliseconds, label) {
+  let timer = null;
+  try {
+    return await Promise.race([
+      task,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(createTimeoutError(label)), milliseconds);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
 
 export function createEmbeddedVideoAudioSegments(visualSegments = [], audioAssets = new Map()) {
   const timeline = getVisualSegmentTimeline(visualSegments);
@@ -47,17 +68,17 @@ export async function prepareEmbeddedVideoAudio(visualSegments = [], onProgress,
       const sourceBlob = segment.blob instanceof Blob
         ? segment.blob
         : segment.src
-          ? await fetch(segment.src, { signal }).then((response) => {
+          ? await withTimeout(fetch(segment.src, { signal }).then((response) => {
               if (!response.ok) throw new Error(`无法读取视频素材：${response.status}`);
               return response.blob();
-            })
+            }), EMBEDDED_AUDIO_TIMEOUT_MS, "Embedded video audio fetch")
           : null;
       if (!sourceBlob) continue;
       const blob = segment.compatibilityAudioBlob instanceof Blob
         ? segment.compatibilityAudioBlob
-        : await extractAudioFromVideo(sourceBlob, segment.name || "source-video.mp4");
+        : await withTimeout(extractAudioFromVideo(sourceBlob, segment.name || "source-video.mp4"), EMBEDDED_AUDIO_TIMEOUT_MS, "Embedded video audio extraction");
       throwIfExportAborted(signal);
-      const decoded = await decodeWaveform(blob, 24);
+      const decoded = await withTimeout(decodeWaveform(blob, 24), EMBEDDED_AUDIO_TIMEOUT_MS, "Embedded video audio decode");
       throwIfExportAborted(signal);
       if (decoded.duration > 0) extracted.push({ key, blob, duration: decoded.duration });
     } catch (error) {

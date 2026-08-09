@@ -13,9 +13,7 @@ const createProjectValidators = [
 
     // validating captionStyle
     body("captionStyle")
-        .optional()
-        .isString()
-        .withMessage("Caption style must be a string"),
+        .optional(),
 
     validateErrors
 

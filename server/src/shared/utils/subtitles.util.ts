@@ -196,3 +196,69 @@ export function buildDrawtextFilters(words, startSec, endSec, croppedWidth, capt
     return drawtextFilters.join(",");
 
 }
+
+function parseSrtTimestampToSeconds(val: string): number {
+    const parts = val.trim().split(":");
+    if (parts.length < 3) return 0;
+    const hrs = parseFloat(parts[0]);
+    const mins = parseFloat(parts[1]);
+    const secsMs = parts[2].replace(",", ".");
+    const secs = parseFloat(secsMs);
+    return hrs * 3600 + mins * 60 + secs;
+}
+
+export function parseSrtToTranscript(srtContent: string): any {
+    const normalized = srtContent.replace(/\r\n/g, "\n").trim();
+    // Split by double newline or block patterns
+    const blocks = normalized.split(/\n\s*\n/);
+    const words: any[] = [];
+    let fullText = "";
+
+    for (const block of blocks) {
+        const lines = block.split("\n").map(l => l.trim()).filter(Boolean);
+        if (lines.length < 2) continue;
+        
+        // Find line containing "-->"
+        const timingLine = lines.find(l => l.includes("-->"));
+        if (!timingLine) continue;
+        
+        const timingIndex = lines.indexOf(timingLine);
+        const timingParts = timingLine.split("-->");
+        if (timingParts.length < 2) continue;
+
+        const start = parseSrtTimestampToSeconds(timingParts[0]);
+        const end = parseSrtTimestampToSeconds(timingParts[1]);
+
+        const textLines = lines.slice(timingIndex + 1);
+        const blockText = textLines.join(" ").trim();
+        if (!blockText) continue;
+
+        if (fullText) fullText += " ";
+        fullText += blockText;
+
+        const blockWords = blockText.split(/\s+/).filter(Boolean);
+        if (blockWords.length === 0) continue;
+
+        const totalDuration = Math.max(0.1, end - start);
+        const durationPerWord = totalDuration / blockWords.length;
+
+        for (let i = 0; i < blockWords.length; i++) {
+            const wordStart = start + i * durationPerWord;
+            const wordEnd = wordStart + durationPerWord;
+            words.push({
+                text: blockWords[i].replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, ""),
+                start: parseFloat(wordStart.toFixed(3)),
+                end: parseFloat(wordEnd.toFixed(3))
+            });
+        }
+    }
+
+    const duration = words.length > 0 ? words[words.length - 1].end : 0;
+
+    return {
+        text: fullText,
+        words,
+        duration,
+        language: "en"
+    };
+}

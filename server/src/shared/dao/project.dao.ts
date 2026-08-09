@@ -30,6 +30,13 @@ class ProjectDao {
 
     }
 
+    // function to find projects by user id
+    async findProjectsByUserId(userId: string) {
+
+        return await this.ProjectModel.find({ userId }).sort({ updatedAt: -1 });
+
+    }
+
     // function to update a project by id
     async updateProjectById(id, updateData) {
 

@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import api from "../lib/api.js";
 import { ensureCaptionFontLoaded } from "../lib/captionFonts.js";
 import { isExportAbortError, throwIfExportAborted } from "../lib/exportCancellation.js";
 import {
@@ -22,10 +23,78 @@ import {
 export function useVideoExport(d) {
   return useCallback(async (options = {}) => {
     if (d.exporting) return { status: "busy" };
-    if (!d.imageSrc) {
+    const firstVisualSegment = d.renderedVisualSegments?.find((segment) => segment.src) || d.visualSegments?.find((segment) => segment.src);
+    const exportImageSrc = d.imageSrc || firstVisualSegment?.src || "";
+    const exportVisualType = d.visualType || firstVisualSegment?.type || "image";
+    if (!exportImageSrc && !firstVisualSegment) {
       d.notify(d.t("exportVisualRequired"));
       return { status: "blocked", error: d.t("exportVisualRequired") };
     }
+    const generatedCandidateId = firstVisualSegment?.generatedCandidateId || d.visualSegments?.find((segment) => segment.generatedCandidateId)?.generatedCandidateId;
+    if (generatedCandidateId) {
+      const requestedSettings = normalizeExportSettings(options.settings || d.exportSettings);
+      const exportBaseName = sanitizeExportFileName(
+        requestedSettings.fileName,
+        `ai-clip-${generatedCandidateId}`,
+      );
+      const controller = new AbortController();
+      d.exportAbortControllerRef.current = controller;
+      try {
+        const preparingPhase = "Exporting generated AI clip";
+        d.setExporting(true);
+        d.exportStartRef.current = performance.now();
+        d.setExportProgress(8);
+        d.setExportPhase(preparingPhase);
+        d.setStatus("generating");
+        d.setStatusText(preparingPhase);
+        const res = await api.get(`/api/candidates/${generatedCandidateId}/download`, {
+          responseType: "blob",
+          signal: controller.signal,
+        });
+        d.setExportProgress(99);
+        d.setExportPhase(d.t("exportSaveFile").replace("{format}", "MP4"));
+        const disposition = res.headers?.["content-disposition"] || "";
+        const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+        downloadBlob(res.data, filenameMatch?.[1] || `${exportBaseName}.mp4`);
+        d.setStatus("done");
+        d.setStatusText(d.t("exportComplete"));
+        d.setExportPhase(d.t("exportComplete"));
+        d.notify(d.t("exportComplete"));
+        return { status: "success", extension: "mp4", byteSize: res.data.size, actualPipeline: "generated-clip" };
+      } catch (error) {
+        if (isExportAbortError(error) || error?.name === "CanceledError") {
+          const canceled = d.t("exportCanceled");
+          d.setStatus("ready");
+          d.setStatusText(canceled);
+          d.setExportPhase(canceled);
+          d.notify(canceled);
+          return { status: "canceled", actualPipeline: "generated-clip" };
+        }
+        let message = error instanceof Error ? error.message : d.t("exportFailed");
+        const data = error?.response?.data;
+        if (data instanceof Blob) {
+          try {
+            const text = await data.text();
+            message = JSON.parse(text)?.message || text || message;
+          } catch {
+            message = error?.response?.statusText || message;
+          }
+        } else if (data?.message) {
+          message = data.message;
+        }
+        console.error(error);
+        d.setStatus("error");
+        d.setStatusText(message);
+        d.setExportPhase(d.t("exportFailed"));
+        d.notify(message);
+        return { status: "failed", actualPipeline: "generated-clip", error: message };
+      } finally {
+        if (d.exportAbortControllerRef.current === controller) d.exportAbortControllerRef.current = null;
+        d.setExporting(false);
+        d.setExportProgress(0);
+      }
+    }
+
     const requestedSettings = normalizeExportSettings(options.settings || d.exportSettings);
     const exportSettings = {
       ...requestedSettings,
@@ -153,7 +222,7 @@ export function useVideoExport(d) {
         throw new Error("配音片段的音频媒体已丢失，请重新生成或重新添加后再导出。");
       }
       const exportOptions = {
-        imageSrc: d.imageSrc, visualType: d.visualType,
+        imageSrc: exportImageSrc, visualType: exportVisualType,
         visualSegments: exportedVisualSegments,
         audioBlob: null, voiceAudioSegments, voiceVolume: d.volume,
         sourceAudioBlob: exportSourceAudioBlob, sourceAudioVolume: d.sourceAudioBlob ? d.sourceAudioVolume : 1,
