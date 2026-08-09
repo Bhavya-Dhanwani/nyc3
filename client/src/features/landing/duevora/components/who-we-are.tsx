@@ -30,20 +30,20 @@ export default function WhoWeAre() {
 
 	return (
 		<>
-			<div className="w-full h-screen bg-greenColor pt-20">
-				<div className="w-full flex items-center justify-between gap-5 p-10 h-full">
-					<div className="w-1/2 flex flex-col justify-between gap-5 relative h-full">
+			<div className="w-full h-auto min-h-screen md:h-screen bg-greenColor pt-10 md:pt-20">
+				<div className="w-full flex flex-col md:flex-row items-center justify-between gap-5 p-10 h-full">
+					<div className="w-full md:w-1/2 flex flex-col justify-between gap-5 relative h-full">
 						<div className="flex flex-col">
 							<AnimatedText
     text="Why Choose"
-    className="text-[250px] text-[#1c1c1c] overflow-hidden leading-[0.85]"
+    className="text-[70px] sm:text-[100px] md:text-[180px] lg:text-[250px] text-[#1c1c1c] overflow-hidden leading-[0.85]"
 />
 <AnimatedText
     text="Katitor"
-    className="text-[250px] text-[#1c1c1c] overflow-hidden leading-[0.85]"
+    className="text-[70px] sm:text-[100px] md:text-[180px] lg:text-[250px] text-[#1c1c1c] overflow-hidden leading-[0.85]"
 />
 						</div>
-						<div className="absolute top-1/2 -left-1/4 -translate-y-1/2 overflow-hidden">
+						<div className="hidden md:block absolute top-1/2 -left-1/4 -translate-y-1/2 overflow-hidden">
 							<img
 								src={whoweareline}
 								alt="whoweareimg"
@@ -52,14 +52,14 @@ export default function WhoWeAre() {
 							/>
 						</div>
 						<div className="w-full flex justify-end items-end">
-							<motion.p className="w-1/2 leading-tight text-lg uppercase font-helveticaNeue text-[#1c1c1c]">
+							<motion.p className="w-full md:w-1/2 leading-tight text-[16px] md:text-lg uppercase font-helveticaNeue text-[#1c1c1c] pt-5 md:pt-0">
 	Turn long streams into viral 9:16 Shorts with AI voices, Whisper captions, and smart framing.
 </motion.p>
 						</div>
 					</div>
 					<div
 						ref={container1Ref}
-						className="w-1/2 relative h-full flex justify-end items-start">
+						className="hidden md:flex w-1/2 relative h-full justify-end items-start">
 						<img
 							src={flowCurveText}
 							alt="flowCurveTextImg"
@@ -101,11 +101,11 @@ export default function WhoWeAre() {
 					</div>
 				</div>
 			</div>
-			<div className="w-full h-screen bg-greenColor py-20">
-				<div className="w-full flex h-full relative">
+			<div className="w-full h-auto min-h-screen md:h-screen bg-greenColor py-10 md:py-20">
+				<div className="w-full flex flex-col md:flex-row h-full relative">
 					<div
 						ref={container2Ref}
-						className="w-1/4 flex flex-col justify-between gap-5 relative h-full">
+						className="hidden md:flex w-1/4 flex-col justify-between gap-5 relative h-full">
 						<motion.div
 							className="flex flex-col"
 							style={{ y: mq, rotate: mrq }}>
@@ -117,35 +117,35 @@ export default function WhoWeAre() {
 							/>
 						</motion.div>
 					</div>
-					<div className="w-1/2 h-full flex justify-center items-center relative z-50">
+					<div className="w-full md:w-1/2 h-full flex justify-center items-center relative z-50 px-5 md:px-0 py-10 md:py-0">
 						<div className="flex flex-col gap-14">
 							<motion.p className="text-center leading-tight tracking-tight text-[18px] uppercase font-medium font-bodoniseventytwo text-white flex items-center justify-center gap-3 flex-col">
 								WHY KATITOR ????
 							</motion.p>
 							<div className="w-full flex flex-col items-center justify-center overflow-hidden">
 								<AnimatedText
-    className="text-[white] leading-[0.85] text-[200px] overflow-hidden"
+    className="text-[white] leading-[0.85] text-[55px] sm:text-[80px] md:text-[140px] lg:text-[200px] overflow-hidden"
     text="Stream Clips"
 />
 
 <AnimatedText
-    className="text-[white] leading-[0.85] text-[200px] overflow-hidden"
+    className="text-[white] leading-[0.85] text-[55px] sm:text-[80px] md:text-[140px] lg:text-[200px] overflow-hidden"
    	text="AI Voices"
 />
 
 <AnimatedText
-    className="text-[#1c1c1c] leading-[0.85] text-[200px] overflow-hidden"
+    className="text-[#1c1c1c] leading-[0.85] text-[55px] sm:text-[80px] md:text-[140px] lg:text-[200px] overflow-hidden"
     text="Auto Subtitles"
 />
 
 <AnimatedText
-    className="text-[#1c1c1c] leading-[0.85] text-[200px] overflow-hidden"
+    className="text-[#1c1c1c] leading-[0.85] text-[55px] sm:text-[80px] md:text-[140px] lg:text-[200px] overflow-hidden"
     text="Smart Crop"
 />
 							</div>
 						</div>
 						<motion.div
-							className="absolute -bottom-40 -right-10 overflow-hidden"
+							className="hidden md:block absolute -bottom-40 -right-10 overflow-hidden"
 							style={{ y: mq, rotate: mrq }}>
 							<img
 								src={emoji2}
@@ -155,7 +155,7 @@ export default function WhoWeAre() {
 							/>
 						</motion.div>
 					</div>
-					<div className="w-1/4 h-full overflow-hidden">
+					<div className="hidden md:block w-1/4 h-full overflow-hidden">
 						<img
 							src={whoweareline}
 							alt="whoweareimg"

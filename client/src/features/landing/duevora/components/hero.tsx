@@ -17,8 +17,8 @@ export default function Hero({
 			<div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
 				<h1 className="text-[45vw] uppercase leading-none tracking-[-5] font-humaneMedium text-white relative">
 					katitor
-					<div className="absolute bottom-28 -right-16">
-						<div className="relative">
+					<div className="absolute -bottom-10 md:bottom-28 -right-5 md:-right-16 w-[120px] h-[120px] md:w-[250px] md:h-[250px]">
+						<div className="relative w-full h-full flex items-center justify-center">
 							<motion.img
 								animate={{
 									rotate: [0, 360],
@@ -30,12 +30,10 @@ export default function Hero({
 								}}
 								src={"/duevora/circlerotation.svg"}
 								alt="Katitor"
-								width={250}
-								height={250}
-								className="w-[250px] h-[250px]"
+								className="absolute inset-0 w-full h-full"
 							/>
 
-							<h1 className="text-[46px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 uppercase leading-tight font-humaneMedium text-black tracking-wide">
+							<h1 className="text-[22px] md:text-[46px] absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 uppercase leading-tight font-humaneMedium text-black tracking-wide">
 								KATITOR
 							</h1>
 						</div>
@@ -43,10 +41,12 @@ export default function Hero({
 				</h1>
 			</div>
 
-			<Eye />
+			<div className="hidden md:block">
+				<Eye />
+			</div>
 
-<div className="absolute bottom-5 left-1/2 -translate-x-1/2 text-center">
-	<h1 className="text-[18px] font-helveticaNeue leading-tight text-white uppercase">
+<div className="absolute bottom-5 w-[95%] md:w-auto left-1/2 -translate-x-1/2 text-center">
+	<h1 className="text-[14px] md:text-[18px] font-helveticaNeue leading-tight text-white uppercase">
 		The browser-first AI video studio for{" "}
 		<span className="text-[24px] font-bodoniseventytwo leading-tight lowercase">
 			creators
@@ -61,7 +61,7 @@ export default function Hero({
 	</h1>
 </div>
 
-			<div className="absolute -top-20 -right-20">
+			<div className="hidden md:block absolute -top-20 -right-20">
 				<motion.img
 					src={"/duevora/linedraw.svg"}
 					alt=""
@@ -71,7 +71,7 @@ export default function Hero({
 				/>
 			</div>
 
-			<div className="absolute bottom-20 -left-20">
+			<div className="hidden md:block absolute bottom-20 -left-20">
 				<motion.img
 					src={"/duevora/linedraw.svg"}
 					alt=""
