@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import api from "../lib/api.js";
 import {
   Sparkles,
@@ -18,70 +18,117 @@ import {
   Check,
   AlertCircle,
   Radio,
-  Download
+  Download,
+  Share2,
+  Copy,
+  ThumbsUp,
+  ThumbsDown,
+  FileText,
+  Eye,
+  X
 } from "lucide-react";
+import { CONTENT_TYPES, REVIEW_STATUSES, getContentTypeConfig } from "../lib/contentTypes.js";
+import { AiClipExplanation } from "./AiClipExplanation.jsx";
+import { useRealtimePipeline } from "../hooks/useRealtimePipeline.js";
+
+function formatSec(seconds = 0) {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${s.toString().padStart(2, "0")}`;
+}
 
 export function AiClipGeneratorPanel({
   project,
   onLoadMomentIntoTimeline,
   onApplyCaptions,
   captionStyle,
-  hasCaptions = false
+  hasCaptions = false,
+  onOpenContentMap,
 }) {
   const [activeTab, setActiveTab] = useState("shorts"); // "shorts" | "captions"
+  const [selectedContentType, setSelectedContentType] = useState("all");
+  const [selectedReviewFilter, setSelectedReviewFilter] = useState("all");
+
   const [candidates, setCandidates] = useState(project?.candidates || []);
+
+  useEffect(() => {
+    if (project?.candidates) {
+      setCandidates(project.candidates);
+    }
+  }, [project?.candidates]);
+
   const [runningPipeline, setRunningPipeline] = useState(false);
-  const [pipelineStep, setPipelineStep] = useState(0); // 0: idle, 1: audio, 2: transcribe, 3: llm, 4: complete
+  const [pipelineStep, setPipelineStep] = useState(0);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [clipCount, setClipCount] = useState(5);
-  const [durationStyle, setDurationStyle] = useState("mixed"); // "short" | "mixed" | "medium"
-  const [transcriptionProvider, setTranscriptionProvider] = useState("auto"); // "auto" | "groq" | "openai" | "deepgram" | "local"
-  const [transcriptionLanguage, setTranscriptionLanguage] = useState("hinglish"); // "hinglish" | "en" | "hi" | "auto"
-  const [captionSplitMode, setCaptionSplitMode] = useState("smart"); // "smart" | "punchy"
+  const [durationStyle, setDurationStyle] = useState("mixed");
+  const [transcriptionProvider, setTranscriptionProvider] = useState("auto");
+  const [transcriptionLanguage, setTranscriptionLanguage] = useState("hinglish");
+  const [captionSplitMode, setCaptionSplitMode] = useState("smart");
   const [generatingCaptions, setGeneratingCaptions] = useState(false);
   const [captionElapsedSec, setCaptionElapsedSec] = useState(0);
   const [captionProgressText, setCaptionProgressText] = useState("");
   const [appliedCaptionCount, setAppliedCaptionCount] = useState(null);
   const [error, setError] = useState(null);
 
+  // Modals for extra details on candidate
+  const [activeHookModalCandidate, setActiveHookModalCandidate] = useState(null);
+  const [activeTitleModalCandidate, setActiveTitleModalCandidate] = useState(null);
+  const [activeSocialModalCandidate, setActiveSocialModalCandidate] = useState(null);
+  const [copiedKey, setCopiedKey] = useState(null);
+
   const timerRef = useRef(null);
   const captionTimerRef = useRef(null);
+  const projectId = project?._id || project?.id;
 
   const PIPELINE_STEPS = [
     { title: "Audio Extraction", desc: "Extracting source audio stream & wave data" },
     { title: "AI Speech-to-Text", desc: "Transcribing dialogue with word timestamps" },
-    { title: "Viral Moment Scoring", desc: "Analyzing narrative hooks with AI" },
+    { title: "Content Intelligence & Scoring", desc: "Analyzing narrative hooks, topics & virality" },
     { title: "9:16 Shorts Generation", desc: "Building vertical crop framing & subtitles" }
   ];
 
-  // Auto-detect project status and load existing candidates on mount
-  useEffect(() => {
-    if (!project?._id && !project?.id) return;
-    const pId = project._id || project.id;
-
-    if (project?.status === "transcribing") {
-      setRunningPipeline(true);
-      setPipelineStep(2);
-    } else if (project?.status === "analyzing") {
-      setRunningPipeline(true);
-      setPipelineStep(3);
-    }
-
-    // Fetch existing generated candidates
-    api.get(`/api/projects/${pId}/pipeline-status`).then((res) => {
-      const data = res.data?.data;
-      if (data?.candidates && data.candidates.length > 0) {
+  // Real-time Pipeline hook (SSE with automatic polling fallback)
+  const realtimePipeline = useRealtimePipeline({
+    projectId,
+    active: Boolean(projectId),
+    onUpdate: (data) => {
+      if (data?.candidates?.length) {
         setCandidates(data.candidates);
       }
-    }).catch(() => {
-      api.get(`/api/projects/${pId}`).then((res) => {
-        const p = res.data?.data;
-        if (p?.candidates && p.candidates.length > 0) {
-          setCandidates(p.candidates);
-        }
-      }).catch(() => {});
+      if (data?.status === "transcribing") {
+        setRunningPipeline(true);
+        setPipelineStep(2);
+      } else if (data?.status === "analyzing") {
+        setRunningPipeline(true);
+        setPipelineStep(3);
+      }
+    },
+    onComplete: (data) => {
+      setRunningPipeline(false);
+      setPipelineStep(4);
+      if (data?.candidates?.length) {
+        setCandidates(data.candidates);
+      }
+    },
+    onError: (err) => {
+      setRunningPipeline(false);
+      setError(String(err));
+    }
+  });
+
+  // Filter candidates based on content type and review status
+  const filteredCandidates = useMemo(() => {
+    return candidates.filter((c) => {
+      if (selectedContentType !== "all" && (c.contentType || "Viral").toLowerCase() !== selectedContentType.toLowerCase()) {
+        return false;
+      }
+      if (selectedReviewFilter !== "all" && (c.reviewStatus || "ai_found") !== selectedReviewFilter) {
+        return false;
+      }
+      return true;
     });
-  }, [project?._id, project?.id, project?.status]);
+  }, [candidates, selectedContentType, selectedReviewFilter]);
 
   // Elapsed timer for Shorts pipeline
   useEffect(() => {
@@ -98,910 +145,742 @@ export function AiClipGeneratorPanel({
     };
   }, [runningPipeline]);
 
-  const [liveProgress, setLiveProgress] = useState(0);
-  const [liveMessage, setLiveMessage] = useState("");
-  const [liveLogs, setLiveLogs] = useState([]);
-
-  // Elapsed timer for Caption generator
-  useEffect(() => {
-    if (generatingCaptions) {
-      setCaptionElapsedSec(0);
-      captionTimerRef.current = setInterval(() => {
-        setCaptionElapsedSec((prev) => prev + 1);
-      }, 1000);
-    } else {
-      if (captionTimerRef.current) clearInterval(captionTimerRef.current);
-    }
-    return () => {
-      if (captionTimerRef.current) clearInterval(captionTimerRef.current);
-    };
-  }, [generatingCaptions]);
-
-  // Real-time poller to sync live progress & server logs with UI
-  useEffect(() => {
-    if (!runningPipeline || (!project?._id && !project?.id)) return;
-    const pId = project._id || project.id;
-    const interval = setInterval(async () => {
-      try {
-        const res = await api.get(`/api/projects/${pId}/pipeline-status`);
-        const data = res.data?.data;
-        if (data) {
-          if (data.progress !== undefined) setLiveProgress(data.progress);
-          if (data.message) setLiveMessage(data.message);
-          if (data.logs) setLiveLogs(data.logs);
-
-          if (data.stage === "extracting_audio" || data.stage === "downloading") {
-            setPipelineStep(1);
-          } else if (data.stage === "transcribing") {
-            setPipelineStep(2);
-          } else if (data.stage === "analyzing_moments" || data.stage === "analyzing") {
-            setPipelineStep(3);
-          } else if (data.stage === "rendering_shorts" || data.stage === "rendering" || data.stage === "completed") {
-            setPipelineStep(4);
-          }
-
-          if (data.status === "completed" || (data.candidates && data.candidates.length > 0 && data.progress >= 95)) {
-            if (data.candidates) setCandidates(data.candidates);
-            setRunningPipeline(false);
-          } else if (data.stage === "error" || (data.message && data.message.includes("failed"))) {
-            setError(data.message);
-            setRunningPipeline(false);
-          }
-        }
-      } catch {
-        // ignore transient poll error
-      }
-    }, 1200);
-
-    return () => clearInterval(interval);
-  }, [runningPipeline, project?._id, project?.id]);
-
+  // Trigger full auto pipeline
   const handleRunAutoPipeline = async () => {
-    if (runningPipeline) return;
-    let pipelineStarted = false;
+    if (!projectId) return;
     try {
-      setRunningPipeline(true);
       setError(null);
+      setRunningPipeline(true);
       setPipelineStep(1);
 
-      // Smooth step visual progression
-      const stepTimer1 = setTimeout(() => setPipelineStep((s) => (s < 2 ? 2 : s)), 3000);
-      const stepTimer2 = setTimeout(() => setPipelineStep((s) => (s < 3 ? 3 : s)), 12000);
-
-      let storedKeys = {};
-      try {
-        const cached = localStorage.getItem("autoshorts_user_keys");
-        if (cached) storedKeys = JSON.parse(cached);
-      } catch {}
-
-      const res = await api.post(`/api/projects/${project._id || project.id}/auto-pipeline`, {
+      await api.post(`/api/projects/${projectId}/auto-pipeline`, {
         clipCount,
         durationStyle,
-        transcriptionMode: transcriptionProvider,
-        language: transcriptionLanguage,
-        ...storedKeys
-      });
-
-      clearTimeout(stepTimer1);
-      clearTimeout(stepTimer2);
-      pipelineStarted = true;
-
-      if (res.data?.data?.candidates) {
-        setCandidates(res.data.data.candidates);
-      } else if (res.data?.data) {
-        setCandidates(Array.isArray(res.data.data) ? res.data.data : []);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || err.message || "Pipeline execution failed");
-      setPipelineStep(0);
-    } finally {
-      // The server runs this pipeline in the background. Keep polling until it
-      // reports completion or an error, rather than hiding progress immediately.
-      if (!pipelineStarted) setRunningPipeline(false);
-    }
-  };
-
-  const handleGenerateWholeVideoCaptions = async () => {
-    if (generatingCaptions) return;
-    try {
-      setGeneratingCaptions(true);
-      setError(null);
-      setCaptionProgressText("Transcribing speech from video...");
-
-      let storedKeys = {};
-      try {
-        const cached = localStorage.getItem("autoshorts_user_keys");
-        if (cached) storedKeys = JSON.parse(cached);
-      } catch {}
-
-      const res = await api.post(`/api/projects/${project._id || project.id}/transcribe`, {
         provider: transcriptionProvider,
         language: transcriptionLanguage,
-        ...storedKeys
+        captionStyle: captionStyle || "modern-box"
       });
-
-      const transcriptData = res.data?.data;
-      if (!transcriptData) {
-        throw new Error("No transcription data returned from server");
-      }
-
-      setCaptionProgressText("Formatting subtitle timeline segments...");
-
-      let formattedSegments = [];
-
-      if (captionSplitMode === "punchy" && transcriptData.words && transcriptData.words.length > 0) {
-        const words = transcriptData.words;
-        const chunkSize = 4;
-        for (let i = 0; i < words.length; i += chunkSize) {
-          const chunk = words.slice(i, i + chunkSize);
-          const start = chunk[0].start || 0;
-          const end = chunk[chunk.length - 1].end || (start + 1.2);
-          const text = chunk.map((w) => w.text).join(" ");
-          formattedSegments.push({
-            id: `caption_${Date.now()}_${formattedSegments.length}`,
-            start,
-            end,
-            text,
-            fontId: captionStyle?.fontId || "default",
-            style: captionStyle || {}
-          });
-        }
-      } else if (transcriptData.segments && transcriptData.segments.length > 0) {
-        formattedSegments = transcriptData.segments.map((seg, idx) => ({
-          id: `caption_${Date.now()}_${idx}`,
-          start: Number(seg.start) || 0,
-          end: Number(seg.end) || 0,
-          text: seg.text || "",
-          fontId: captionStyle?.fontId || "default",
-          style: captionStyle || {}
-        }));
-      } else if (transcriptData.words && transcriptData.words.length > 0) {
-        formattedSegments = transcriptData.words.map((w, idx) => ({
-          id: `caption_${Date.now()}_${idx}`,
-          start: Number(w.start) || 0,
-          end: Number(w.end) || 0,
-          text: w.text || "",
-          fontId: captionStyle?.fontId || "default",
-          style: captionStyle || {}
-        }));
-      }
-
-      if (formattedSegments.length === 0) {
-        throw new Error("No spoken dialogue detected in this video.");
-      }
-
-      const fullText = formattedSegments.map((s) => s.text).join(" ");
-
-      if (onApplyCaptions) {
-        onApplyCaptions(formattedSegments, fullText);
-      }
-
-      setAppliedCaptionCount(formattedSegments.length);
-      setCaptionProgressText("");
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Failed to generate whole video captions");
-    } finally {
-      setGeneratingCaptions(false);
+      setError(err.response?.data?.message || err.message || "Failed to run video pipeline");
+      setRunningPipeline(false);
     }
   };
 
-  const handleDownloadClip = async (cand) => {
-    const candidateId = cand._id || cand.id;
-    if (!candidateId) return;
+  // Update candidate review status (Approve / Reject / Reviewing)
+  const handleUpdateReviewStatus = async (candidateId, newStatus) => {
+    try {
+      await api.put(`/api/candidates/${candidateId}/review-status`, { reviewStatus: newStatus });
+      setCandidates((prev) =>
+        prev.map((c) => (c._id === candidateId || c.id === candidateId ? { ...c, reviewStatus: newStatus } : c))
+      );
+    } catch (e) {
+      console.warn("Failed to update review status", e);
+    }
+  };
 
-    const cleanTitle = (cand.title || `Short_${cand.rank || 1}`)
-      .replace(/[^a-zA-Z0-9_-]/g, "_")
-      .substring(0, 40);
-    const filename = `${cleanTitle}_9x16.mp4`;
+  const handleCopy = (text, key) => {
+    navigator.clipboard.writeText(text);
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const handleDownloadClip = async (candidate) => {
+    const candidateId = candidate._id || candidate.id;
+    if (!candidateId || downloadingClipId) return;
 
     try {
+      setError(null);
+      setDownloadingClipId(candidateId);
       const res = await api.get(`/api/candidates/${candidateId}/download`, {
-        responseType: "blob",
-        timeout: 300000 // 5 min for large renders
+        responseType: "blob"
       });
-      const blobUrl = URL.createObjectURL(new Blob([res.data], { type: "video/mp4" }));
-      const anchor = document.createElement("a");
-      anchor.href = blobUrl;
-      anchor.download = filename;
-      document.body.appendChild(anchor);
-      anchor.click();
-      document.body.removeChild(anchor);
-      URL.revokeObjectURL(blobUrl);
+      const disposition = res.headers?.["content-disposition"] || "";
+      const filenameMatch = disposition.match(/filename="?([^";]+)"?/i);
+      const fallbackName = `${candidate.title || "generated-short"}.mp4`.replace(/[\\/:*?"<>|]+/g, "_");
+      downloadMediaBlob(res.data, filenameMatch?.[1] || fallbackName);
     } catch (err) {
-      setError("Download failed: " + (err.response?.data?.message || err.message));
+      console.error("Failed to download generated clip:", err);
+      let message = err.message || "Failed to download generated clip";
+      const data = err.response?.data;
+      if (data instanceof Blob) {
+        try {
+          const text = await data.text();
+          message = JSON.parse(text)?.message || text || message;
+        } catch {
+          message = err.response?.statusText || message;
+        }
+      } else if (data?.message) {
+        message = data.message;
+      }
+      setError(message);
+    } finally {
+      setDownloadingClipId(null);
     }
-  };
-
-  const formatSec = (sec) => {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "16px", color: "#f4f4f5", fontFamily: "sans-serif" }}>
-      
-      {/* Mode Switcher Tabs */}
-      <div style={{
-        display: "flex",
-        background: "rgba(255, 255, 255, 0.05)",
-        padding: "4px",
-        borderRadius: "10px",
-        gap: "4px",
-        border: "1px solid rgba(255, 255, 255, 0.08)"
-      }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "16px", padding: "16px", color: "#f4f4f5" }}>
+      {/* Top Banner & Header */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+          <div style={{
+            width: "32px",
+            height: "32px",
+            borderRadius: "8px",
+            background: "linear-gradient(135deg, #6366f1, #a855f7)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center"
+          }}>
+            <Sparkles size={18} color="#ffffff" />
+          </div>
+          <div>
+            <h2 style={{ fontSize: "16px", fontWeight: 700, margin: 0, color: "#ffffff" }}>AI Content Intelligence</h2>
+            <span style={{ fontSize: "11px", color: "#94a3b8" }}>Extract, Rank, and Auto-Edit Viral Shorts</span>
+          </div>
+        </div>
+
+        {onOpenContentMap && (
+          <button
+            type="button"
+            className="layout-pill-btn"
+            onClick={onOpenContentMap}
+            title="Open Interactive Content Map"
+          >
+            <span>⚡ Content Map</span>
+          </button>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div style={{ display: "flex", gap: "8px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", paddingBottom: "8px" }}>
         <button
           type="button"
           onClick={() => setActiveTab("shorts")}
           style={{
-            flex: 1,
-            padding: "8px 12px",
-            borderRadius: "8px",
-            border: "none",
-            background: activeTab === "shorts" ? "linear-gradient(135deg, #6366f1, #8b5cf6)" : "transparent",
-            color: activeTab === "shorts" ? "#ffffff" : "#a1a1aa",
-            fontWeight: 600,
+            padding: "8px 14px",
+            borderRadius: "6px",
+            background: activeTab === "shorts" ? "rgba(99, 102, 241, 0.2)" : "transparent",
+            color: activeTab === "shorts" ? "#c4b5fd" : "#a1a1aa",
+            border: activeTab === "shorts" ? "1px solid rgba(99, 102, 241, 0.4)" : "1px solid transparent",
             fontSize: "12px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "6px",
-            cursor: "pointer",
-            transition: "all 0.2s ease"
+            fontWeight: 600,
+            cursor: "pointer"
           }}
         >
-          <Sparkles size={14} />
-          <span>AI Viral Shorts</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab("captions")}
-          style={{
-            flex: 1,
-            padding: "8px 12px",
-            borderRadius: "8px",
-            border: "none",
-            background: activeTab === "captions" ? "linear-gradient(135deg, #6366f1, #8b5cf6)" : "transparent",
-            color: activeTab === "captions" ? "#ffffff" : "#a1a1aa",
-            fontWeight: 600,
-            fontSize: "12px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: "6px",
-            cursor: "pointer",
-            transition: "all 0.2s ease"
-          }}
-        >
-          <Subtitles size={14} />
-          <span>Whole Video Captions</span>
+          AI Viral Shorts ({candidates.length})
         </button>
       </div>
 
-      {/* TAB 1: AI SHORTS GENERATOR */}
-      {activeTab === "shorts" && (
-        <div style={{
-          padding: "16px",
-          background: "linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)",
-          border: "1px solid rgba(99, 102, 241, 0.2)",
-          borderRadius: "12px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Sparkles size={18} color="#8b5cf6" />
-              <h3 style={{ fontSize: "14px", fontWeight: 600, margin: 0, color: "#ffffff" }}>Generate Viral 9:16 Shorts</h3>
-            </div>
-            <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "999px", background: "rgba(139, 92, 246, 0.2)", color: "#c084fc", fontWeight: 600 }}>
-              Auto Pipeline
-            </span>
-          </div>
-
-          <p style={{ fontSize: "12px", color: "#a1a1aa", margin: 0, lineHeight: 1.5 }}>
-            Extract viral moments with narrative hooks, speaker tracking, and animated punchy captions in 9:16 vertical format.
-          </p>
-
-          {/* Options */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingTop: "4px" }}>
-            
-            {/* Target Count Slider */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <div style={{ display: "flex", justifyContent: "space-between", fontSize: "11px", color: "#a1a1aa" }}>
-                <span>Target Shorts Count:</span>
-                <strong style={{ color: "#8b5cf6" }}>{clipCount} Clips</strong>
-              </div>
-              <input
-                type="range"
-                min="1"
-                max="10"
-                value={clipCount}
-                disabled={runningPipeline}
-                onChange={(e) => setClipCount(parseInt(e.target.value))}
-                style={{ width: "100%", cursor: runningPipeline ? "not-allowed" : "pointer", accentColor: "#6366f1" }}
-              />
-            </div>
-
-            {/* Duration Style */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "11px", color: "#a1a1aa" }}>Shorts Duration:</label>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "6px" }}>
-                {[
-                  ["short", "15-30s", "Snappy"],
-                  ["mixed", "30-60s", "Balanced"],
-                  ["medium", "60-90s", "Detailed"]
-                ].map(([id, time, label]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    disabled={runningPipeline}
-                    onClick={() => setDurationStyle(id)}
-                    style={{
-                      padding: "6px 8px",
-                      borderRadius: "6px",
-                      border: durationStyle === id ? "1px solid #8b5cf6" : "1px solid rgba(255, 255, 255, 0.08)",
-                      background: durationStyle === id ? "rgba(139, 92, 246, 0.15)" : "rgba(0, 0, 0, 0.2)",
-                      color: durationStyle === id ? "#c4b5fd" : "#a1a1aa",
-                      fontSize: "11px",
-                      cursor: runningPipeline ? "not-allowed" : "pointer",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: "2px"
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>{time}</span>
-                    <span style={{ fontSize: "9px", opacity: 0.7 }}>{label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Language & Dialect Selection */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "11px", color: "#a1a1aa" }}>Spoken Language / Script:</label>
-              <select
-                value={transcriptionLanguage}
-                disabled={runningPipeline}
-                onChange={(e) => setTranscriptionLanguage(e.target.value)}
-                style={{
-                  background: "rgba(0, 0, 0, 0.4)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
-                  color: "#f4f4f5",
-                  padding: "8px",
-                  borderRadius: "6px",
-                  fontSize: "11px",
-                  outline: "none",
-                  cursor: runningPipeline ? "not-allowed" : "pointer"
-                }}
-              >
-                <option value="hinglish">ðŸ‡®ðŸ‡³ Hinglish (Hindi in English/Latin letters)</option>
-                <option value="en">ðŸ‡ºðŸ‡¸ English</option>
-                <option value="hi">ðŸ‡®ðŸ‡³ Hindi (Devanagari script)</option>
-                <option value="auto">ðŸŒ Auto Detect Language</option>
-              </select>
-            </div>
-
-            {/* AI Speech Engine Selection */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "11px", color: "#a1a1aa" }}>Speech Recognition Engine:</label>
-              <select
-                value={transcriptionProvider}
-                disabled={runningPipeline}
-                onChange={(e) => setTranscriptionProvider(e.target.value)}
-                style={{
-                  background: "rgba(0, 0, 0, 0.4)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
-                  color: "#f4f4f5",
-                  padding: "8px",
-                  borderRadius: "6px",
-                  fontSize: "11px",
-                  outline: "none",
-                  cursor: runningPipeline ? "not-allowed" : "pointer"
-                }}
-              >
-                <option value="auto">⚡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
-                <option value="groq">Groq Whisper (Ultra Fast, Large-v3)</option>
-                <option value="openai">OpenAI Whisper Cloud</option>
-                <option value="deepgram">Deepgram Nova-2</option>
-                <option value="local">Local Whisper CLI</option>
-              </select>
-            </div>
-
-            {/* Submit Button */}
-            <button
-              type="button"
-              onClick={handleRunAutoPipeline}
+      {/* Main Generator Action Card */}
+      <div style={{
+        background: "rgba(0, 0, 0, 0.35)",
+        border: "1px solid rgba(255, 255, 255, 0.08)",
+        borderRadius: "10px",
+        padding: "14px",
+        display: "flex",
+        flexDirection: "column",
+        gap: "12px"
+      }}>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }}>
+          <div>
+            <label style={{ fontSize: "11px", color: "#94a3b8" }}>Opportunity Count:</label>
+            <select
+              value={clipCount}
               disabled={runningPipeline}
-              className="btn-primary-gradient"
+              onChange={(e) => setClipCount(Number(e.target.value))}
               style={{
                 width: "100%",
-                padding: "12px",
-                fontSize: "13px",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                borderRadius: "8px",
-                cursor: runningPipeline ? "not-allowed" : "pointer",
-                background: runningPipeline ? "rgba(99, 102, 241, 0.25)" : undefined,
-                border: runningPipeline ? "1px solid rgba(99, 102, 241, 0.4)" : undefined,
-                color: runningPipeline ? "#c4b5fd" : undefined,
-                transition: "all 0.2s ease"
-              }}
-            >
-              {runningPipeline ? (
-                <>
-                  <Loader2 size={16} className="spin" style={{ animation: "spin 1s linear infinite" }} />
-                  <span>Transcribing & Generating Shorts ({formatSec(elapsedSec)})...</span>
-                </>
-              ) : (
-                <>
-                  <Sparkles size={16} />
-                  <span>{hasCaptions ? "Generate AI Shorts" : "Generate Captions & Shorts"}</span>
-                </>
-              )}
-            </button>
-          </div>
-
-          {/* Active Pipeline Card */}
-          {runningPipeline && (
-            <div style={{
-              marginTop: "8px",
-              background: "rgba(0, 0, 0, 0.45)",
-              border: "1px solid rgba(139, 92, 246, 0.35)",
-              borderRadius: "10px",
-              padding: "14px",
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-              animation: "fadeIn 0.3s ease"
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <Radio size={14} color="#a855f7" className="spin" style={{ animation: "pulse 1.5s ease infinite" }} />
-                  <span style={{ fontSize: "12px", fontWeight: 600, color: "#e9d5ff" }}>
-                    AI Pipeline Active {liveProgress > 0 ? `(${liveProgress}%)` : ""}
-                  </span>
-                </div>
-                <span style={{ fontSize: "11px", color: "#a1a1aa", background: "rgba(255, 255, 255, 0.06)", padding: "2px 6px", borderRadius: "4px" }}>
-                  Elapsed: {formatSec(elapsedSec)}
-                </span>
-              </div>
-
-              {/* Pulsing Progress Line */}
-              <div style={{ height: "5px", background: "rgba(255, 255, 255, 0.08)", borderRadius: "999px", overflow: "hidden" }}>
-                <div style={{
-                  height: "100%",
-                  width: `${Math.min(100, Math.max(8, liveProgress || (pipelineStep * 25)))}%`,
-                  background: "linear-gradient(90deg, #6366f1, #a855f7, #ec4899)",
-                  transition: "width 0.4s ease",
-                  borderRadius: "999px"
-                }} />
-              </div>
-
-              {/* Live status subtitle */}
-              {liveMessage && (
-                <div style={{
-                  fontSize: "11px",
-                  color: "#c084fc",
-                  background: "rgba(192, 132, 252, 0.08)",
-                  border: "1px solid rgba(192, 132, 252, 0.2)",
-                  padding: "6px 10px",
-                  borderRadius: "6px",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px"
-                }}>
-                  <Loader2 size={12} className="spin" />
-                  <span>{liveMessage}</span>
-                </div>
-              )}
-
-              <div style={{ display: "flex", flexDirection: "column", gap: "8px", paddingTop: "4px" }}>
-                {PIPELINE_STEPS.map((step, idx) => {
-                  const stepNum = idx + 1;
-                  const isDone = pipelineStep > stepNum;
-                  const isCurrent = pipelineStep === stepNum;
-                  return (
-                    <div
-                      key={step.title}
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "10px",
-                        fontSize: "11px",
-                        padding: "4px 8px",
-                        borderRadius: "6px",
-                        background: isCurrent ? "rgba(139, 92, 246, 0.12)" : "transparent",
-                        color: isCurrent ? "#ffffff" : isDone ? "#4ade80" : "#71717a"
-                      }}
-                    >
-                      {isDone ? (
-                        <CheckCircle2 size={15} color="#4ade80" />
-                      ) : isCurrent ? (
-                        <Loader2 size={15} color="#c084fc" style={{ animation: "spin 1s linear infinite" }} />
-                      ) : (
-                        <div style={{ width: "15px", height: "15px", borderRadius: "50%", border: "1px solid #52525b" }} />
-                      )}
-                      <div style={{ display: "flex", flexDirection: "column" }}>
-                        <span style={{ fontWeight: isCurrent ? 600 : 400, color: isCurrent ? "#ffffff" : isDone ? "#4ade80" : "#a1a1aa" }}>
-                          {step.title} {isCurrent && <em style={{ fontSize: "10px", color: "#c084fc", fontStyle: "normal" }}>â€” in progress</em>}
-                        </span>
-                        <span style={{ fontSize: "10px", color: "#71717a" }}>{step.desc}</span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Live Console Output Feed */}
-              {liveLogs.length > 0 && (
-                <div style={{
-                  marginTop: "6px",
-                  background: "#08090d",
-                  border: "1px solid rgba(255, 255, 255, 0.07)",
-                  borderRadius: "6px",
-                  padding: "8px 10px",
-                  maxHeight: "100px",
-                  overflowY: "auto",
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: "3px"
-                }}>
-                  <div style={{ fontSize: "9px", textTransform: "uppercase", letterSpacing: "0.05em", color: "#71717a", fontWeight: 600, borderBottom: "1px solid rgba(255, 255, 255, 0.05)", paddingBottom: "3px", marginBottom: "2px" }}>
-                    Live Server Activity Feed
-                  </div>
-                  {liveLogs.map((logLine, lIdx) => (
-                    <div
-                      key={lIdx}
-                      style={{
-                        fontFamily: "monospace",
-                        fontSize: "10px",
-                        lineHeight: 1.3,
-                        color: logLine.includes("failed") || logLine.includes("error") ? "#f87171" : logLine.includes("complete") || logLine.includes("Complete") ? "#4ade80" : "#a1a1aa"
-                      }}
-                    >
-                      {logLine}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* TAB 2: WHOLE VIDEO CAPTIONS GENERATOR */}
-      {activeTab === "captions" && (
-        <div style={{
-          padding: "16px",
-          background: "linear-gradient(135deg, rgba(99, 102, 241, 0.08) 0%, rgba(139, 92, 246, 0.08) 100%)",
-          border: "1px solid rgba(99, 102, 241, 0.2)",
-          borderRadius: "12px",
-          display: "flex",
-          flexDirection: "column",
-          gap: "12px"
-        }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <Subtitles size={18} color="#8b5cf6" />
-              <h3 style={{ fontSize: "14px", fontWeight: 600, margin: 0, color: "#ffffff" }}>Full Video Auto-Captions</h3>
-            </div>
-            <span style={{ fontSize: "10px", padding: "2px 8px", borderRadius: "999px", background: "rgba(16, 185, 129, 0.15)", color: "#34d399", fontWeight: 600 }}>
-              1-Click Apply
-            </span>
-          </div>
-
-          <p style={{ fontSize: "12px", color: "#a1a1aa", margin: 0, lineHeight: 1.5 }}>
-            Transcribe the entire project audio and generate word-accurate timeline caption segments with customizable layout styles.
-          </p>
-
-          <div style={{ display: "flex", flexDirection: "column", gap: "12px", paddingTop: "4px" }}>
-            
-            {/* Caption Format Style */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "11px", color: "#a1a1aa" }}>Subtitle Segmentation Style:</label>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px" }}>
-                {[
-                  ["smart", "Sentence Chunks", "Natural reading flow"],
-                  ["punchy", "Punchy Phrases", "3-4 words (Viral style)"]
-                ].map(([id, title, desc]) => (
-                  <button
-                    key={id}
-                    type="button"
-                    disabled={generatingCaptions}
-                    onClick={() => setCaptionSplitMode(id)}
-                    style={{
-                      padding: "8px 10px",
-                      borderRadius: "6px",
-                      border: captionSplitMode === id ? "1px solid #8b5cf6" : "1px solid rgba(255, 255, 255, 0.08)",
-                      background: captionSplitMode === id ? "rgba(139, 92, 246, 0.15)" : "rgba(0, 0, 0, 0.2)",
-                      color: captionSplitMode === id ? "#c4b5fd" : "#a1a1aa",
-                      fontSize: "11px",
-                      cursor: generatingCaptions ? "not-allowed" : "pointer",
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      gap: "2px"
-                    }}
-                  >
-                    <span style={{ fontWeight: 600 }}>{title}</span>
-                    <span style={{ fontSize: "9px", opacity: 0.7 }}>{desc}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Language & Dialect Selection */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "11px", color: "#a1a1aa" }}>Spoken Language / Script:</label>
-              <select
-                value={transcriptionLanguage}
-                disabled={generatingCaptions}
-                onChange={(e) => setTranscriptionLanguage(e.target.value)}
-                style={{
-                  background: "rgba(0, 0, 0, 0.4)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
-                  color: "#f4f4f5",
-                  padding: "8px",
-                  borderRadius: "6px",
-                  fontSize: "11px",
-                  outline: "none",
-                  cursor: generatingCaptions ? "not-allowed" : "pointer"
-                }}
-              >
-                <option value="hinglish">ðŸ‡®ðŸ‡³ Hinglish (Hindi in English/Latin letters)</option>
-                <option value="en">ðŸ‡ºðŸ‡¸ English</option>
-                <option value="hi">ðŸ‡®ðŸ‡³ Hindi (Devanagari script)</option>
-                <option value="auto">ðŸŒ Auto Detect Language</option>
-              </select>
-            </div>
-
-            {/* Speech Recognition Engine */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-              <label style={{ fontSize: "11px", color: "#a1a1aa" }}>Speech Recognition Engine:</label>
-              <select
-                value={transcriptionProvider}
-                disabled={generatingCaptions}
-                onChange={(e) => setTranscriptionProvider(e.target.value)}
-                style={{
-                  background: "rgba(0, 0, 0, 0.4)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
-                  color: "#f4f4f5",
-                  padding: "8px",
-                  borderRadius: "6px",
-                  fontSize: "11px",
-                  outline: "none",
-                  cursor: generatingCaptions ? "not-allowed" : "pointer"
-                }}
-              >
-                <option value="auto">⚡ Auto Smart (Groq / OpenAI / Deepgram / Local)</option>
-                <option value="groq">Groq Whisper (Ultra Fast, Large-v3)</option>
-                <option value="openai">OpenAI Whisper Cloud</option>
-                <option value="deepgram">Deepgram Nova-2</option>
-                <option value="local">Local Whisper CLI</option>
-              </select>
-            </div>
-
-            {/* Action Button */}
-            <button
-              type="button"
-              onClick={handleGenerateWholeVideoCaptions}
-              disabled={generatingCaptions}
-              className="btn-primary-gradient"
-              style={{
-                width: "100%",
-                padding: "12px",
-                fontSize: "13px",
-                fontWeight: 600,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "8px",
-                borderRadius: "8px",
-                cursor: generatingCaptions ? "not-allowed" : "pointer",
-                background: generatingCaptions ? "rgba(99, 102, 241, 0.25)" : undefined,
-                border: generatingCaptions ? "1px solid rgba(99, 102, 241, 0.4)" : undefined,
-                color: generatingCaptions ? "#c4b5fd" : undefined,
-                transition: "all 0.2s ease"
-              }}
-            >
-              {generatingCaptions ? (
-                <>
-                  <Loader2 size={16} className="spin" style={{ animation: "spin 1s linear infinite" }} />
-                  <span>{captionProgressText || "Transcribing Audio"} ({formatSec(captionElapsedSec)})...</span>
-                </>
-              ) : (
-                <>
-                  <Subtitles size={16} />
-                  <span>Transcribe & Apply Captions to Timeline</span>
-                </>
-              )}
-            </button>
-
-            {appliedCaptionCount !== null && (
-              <div style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                fontSize: "11px",
-                color: "#4ade80",
-                background: "rgba(74, 222, 128, 0.1)",
-                padding: "8px 12px",
+                marginTop: "4px",
+                padding: "8px",
+                background: "rgba(0,0,0,0.4)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "#fff",
                 borderRadius: "6px",
-                border: "1px solid rgba(74, 222, 128, 0.2)"
-              }}>
-                <Check size={14} />
-                <span>Successfully generated and applied {appliedCaptionCount} captions to the timeline track!</span>
-              </div>
-            )}
+                fontSize: "11px"
+              }}
+            >
+              <option value={3}>Top 3 Opportunities</option>
+              <option value={5}>Top 5 Opportunities</option>
+              <option value={8}>Top 8 Opportunities</option>
+              <option value={12}>Top 12 Opportunities</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ fontSize: "11px", color: "#94a3b8" }}>Recognition Model:</label>
+            <select
+              value={transcriptionProvider}
+              disabled={runningPipeline}
+              onChange={(e) => setTranscriptionProvider(e.target.value)}
+              style={{
+                width: "100%",
+                marginTop: "4px",
+                padding: "8px",
+                background: "rgba(0,0,0,0.4)",
+                border: "1px solid rgba(255,255,255,0.12)",
+                color: "#fff",
+                borderRadius: "6px",
+                fontSize: "11px"
+              }}
+            >
+              <option value="auto">⚡ Auto Smart (Groq / OpenAI / Deepgram)</option>
+              <option value="groq">Groq Whisper (Ultra Fast)</option>
+              <option value="openai">OpenAI Whisper Cloud</option>
+              <option value="deepgram">Deepgram Nova-2</option>
+            </select>
           </div>
         </div>
-      )}
 
-      {/* Error Banner */}
+        <button
+          type="button"
+          onClick={handleRunAutoPipeline}
+          disabled={runningPipeline}
+          className="btn-primary-gradient"
+          style={{
+            padding: "12px",
+            fontSize: "13px",
+            fontWeight: 700,
+            borderRadius: "8px",
+            cursor: runningPipeline ? "not-allowed" : "pointer",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px"
+          }}
+        >
+          {runningPipeline ? (
+            <>
+              <Loader2 size={16} className="spin" />
+              <span>Analyzing Video & Generating Content ({formatSec(elapsedSec)})...</span>
+            </>
+          ) : (
+            <>
+              <Sparkles size={16} />
+              <span>Analyze & Generate Content Intelligence</span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Error Display */}
       {error && (
         <div style={{
           padding: "12px",
           background: "rgba(239, 68, 68, 0.1)",
-          border: "1px solid rgba(239, 68, 68, 0.25)",
+          border: "1px solid rgba(239, 68, 68, 0.3)",
           borderRadius: "8px",
           color: "#f87171",
           fontSize: "12px",
-          lineHeight: 1.4,
           display: "flex",
-          alignItems: "flex-start",
+          alignItems: "center",
           gap: "8px"
         }}>
-          <AlertCircle size={16} style={{ flexShrink: 0, marginTop: "2px" }} />
-          <div>{error}</div>
+          <AlertCircle size={16} />
+          <span>{error}</span>
         </div>
       )}
 
-      {/* Generated Candidates List */}
-      {activeTab === "shorts" && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-          <h4 style={{ fontSize: "11px", fontWeight: 600, color: "#a1a1aa", textTransform: "uppercase", letterSpacing: "0.05em", margin: "8px 0 0 0" }}>
-            Detected Viral Moments ({candidates.length})
-          </h4>
+      {/* Content Type & Review Status Filters */}
+      {candidates.length > 0 && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+          {/* Content Types Chips */}
+          <div className="content-map-filter-bar">
+            <button
+              type="button"
+              className={`content-type-filter-chip ${selectedContentType === "all" ? "is-active" : ""}`}
+              onClick={() => setSelectedContentType("all")}
+            >
+              <span>ALL ({candidates.length})</span>
+            </button>
+            {CONTENT_TYPES.map((type) => {
+              const count = candidates.filter((c) => (c.contentType || "Viral").toLowerCase() === type.id.toLowerCase()).length;
+              if (count === 0) return null;
+              return (
+                <button
+                  key={type.id}
+                  type="button"
+                  className={`content-type-filter-chip ${selectedContentType === type.id ? "is-active" : ""}`}
+                  onClick={() => setSelectedContentType(type.id)}
+                  style={selectedContentType === type.id ? { borderColor: type.color, color: "#ffffff", background: type.bg } : undefined}
+                >
+                  <span>{type.icon}</span>
+                  <span>{type.label} ({count})</span>
+                </button>
+              );
+            })}
+          </div>
 
-          {candidates.length === 0 ? (
-            <div style={{
-              padding: "32px 16px",
-              textAlign: "center",
-              color: "#71717a",
-              fontSize: "12px",
-              border: "1px dashed rgba(255, 255, 255, 0.08)",
-              borderRadius: "12px",
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: "8px"
-            }}>
-              <Sparkles size={24} style={{ color: "#3f3f46" }} />
-              <span>Click "Generate AI Shorts" to analyze your video and extract clips.</span>
-            </div>
-          ) : (
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-              {candidates.map((candidate, idx) => {
-                const start = Number(candidate.startSec ?? candidate.start) || 0;
-                const end = Number(candidate.endSec ?? candidate.end) || (start + 30);
-                const duration = (end - start).toFixed(1);
-                const score = candidate.score || 85;
+          {/* Human Review Status Filter */}
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", overflowX: "auto" }}>
+            {REVIEW_STATUSES.map((st) => (
+              <button
+                key={st.id}
+                type="button"
+                onClick={() => setSelectedReviewFilter(st.id)}
+                style={{
+                  padding: "4px 10px",
+                  borderRadius: "6px",
+                  fontSize: "10px",
+                  fontWeight: 600,
+                  border: selectedReviewFilter === st.id ? "1px solid #818cf8" : "1px solid rgba(255,255,255,0.06)",
+                  background: selectedReviewFilter === st.id ? "rgba(99,102,241,0.2)" : "rgba(0,0,0,0.2)",
+                  color: selectedReviewFilter === st.id ? "#c7d2fe" : "#94a3b8",
+                  cursor: "pointer"
+                }}
+              >
+                {st.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
-                return (
-                  <div
-                    key={candidate._id || idx}
+      {/* Candidate Opportunities Cards List */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+        {filteredCandidates.map((candidate, idx) => {
+          const start = Number(candidate.startSec ?? candidate.start) || 0;
+          const end = Number(candidate.endSec ?? candidate.end) || (start + 30);
+          const duration = (end - start).toFixed(1);
+          const score = candidate.score || 85;
+          const cfg = getContentTypeConfig(candidate.contentType);
+          const candidateId = candidate._id || candidate.id;
+          const reviewStatus = candidate.reviewStatus || "ai_found";
+
+          return (
+            <div
+              key={candidateId || idx}
+              style={{
+                padding: "14px",
+                background: "rgba(255, 255, 255, 0.02)",
+                border: "1px solid rgba(255, 255, 255, 0.07)",
+                borderRadius: "10px",
+                display: "flex",
+                flexDirection: "column",
+                gap: "10px"
+              }}
+            >
+              {/* Header with Type, Title, and Score */}
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                    <span style={{
+                      fontSize: "10px",
+                      fontWeight: 700,
+                      padding: "2px 6px",
+                      borderRadius: "4px",
+                      background: cfg.bg,
+                      color: cfg.color,
+                      border: `1px solid ${cfg.border}`
+                    }}>
+                      {cfg.icon} {candidate.contentType || "Viral"}
+                    </span>
+
+                    <span style={{
+                      fontSize: "10px",
+                      fontWeight: 600,
+                      padding: "2px 6px",
+                      borderRadius: "4px",
+                      background: reviewStatus === "approved" ? "rgba(16,185,129,0.2)" : reviewStatus === "rejected" ? "rgba(239,68,68,0.2)" : "rgba(255,255,255,0.06)",
+                      color: reviewStatus === "approved" ? "#34d399" : reviewStatus === "rejected" ? "#f87171" : "#94a3b8"
+                    }}>
+                      {reviewStatus.toUpperCase()}
+                    </span>
+                  </div>
+
+                  <h4 style={{ fontSize: "14px", fontWeight: 600, color: "#ffffff", margin: 0 }}>
+                    {candidate.title || `Moment #${idx + 1}`}
+                  </h4>
+
+                  <p style={{ fontSize: "11px", color: "#71717a", margin: "3px 0 0 0" }}>
+                    {formatSec(start)} - {formatSec(end)} ({duration}s duration)
+                  </p>
+                </div>
+
+                <div style={{
+                  padding: "3px 8px",
+                  borderRadius: "999px",
+                  fontSize: "11px",
+                  fontWeight: 700,
+                  background: "rgba(245, 158, 11, 0.12)",
+                  color: "#fbbf24",
+                  border: "1px solid rgba(245, 158, 11, 0.25)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px"
+                }}>
+                  <Flame size={13} />
+                  <span>{Math.round(score)}%</span>
+                </div>
+              </div>
+
+              {/* Hook text */}
+              {candidate.hook && (
+                <div style={{
+                  fontSize: "11.5px",
+                  color: "#e2e8f0",
+                  fontStyle: "italic",
+                  background: "rgba(0, 0, 0, 0.25)",
+                  padding: "8px 10px",
+                  borderRadius: "6px",
+                  borderLeft: `3px solid ${cfg.color}`,
+                  lineHeight: 1.4
+                }}>
+                  "{candidate.hook}"
+                </div>
+              )}
+
+              {/* Action Tabs Bar: Hooks | Titles | Social Posts | Score */}
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap", paddingTop: "4px" }}>
+                <button
+                  type="button"
+                  onClick={() => setActiveHookModalCandidate(candidate)}
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: "6px",
+                    background: "rgba(99, 102, 241, 0.12)",
+                    border: "1px solid rgba(99, 102, 241, 0.25)",
+                    color: "#a5b4fc",
+                    fontSize: "10.5px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                >
+                  <Sparkles size={12} />
+                  <span>5 AI Hooks</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveTitleModalCandidate(candidate)}
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: "6px",
+                    background: "rgba(168, 85, 247, 0.12)",
+                    border: "1px solid rgba(168, 85, 247, 0.25)",
+                    color: "#d8b4fe",
+                    fontSize: "10.5px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                >
+                  <FileText size={12} />
+                  <span>AI Titles</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setActiveSocialModalCandidate(candidate)}
+                  style={{
+                    padding: "4px 8px",
+                    borderRadius: "6px",
+                    background: "rgba(6, 182, 212, 0.12)",
+                    border: "1px solid rgba(6, 182, 212, 0.25)",
+                    color: "#67e8f9",
+                    fontSize: "10.5px",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "4px"
+                  }}
+                >
+                  <Share2 size={12} />
+                  <span>Social Posts</span>
+                </button>
+              </div>
+
+              {/* Human Review Approval & Timeline Open Bar */}
+              <div style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "8px",
+                paddingTop: "8px",
+                borderTop: "1px solid rgba(255, 255, 255, 0.06)"
+              }}>
+                {/* Human Review Buttons */}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateReviewStatus(candidateId, reviewStatus === "approved" ? "ai_found" : "approved")}
                     style={{
-                      padding: "14px",
-                      background: "rgba(255, 255, 255, 0.02)",
-                      border: "1px solid rgba(255, 255, 255, 0.06)",
-                      borderRadius: "10px",
+                      padding: "5px 8px",
+                      borderRadius: "6px",
+                      border: "1px solid",
+                      borderColor: reviewStatus === "approved" ? "#10b981" : "rgba(255, 255, 255, 0.1)",
+                      background: reviewStatus === "approved" ? "rgba(16, 185, 129, 0.2)" : "transparent",
+                      color: reviewStatus === "approved" ? "#34d399" : "#94a3b8",
+                      cursor: "pointer",
+                      fontSize: "11px",
                       display: "flex",
-                      flexDirection: "column",
-                      gap: "10px"
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                    title="Approve clip for production"
+                  >
+                    <ThumbsUp size={12} />
+                    <span>Approve</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateReviewStatus(candidateId, reviewStatus === "rejected" ? "ai_found" : "rejected")}
+                    style={{
+                      padding: "5px 8px",
+                      borderRadius: "6px",
+                      border: "1px solid",
+                      borderColor: reviewStatus === "rejected" ? "#ef4444" : "rgba(255, 255, 255, 0.1)",
+                      background: reviewStatus === "rejected" ? "rgba(239, 68, 68, 0.2)" : "transparent",
+                      color: reviewStatus === "rejected" ? "#f87171" : "#94a3b8",
+                      cursor: "pointer",
+                      fontSize: "11px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
+                    title="Reject clip"
+                  >
+                    <ThumbsDown size={12} />
+                    <span>Reject</span>
+                  </button>
+                </div>
+
+                {/* Open & Download Buttons */}
+                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadClip(candidate)}
+                    className="btn-secondary"
+                    style={{
+                      padding: "6px 10px",
+                      fontSize: "11px",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px",
+                      cursor: "pointer",
+                      borderRadius: "6px"
                     }}
                   >
-                    <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: "8px" }}>
-                      <div style={{ minWidth: 0, flex: 1 }}>
-                        <h5 style={{ fontSize: "13px", fontWeight: 600, color: "#ffffff", margin: 0, textOverflow: "ellipsis", overflow: "hidden", whiteSpace: "nowrap" }}>
-                          {candidate.title || `Moment #${idx + 1}`}
-                        </h5>
-                        <p style={{ fontSize: "11px", color: "#71717a", margin: "4px 0 0 0" }}>
-                          {start.toFixed(1)}s - {end.toFixed(1)}s ({duration}s duration)
-                        </p>
-                      </div>
+                    <Download size={12} />
+                    <span>Download</span>
+                  </button>
 
-                      <span style={{
-                        padding: "2px 8px",
-                        borderRadius: "999px",
-                        fontSize: "10px",
-                        fontWeight: 600,
-                        background: "rgba(245, 158, 11, 0.1)",
-                        color: "#fbbf24",
-                        border: "1px solid rgba(245, 158, 11, 0.2)",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "4px",
-                        height: "fit-content"
-                      }}>
-                        <Flame size={12} />
-                        <span>{Math.round(score)}% Score</span>
-                      </span>
-                    </div>
-
-                    {candidate.hook && (
-                      <p style={{
-                        fontSize: "11px",
-                        color: "#e4e4e7",
-                        fontStyle: "italic",
-                        background: "rgba(0, 0, 0, 0.2)",
-                        padding: "8px 12px",
-                        borderRadius: "6px",
-                        border: "1px solid rgba(255, 255, 255, 0.04)",
-                        margin: 0,
-                        lineHeight: 1.4
-                      }}>
-                        "{candidate.hook}"
-                      </p>
-                    )}
-
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "flex-end", gap: "8px", paddingTop: "8px", borderTop: "1px solid rgba(255, 255, 255, 0.06)" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleDownloadClip(candidate)}
-                        className="btn-secondary"
-                        style={{
-                          padding: "6px 12px",
-                          fontSize: "11px",
-                          fontWeight: 500,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          cursor: "pointer",
-                          borderRadius: "6px",
-                          color: "#34d399",
-                          borderColor: "rgba(52, 211, 153, 0.25)"
-                        }}
-                        title="Download 9:16 Short MP4"
-                      >
-                        <Download size={13} />
-                        <span>Download</span>
-                      </button>
-
-                      <button
-                        onClick={() => onLoadMomentIntoTimeline({
-                          start,
-                          end,
-                          title: candidate.title,
-                          aspectRatio: "vertical",
-                          rank: candidate.rank || index + 1
-                        })}
-                        className="btn-secondary"
-                        style={{
-                          padding: "6px 12px",
-                          fontSize: "11px",
-                          fontWeight: 500,
-                          display: "flex",
-                          alignItems: "center",
-                          gap: "6px",
-                          cursor: "pointer",
-                          borderRadius: "6px"
-                        }}
-                      >
-                        <span>Open on Timeline</span>
-                        <ArrowRight size={12} />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
+                  <button
+                    type="button"
+                    onClick={() => onLoadMomentIntoTimeline({
+                      start,
+                      end,
+                      title: candidate.title,
+                      aspectRatio: candidate.aspectRatio || "vertical",
+                      rank: candidate.rank || idx + 1,
+                      layout: candidate.layout,
+                      focusX: candidate.focusX,
+                      focusY: candidate.focusY,
+                      zoomFactor: candidate.zoomFactor,
+                      smartFrame: candidate.smartFrame
+                    })}
+                    className="btn-primary-gradient"
+                    style={{
+                      padding: "6px 12px",
+                      fontSize: "11px",
+                      fontWeight: 600,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "5px",
+                      cursor: "pointer",
+                      borderRadius: "6px"
+                    }}
+                  >
+                    <span>Open on Timeline</span>
+                    <ArrowRight size={12} />
+                  </button>
+                </div>
+              </div>
             </div>
-          )}
+          );
+        })}
+      </div>
+
+      {/* 5 AI Hooks Modal */}
+      {activeHookModalCandidate && (
+        <div className="language-intro" style={{ zIndex: 1100 }}>
+          <div className="language-intro-card" style={{ maxWidth: "600px", padding: "20px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Sparkles size={18} color="#818cf8" />
+                <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0, color: "#fff" }}>AI Hook Variations (5 Styles)</h3>
+              </div>
+              <button type="button" onClick={() => setActiveHookModalCandidate(null)} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer" }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+              {(activeHookModalCandidate.suggestedHooks || []).map((h, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: "rgba(0,0,0,0.3)",
+                    padding: "10px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "4px"
+                  }}
+                >
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: "10px", fontWeight: 700, color: "#818cf8", textTransform: "uppercase" }}>
+                      {h.hookType || `Style #${i + 1}`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(h.hook, `hook-${i}`)}
+                      style={{ background: "transparent", border: "none", color: copiedKey === `hook-${i}` ? "#4ade80" : "#94a3b8", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", gap: "4px" }}
+                    >
+                      {copiedKey === `hook-${i}` ? <Check size={12} /> : <Copy size={12} />}
+                      <span>{copiedKey === `hook-${i}` ? "Copied" : "Copy"}</span>
+                    </button>
+                  </div>
+                  <div style={{ fontSize: "12px", color: "#ffffff", fontWeight: 500 }}>"{h.hook}"</div>
+                  {h.reason && <div style={{ fontSize: "10px", color: "#94a3b8" }}>Why: {h.reason}</div>}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Titles Modal */}
+      {activeTitleModalCandidate && (
+        <div className="language-intro" style={{ zIndex: 1100 }}>
+          <div className="language-intro-card" style={{ maxWidth: "560px", padding: "20px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <FileText size={18} color="#a855f7" />
+                <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0, color: "#fff" }}>High-CTR AI Title Styles</h3>
+              </div>
+              <button type="button" onClick={() => setActiveTitleModalCandidate(null)} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer" }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {(activeTitleModalCandidate.suggestedTitles || []).map((tItem, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: "rgba(0,0,0,0.3)",
+                    padding: "10px 12px",
+                    borderRadius: "8px",
+                    border: "1px solid rgba(255,255,255,0.06)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: "8px"
+                  }}
+                >
+                  <div>
+                    <span style={{ fontSize: "9.5px", color: "#a855f7", fontWeight: 700, textTransform: "uppercase" }}>{tItem.style || "Direct"}</span>
+                    <div style={{ fontSize: "12px", color: "#fff", fontWeight: 500, marginTop: "2px" }}>{tItem.title}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(tItem.title, `title-${i}`)}
+                    style={{ background: "transparent", border: "none", color: copiedKey === `title-${i}` ? "#4ade80" : "#94a3b8", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", gap: "4px" }}
+                  >
+                    {copiedKey === `title-${i}` ? <Check size={12} /> : <Copy size={12} />}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Social Posts Modal */}
+      {activeSocialModalCandidate && (
+        <div className="language-intro" style={{ zIndex: 1100 }}>
+          <div className="language-intro-card" style={{ maxWidth: "650px", padding: "20px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "14px" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                <Share2 size={18} color="#06b6d4" />
+                <h3 style={{ fontSize: "15px", fontWeight: 700, margin: 0, color: "#fff" }}>Ready Platform Social Content</h3>
+              </div>
+              <button type="button" onClick={() => setActiveSocialModalCandidate(null)} style={{ background: "transparent", border: "none", color: "#94a3b8", cursor: "pointer" }}>
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
+              {/* Instagram */}
+              <div style={{ background: "rgba(0,0,0,0.3)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#ec4899" }}>📷 Instagram (Reels & Caption)</span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(`${activeSocialModalCandidate.suggestedCaptions?.instagram?.caption || ""}\n\n${activeSocialModalCandidate.suggestedCaptions?.instagram?.cta || ""}\n\n${activeSocialModalCandidate.suggestedCaptions?.instagram?.hashtags || ""}`, "social-ig")}
+                    style={{ background: "transparent", border: "none", color: copiedKey === "social-ig" ? "#4ade80" : "#94a3b8", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", gap: "4px" }}
+                  >
+                    {copiedKey === "social-ig" ? <Check size={12} /> : <Copy size={12} />}
+                    <span>{copiedKey === "social-ig" ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
+                <div style={{ fontSize: "11px", color: "#cbd5e1", whiteSpace: "pre-line", lineHeight: 1.4 }}>
+                  {activeSocialModalCandidate.suggestedCaptions?.instagram?.caption || "Insightful viral clip highlight."}
+                  {"\n\n"}
+                  {activeSocialModalCandidate.suggestedCaptions?.instagram?.cta || "Save this post for later 📌"}
+                  {"\n\n"}
+                  <span style={{ color: "#818cf8" }}>{activeSocialModalCandidate.suggestedCaptions?.instagram?.hashtags || "#viral #shorts #reels"}</span>
+                </div>
+              </div>
+
+              {/* TikTok */}
+              <div style={{ background: "rgba(0,0,0,0.3)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#06b6d4" }}>🎵 TikTok (Hook & Caption)</span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(`${activeSocialModalCandidate.suggestedCaptions?.tiktok?.caption || ""}\n\n${activeSocialModalCandidate.suggestedCaptions?.tiktok?.hashtags || ""}`, "social-tt")}
+                    style={{ background: "transparent", border: "none", color: copiedKey === "social-tt" ? "#4ade80" : "#94a3b8", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", gap: "4px" }}
+                  >
+                    {copiedKey === "social-tt" ? <Check size={12} /> : <Copy size={12} />}
+                    <span>{copiedKey === "social-tt" ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
+                <div style={{ fontSize: "11px", color: "#cbd5e1", whiteSpace: "pre-line" }}>
+                  {activeSocialModalCandidate.suggestedCaptions?.tiktok?.caption || "Wait till the end 🤯"}
+                  {"\n\n"}
+                  <span style={{ color: "#06b6d4" }}>{activeSocialModalCandidate.suggestedCaptions?.tiktok?.hashtags || "#fyp #viral #learnontiktok"}</span>
+                </div>
+              </div>
+
+              {/* LinkedIn */}
+              <div style={{ background: "rgba(0,0,0,0.3)", padding: "12px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                  <span style={{ fontSize: "12px", fontWeight: 700, color: "#3b82f6" }}>💼 LinkedIn (Professional Post)</span>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(activeSocialModalCandidate.suggestedCaptions?.linkedin?.post || "", "social-li")}
+                    style={{ background: "transparent", border: "none", color: copiedKey === "social-li" ? "#4ade80" : "#94a3b8", cursor: "pointer", fontSize: "11px", display: "flex", alignItems: "center", gap: "4px" }}
+                  >
+                    {copiedKey === "social-li" ? <Check size={12} /> : <Copy size={12} />}
+                    <span>{copiedKey === "social-li" ? "Copied" : "Copy"}</span>
+                  </button>
+                </div>
+                <div style={{ fontSize: "11px", color: "#cbd5e1", whiteSpace: "pre-line", lineHeight: 1.4 }}>
+                  {activeSocialModalCandidate.suggestedCaptions?.linkedin?.post || "Key leadership and technical takeaways from this discussion."}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

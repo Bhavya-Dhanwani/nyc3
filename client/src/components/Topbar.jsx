@@ -19,6 +19,8 @@ import { RATIO_OPTIONS } from "../config/editor.js";
 import { APP_LANGUAGES, saveLanguagePreference } from "../i18n.js";
 import { ExportSettingsPanel } from "./ExportSettingsPanel.jsx";
 import { IconButton, Popover } from "./ui.jsx";
+import { GlobalActivityPill, GlobalActivityDrawer } from "./GlobalActivityDrawer.jsx";
+import { useState } from "react";
 
 export function Topbar({
   t,
@@ -36,6 +38,7 @@ export function Topbar({
   isPlaying,
   handlePlayToggle,
   imageSrc,
+  canExportVideo = Boolean(imageSrc),
   exporting,
   handleExportVideo,
   showExportMenu,
@@ -63,7 +66,16 @@ export function Topbar({
   isSavingToBackend,
   onOpenSettingsModal,
   onOpenTutorial,
+  showContentMap,
+  onToggleContentMap,
+  onResetLayout,
+  editorLayout,
+  activeOperations = [],
+  operationHistory = [],
+  onCancelOperation,
+  onRetryOperation
 }) {
+  const [isActivityDrawerOpen, setIsActivityDrawerOpen] = useState(false);
   return (
     <header className="topbar">
       <div className="project-cluster">
@@ -133,6 +145,20 @@ export function Topbar({
           <ArrowClockwise size={16} />
           {t("redo")}
         </button>
+        {onResetLayout && (
+          <button
+            className="ghost-action"
+            type="button"
+            onClick={() => {
+              onResetLayout();
+              notify?.("Layout reset to default");
+            }}
+            title={t("resetLayout", "Reset Layout")}
+          >
+            <SlidersHorizontal size={15} />
+            <span>{t("resetLayout", "Reset Layout")}</span>
+          </button>
+        )}
         <span className="divider" />
         <div className="menu-anchor">
           <button
@@ -167,6 +193,39 @@ export function Topbar({
       </div>
 
       <div className="topbar-actions">
+        {/* Real-time Global Activity & Drive Save Indicator */}
+        <GlobalActivityPill
+          activeOperations={activeOperations}
+          operationHistory={operationHistory}
+          isOpen={isActivityDrawerOpen}
+          onToggle={() => setIsActivityDrawerOpen((v) => !v)}
+          saveStatus={isSavingToBackend ? "saving" : "saved"}
+        />
+
+        {onToggleContentMap && (
+          <button
+            type="button"
+            className={`layout-pill-btn ${showContentMap ? "is-active" : ""}`}
+            onClick={onToggleContentMap}
+            title="Toggle Visual Content Map"
+            style={{
+              padding: "5px 12px",
+              fontSize: "11px",
+              fontWeight: 700,
+              display: "flex",
+              alignItems: "center",
+              gap: "5px",
+              borderRadius: "999px",
+              background: showContentMap ? "linear-gradient(135deg, rgba(99, 102, 241, 0.3), rgba(168, 85, 247, 0.3))" : "rgba(255, 255, 255, 0.05)",
+              border: showContentMap ? "1px solid #818cf8" : "1px solid rgba(255, 255, 255, 0.1)",
+              color: showContentMap ? "#ffffff" : "#cbd5e1",
+              cursor: "pointer"
+            }}
+          >
+            <span>⚡ Content Map</span>
+          </button>
+        )}
+
         {onSaveToBackend && (
           <button
             className="ghost-action"
@@ -190,7 +249,7 @@ export function Topbar({
             className="export-trigger"
             type="button"
             onClick={() => setShowExportMenu((open) => !open)}
-            disabled={exporting || !imageSrc}
+            disabled={exporting || !canExportVideo}
           >
             {exporting ? t("exporting") : t("export")}
             <CaretDown size={13} />
@@ -202,6 +261,7 @@ export function Topbar({
                 exporting={exporting}
                 ratio={ratio}
                 imageSrc={imageSrc}
+                canExportVideo={canExportVideo}
                 timelineDuration={timelineDuration}
                 exportSettings={exportSettings}
                 setExportSettings={setExportSettings}
@@ -291,6 +351,15 @@ export function Topbar({
           </Popover>
         ) : null}
       </div>
+
+      <GlobalActivityDrawer
+        isOpen={isActivityDrawerOpen}
+        onClose={() => setIsActivityDrawerOpen(false)}
+        activeOperations={activeOperations}
+        operationHistory={operationHistory}
+        onCancelOperation={onCancelOperation}
+        onRetryOperation={onRetryOperation}
+      />
     </header>
   );
 }

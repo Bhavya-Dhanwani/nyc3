@@ -50,13 +50,96 @@ const candidateSchema = new mongoose.Schema({
         default: null
     },
 
+    // Content Intelligence properties
+    contentType: {
+        type: String,
+        default: "Viral"
+    },
+
+    secondaryTypes: {
+        type: [String],
+        default: []
+    },
+
+    topic: {
+        type: String,
+        default: null
+    },
+
+    subtopic: {
+        type: String,
+        default: null
+    },
+
+    summary: {
+        type: String,
+        default: null
+    },
+
+    emotion: {
+        type: String,
+        default: null
+    },
+
+    audience: {
+        type: String,
+        default: null
+    },
+
+    hookType: {
+        type: String,
+        default: "Curiosity"
+    },
+
+    recommendedPlatforms: {
+        type: [String],
+        default: ["TikTok", "Instagram Reels", "YouTube Shorts"]
+    },
+
+    suggestedTitles: {
+        type: [
+            {
+                title: { type: String },
+                style: { type: String },
+                score: { type: Number, default: 85 }
+            }
+        ],
+        default: []
+    },
+
+    suggestedHooks: {
+        type: [
+            {
+                hook: { type: String },
+                hookType: { type: String },
+                score: { type: Number, default: 85 },
+                reason: { type: String }
+            }
+        ],
+        default: []
+    },
+
+    suggestedCaptions: {
+        type: mongoose.Schema.Types.Mixed,
+        default: null
+    },
+
+    reviewStatus: {
+        type: String,
+        enum: ["ai_found", "reviewing", "approved", "rejected", "generating", "generated"],
+        default: "ai_found"
+    },
+
     scoreBreakdown: {
         hook: { type: Number, default: 0 },
         standalone: { type: Number, default: 0 },
         emotion: { type: Number, default: 0 },
         curiosity: { type: Number, default: 0 },
         payoff: { type: Number, default: 0 },
-        formatFit: { type: Number, default: 0 }
+        formatFit: { type: Number, default: 0 },
+        visualInterest: { type: Number, default: 0 },
+        context: { type: Number, default: 0 },
+        shareability: { type: Number, default: 0 }
     },
 
     selected: {

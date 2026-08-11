@@ -40,6 +40,48 @@ router.post("/:projectId/upload-media", upload.single("media"), getProjectValida
 router.get("/", controller.listProjects);
 
 /*
+    @route GET /api/projects/analytics
+    @desc Real database analytics across all user projects
+    @access Private
+*/
+router.get("/analytics", controller.getAnalytics);
+
+/*
+    @route GET /api/projects/brand-kit
+    @desc Retrieve user brand kit configuration
+    @access Private
+*/
+router.get("/brand-kit", controller.getBrandKit);
+
+/*
+    @route PUT /api/projects/brand-kit
+    @desc Save user brand kit configuration
+    @access Private
+*/
+router.put("/brand-kit", controller.updateBrandKit);
+
+/*
+    @route GET /api/projects/:projectId/pipeline-stream
+    @desc Server-Sent Events (SSE) stream for real-time pipeline status
+    @access Private
+*/
+router.get("/:projectId/pipeline-stream", getProjectValidators, controller.streamPipelineEvents);
+
+/*
+    @route GET /api/projects/:projectId/operations
+    @desc Retrieve active operations and recent history for project
+    @access Private
+*/
+router.get("/:projectId/operations", getProjectValidators, controller.getProjectOperations);
+
+/*
+    @route POST /api/projects/:projectId/operations/:operationId/cancel
+    @desc Cancel a running operation
+    @access Private
+*/
+router.post("/:projectId/operations/:operationId/cancel", getProjectValidators, controller.cancelProjectOperation);
+
+/*
     @route GET /api/projects/:projectId
     @desc Retrieve detailed data including project, transcript, candidates, and clips
     @access Private

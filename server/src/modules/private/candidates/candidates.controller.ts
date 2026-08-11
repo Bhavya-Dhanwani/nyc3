@@ -10,6 +10,7 @@ import ClipDao from "../../../shared/dao/clip.dao.js";
 import UserDao from "../../../shared/dao/user.dao.js";
 import MediaService from "../../../shared/services/media.service.js";
 import GoogleDriveService from "../../../shared/services/googleDrive.service.js";
+import LlmService from "../../../shared/services/llm.service.js";
 import Forbidden from "../../../shared/errors/Forbidden.error.js";
 import { generateSrt, buildDrawtextFilters } from "../../../shared/utils/subtitles.util.js";
 import Ok from "../../../shared/responses/Ok.response.js";
@@ -28,6 +29,7 @@ class CandidatesController {
     userDao: UserDao;
     mediaService: MediaService;
     googleDriveService: GoogleDriveService;
+    llmService: LlmService;
 
     constructor() {
 
@@ -41,6 +43,7 @@ class CandidatesController {
         // initializing services
         this.mediaService = new MediaService();
         this.googleDriveService = new GoogleDriveService();
+        this.llmService = new LlmService();
 
     }
 
@@ -677,12 +680,17 @@ class CandidatesController {
 
     downloadCandidateClip = async (req: Request, res: Response) => {
         const { candidateId } = req.params;
+        const userId = (req as any).user?.userId;
 
         const candidate = await this.candidateDao.findCandidateById(candidateId);
         if (!candidate) throw new NotFound("Candidate not found");
 
         const project = await this.projectDao.findProjectById(candidate.projectId.toString());
         if (!project) throw new NotFound("Project not found");
+
+        if (project.userId && project.userId.toString() !== userId) {
+            throw new Forbidden("You do not have access to this resource");
+        }
 
         const projectDir = `./uploads/projects/${project._id}`;
         const localVideoPath = path.join(projectDir, "source_video.mp4");
@@ -693,6 +701,15 @@ class CandidatesController {
             .substring(0, 40);
         const downloadName = `${cleanTitle}_9x16.mp4`;
 
+        const getDrive = async () => {
+            const user = await this.userDao.findUserById(userId);
+            if (user && user.googleAccessToken) {
+                const driveToken = await this.googleDriveService.getValidUserToken(user);
+                return this.googleDriveService.getUserDriveClient(driveToken, user.googleRefreshToken);
+            }
+            return this.googleDriveService.getCentralDriveClient();
+        };
+
         // If rendered file exists, stream it directly
         if (fs.existsSync(renderedClip)) {
             const stat = fs.statSync(renderedClip);
@@ -702,11 +719,38 @@ class CandidatesController {
             return fs.createReadStream(renderedClip).pipe(res);
         }
 
-        // Otherwise, render on-the-fly with ffmpeg
-        if (!fs.existsSync(localVideoPath)) {
-            throw new NotFound("Source video not found on server");
+        const existingClip = await this.clipDao.findClipByCandidateId(candidateId);
+        if (existingClip?.driveFileId) {
+            try {
+                const drive = await getDrive();
+                if (drive) {
+                    const driveRes = await drive.files.get(
+                        { fileId: existingClip.driveFileId, alt: "media", supportsAllDrives: true },
+                        { responseType: "stream" }
+                    );
+                    res.setHeader("Content-Disposition", `attachment; filename="${downloadName}"`);
+                    res.setHeader("Content-Type", "video/mp4");
+                    res.setHeader("Cache-Control", "private, no-store");
+                    return driveRes.data.pipe(res);
+                }
+            } catch (driveErr: any) {
+                logger.warn(`Drive clip download failed, trying source render fallback: ${driveErr.message}`);
+            }
         }
 
+        // Otherwise, render on-the-fly with ffmpeg. If the source was only in Drive,
+        // restore it locally first so generated clip downloads still work later.
+        if (!fs.existsSync(localVideoPath) && project.driveFileId) {
+            const drive = await getDrive();
+            if (drive) {
+                fs.mkdirSync(projectDir, { recursive: true });
+                await this.googleDriveService.downloadFile(drive, project.driveFileId, localVideoPath);
+            }
+        }
+
+        if (!fs.existsSync(localVideoPath)) {
+            throw new NotFound("Source video not found on server or Google Drive");
+        }
         fs.mkdirSync(path.join(projectDir, "clips"), { recursive: true });
 
         // Use the correct model fields: startSec and endSec
@@ -775,6 +819,137 @@ class CandidatesController {
                 });
             });
         });
+    };
+
+    // Update candidate human review status (ai_found | reviewing | approved | rejected | generating | generated)
+    updateReviewStatus = async (req: Request, res: Response) => {
+        const { candidateId } = req.params;
+        const { reviewStatus } = req.body;
+        const userId = (req as any).user?.userId;
+
+        const candidate = await this.candidateDao.findCandidateById(candidateId);
+        if (!candidate) throw new NotFound("Candidate not found");
+
+        const project = await this.projectDao.findProjectById(candidate.projectId);
+        if (!project) throw new NotFound("Project not found");
+        if (project.userId && project.userId.toString() !== userId) {
+            throw new Forbidden("You do not have access to this resource");
+        }
+
+        const validStatuses = ["ai_found", "reviewing", "approved", "rejected", "generating", "generated"];
+        if (!validStatuses.includes(reviewStatus)) {
+            throw new BadRequest(`Invalid review status: ${reviewStatus}`);
+        }
+
+        candidate.reviewStatus = reviewStatus;
+        await candidate.save();
+
+        return Ok(res, "Review status updated successfully", candidate);
+    };
+
+    // Generate 5 distinct hook options on demand
+    generateHooks = async (req: Request, res: Response) => {
+        const { candidateId } = req.params;
+        const userId = (req as any).user?.userId;
+
+        const candidate = await this.candidateDao.findCandidateById(candidateId);
+        if (!candidate) throw new NotFound("Candidate not found");
+
+        const user = await this.userDao.findUserById(userId);
+        const apiKey = user?.mistralKeys?.[0] || user?.groqKeys?.[0] || user?.openaiKeys?.[0] || undefined;
+        const provider = user?.mistralKeys?.length ? "mistral" : user?.groqKeys?.length ? "groq" : user?.openaiKeys?.length ? "openai" : "mistral";
+
+        const hooks = await this.llmService.generateHookOptions(candidate.hook || candidate.title, candidate.topic, provider, apiKey);
+        candidate.suggestedHooks = hooks;
+        await candidate.save();
+
+        return Ok(res, "Hooks generated successfully", hooks);
+    };
+
+    // Generate style-specific title options on demand
+    generateTitles = async (req: Request, res: Response) => {
+        const { candidateId } = req.params;
+        const userId = (req as any).user?.userId;
+
+        const candidate = await this.candidateDao.findCandidateById(candidateId);
+        if (!candidate) throw new NotFound("Candidate not found");
+
+        const user = await this.userDao.findUserById(userId);
+        const apiKey = user?.mistralKeys?.[0] || user?.groqKeys?.[0] || user?.openaiKeys?.[0] || undefined;
+        const provider = user?.mistralKeys?.length ? "mistral" : user?.groqKeys?.length ? "groq" : "mistral";
+
+        const titles = await this.llmService.generateTitleOptions(candidate.hook || candidate.title, candidate.topic, provider, apiKey);
+        candidate.suggestedTitles = titles;
+        await candidate.save();
+
+        return Ok(res, "Titles generated successfully", titles);
+    };
+
+    // Generate/regenerate platform social captions
+    generateSocial = async (req: Request, res: Response) => {
+        const { candidateId } = req.params;
+        const candidate = await this.candidateDao.findCandidateById(candidateId);
+        if (!candidate) throw new NotFound("Candidate not found");
+
+        const title = candidate.title || "Viral Moment";
+        const summary = candidate.summary || candidate.rationale || "Key highlight from this conversation";
+        const topic = candidate.topic || "Insights";
+        const hook = candidate.hook || title;
+
+        const captions = {
+            instagram: {
+                caption: `🔥 ${title}\n\n${summary}\n\n👉 Share this with someone who needs to hear it!`,
+                cta: "Save this post for later 📌 and comment your thoughts below!",
+                hashtags: `#${topic.replace(/\s+/g, "").toLowerCase()} #viralshorts #reelsvideo #contentcreator #learnontiktok`
+            },
+            tiktok: {
+                caption: `Wait until the end... 🤯 ${summary}`,
+                cta: "Follow for more daily clips ⚡",
+                hashtags: `#fyp #viral #${topic.replace(/\s+/g, "").toLowerCase()} #podcastclips`
+            },
+            youtube: {
+                title: `${title} | YouTube Shorts`,
+                description: `${summary}\n\n"${hook}"\n\n🔔 Subscribe to the channel for more powerful shorts highlights!`,
+                tags: `${topic}, shorts, youtube shorts, podcast clip, viral highlights`
+            },
+            linkedin: {
+                post: `A powerful perspective on ${topic}:\n\n"${hook}"\n\n${summary}\n\nWhat is your perspective on this?`,
+                takeaway: `Success with ${topic} comes down to consistent execution and deliberate practice.`,
+                question: "How do you navigate this in your organization?"
+            },
+            twitter: {
+                post: `"${hook}"\n\nKey insight on ${topic}: ${summary}\n\nRT if this resonates 🔁`
+            }
+        };
+
+        candidate.suggestedCaptions = captions;
+        await candidate.save();
+
+        return Ok(res, "Social content generated successfully", captions);
+    };
+
+    // Generate structured AI edit plan
+    generateEditPlan = async (req: Request, res: Response) => {
+        const { candidateId } = req.params;
+        const { goal } = req.body;
+        const userId = (req as any).user?.userId;
+
+        const candidate = await this.candidateDao.findCandidateById(candidateId);
+        if (!candidate) throw new NotFound("Candidate not found");
+
+        const user = await this.userDao.findUserById(userId);
+        const apiKey = user?.mistralKeys?.[0] || user?.groqKeys?.[0] || undefined;
+        const provider = user?.mistralKeys?.length ? "mistral" : user?.groqKeys?.length ? "groq" : "mistral";
+
+        const plan = await this.llmService.generateAiEditPlan(
+            candidate.hook + "\n" + (candidate.summary || candidate.rationale),
+            candidate.duration || 60,
+            goal || "Make this more engaging, fast-paced and punchy",
+            provider,
+            apiKey
+        );
+
+        return Ok(res, "AI edit plan generated successfully", plan);
     };
 
 }

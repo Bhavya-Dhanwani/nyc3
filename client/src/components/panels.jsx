@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal, flushSync } from "react-dom";
-import { getGoogleToken } from "../lib/googleDriveClient.js";
-import axios from "axios";
+import api from "../lib/api.js";
 import { Plus, Cloud, Loader2, Sparkles } from "lucide-react";
 import { AiClipGeneratorPanel } from "./AiClipGeneratorPanel.jsx";
+import { AiAssistantPanel } from "./AiAssistantPanel.jsx";
 import {
   CaretDown,
   CaretLeft,
@@ -111,6 +111,7 @@ export function MediaPanel({
   mediaTab,
   setMediaTab,
   driveFiles = [],
+  projectId,
   isDragging,
   setIsDragging,
   fileInputRef,
@@ -142,40 +143,50 @@ export function MediaPanel({
   const [vectorCategory, setVectorCategory] = useState("all");
   const [downloadingDriveFileId, setDownloadingDriveFileId] = useState(null);
 
+  const fetchDriveFileBlob = async (df) => {
+    if (!projectId) {
+      throw new Error("Open or save the project before downloading files from Google Drive.");
+    }
+    const res = await api.get(`/api/projects/${projectId}/drive-files/${df.id}/content`, {
+      responseType: "blob"
+    });
+    return res.data;
+  };
+
   const handleDriveFileClick = async (df) => {
     if (downloadingDriveFileId) return;
     try {
       setDownloadingDriveFileId(df.id);
       const isSrt = df.name?.toLowerCase().endsWith(".srt") || df.name?.toLowerCase().endsWith(".vtt");
-      let fileBlob;
-      const token = getGoogleToken();
+      const fileBlob = await fetchDriveFileBlob(df);
 
-      if (token) {
-        const res = await axios.get(`https://www.googleapis.com/drive/v3/files/${df.id}?alt=media`, {
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: "blob"
-        });
-        fileBlob = res.data;
-      } else {
-        const currentPId = (typeof window !== "undefined" && window.location.pathname.split("/").pop()) || "";
-        const res = await api.get(`/api/projects/${currentPId}/drive-files/${df.id}/content`, {
-          responseType: "blob"
-        });
-        fileBlob = res.data;
-      }
-
-      const file = new File([fileBlob], df.name, { type: isSrt ? "application/x-subrip" : (df.mimeType || "application/octet-stream") });
+      const file = new File([fileBlob], df.name, { type: isSrt ? "application/x-subrip" : (df.mimeType || fileBlob.type || "application/octet-stream") });
       await handleFiles([file]);
       if (!isSrt) {
         setMediaTab("upload");
       }
     } catch (err) {
-      console.error("Failed to download Google Drive file:", err);
-      alert("Failed to retrieve file from Google Drive: " + (err.response?.data?.message || err.message || err));
+      console.error("Failed to import Google Drive file:", err);
+      alert("Failed to import file from Google Drive: " + (err.response?.data?.message || err.message || err));
     } finally {
       setDownloadingDriveFileId(null);
     }
   };
+
+  const handleDriveFileDownload = async (df) => {
+    if (downloadingDriveFileId) return;
+    try {
+      setDownloadingDriveFileId(df.id);
+      const fileBlob = await fetchDriveFileBlob(df);
+      downloadMediaBlob(fileBlob, df.name || "drive-file");
+    } catch (err) {
+      console.error("Failed to download Google Drive file:", err);
+      alert("Failed to download file from Google Drive: " + (err.response?.data?.message || err.message || err));
+    } finally {
+      setDownloadingDriveFileId(null);
+    }
+  };
+
   const visibleAssets = libraryType === "vector" && vectorCategory !== "all"
     ? assets.filter((asset) => asset.category === vectorCategory)
     : assets;
@@ -288,30 +299,53 @@ export function MediaPanel({
                     </p>
                   </div>
                   
-                  <button
-                    type="button"
-                    onClick={() => handleDriveFileClick(df)}
-                    disabled={downloadingDriveFileId !== null}
-                    style={{
-                      padding: "6px 10px",
-                      background: "rgba(16, 185, 129, 0.2)",
-                      border: "1px solid rgba(16, 185, 129, 0.4)",
-                      borderRadius: "6px",
-                      color: "#34d399",
-                      fontSize: "12px",
-                      cursor: "pointer",
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "4px"
-                    }}
-                  >
-                    {downloadingDriveFileId === df.id ? (
-                      <Loader2 size={14} className="spin" style={{ animation: "spin 1s linear infinite" }} />
-                    ) : (
-                      <Plus size={14} />
-                    )}
-                    <span>Import</span>
-                  </button>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                    <button
+                      type="button"
+                      onClick={() => handleDriveFileClick(df)}
+                      disabled={downloadingDriveFileId !== null}
+                      style={{
+                        padding: "6px 10px",
+                        background: "rgba(16, 185, 129, 0.2)",
+                        border: "1px solid rgba(16, 185, 129, 0.4)",
+                        borderRadius: "6px",
+                        color: "#34d399",
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px"
+                      }}
+                    >
+                      {downloadingDriveFileId === df.id ? (
+                        <Loader2 size={14} className="spin" style={{ animation: "spin 1s linear infinite" }} />
+                      ) : (
+                        <Plus size={14} />
+                      )}
+                      <span>Import</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDriveFileDownload(df)}
+                      disabled={downloadingDriveFileId !== null}
+                      title="Download file"
+                      style={{
+                        padding: "6px 8px",
+                        background: "rgba(59, 130, 246, 0.18)",
+                        border: "1px solid rgba(59, 130, 246, 0.38)",
+                        borderRadius: "6px",
+                        color: "#60a5fa",
+                        fontSize: "12px",
+                        cursor: "pointer",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "4px"
+                      }}
+                    >
+                      <DownloadSimple size={14} />
+                      <span>Download</span>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -1197,7 +1231,87 @@ export function ToolPanel(props) {
   if (activeTool === "caption") {
     return (
       <div className="tool-panel caption-tool-panel">
-        <h2>{t("caption")}</h2>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+          <h2>{t("caption")}</h2>
+          {captionSegments?.length > 0 && (
+            <span style={{
+              fontSize: "11px",
+              fontWeight: 600,
+              padding: "2px 8px",
+              borderRadius: "999px",
+              background: "rgba(99, 102, 241, 0.2)",
+              color: "#a5b4fc",
+              border: "1px solid rgba(99, 102, 241, 0.3)"
+            }}>
+              {captionSegments.length} Segments
+            </span>
+          )}
+        </div>
+
+        {/* Auto-Generate Captions Action Card */}
+        <div style={{
+          padding: "14px",
+          borderRadius: "12px",
+          background: "linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(168, 85, 247, 0.15))",
+          border: "1px solid rgba(99, 102, 241, 0.35)",
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+          marginBottom: "14px"
+        }}>
+          <div>
+            <strong style={{ fontSize: "13px", color: "#ffffff", display: "flex", alignItems: "center", gap: "6px" }}>
+              <span>✨</span> Auto-Generate Subtitles
+            </strong>
+            <p style={{ fontSize: "11px", color: "#94a3b8", margin: "4px 0 0 0" }}>
+              Automatically transcribe spoken audio into synchronized word-level captions on the timeline.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className="action-button primary"
+            onClick={generateCaptionsFromSourceAudio}
+            disabled={isGeneratingCaptions}
+            style={{
+              width: "100%",
+              padding: "9px 14px",
+              fontWeight: 700,
+              fontSize: "12px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+              background: "linear-gradient(135deg, #6366f1, #8b5cf6)",
+              borderRadius: "8px",
+              cursor: isGeneratingCaptions ? "not-allowed" : "pointer"
+            }}
+          >
+            {isGeneratingCaptions ? (
+              <>
+                <span className="spinner-icon" style={{ width: "14px", height: "14px", border: "2px solid rgba(255,255,255,0.3)", borderTopColor: "#fff", borderRadius: "50%", display: "inline-block", animation: "spin 0.8s linear infinite" }} />
+                <span>Transcribing... {automaticCaptionProgress > 0 ? `${automaticCaptionProgress}%` : ""}</span>
+              </>
+            ) : (
+              <>
+                <span>⚡</span>
+                <span>{captionSegments?.length > 0 ? "Regenerate Captions" : "Generate Captions from Audio"}</span>
+              </>
+            )}
+          </button>
+
+          {isGeneratingCaptions && (
+            <div style={{ width: "100%", height: "4px", background: "rgba(255, 255, 255, 0.1)", borderRadius: "2px", overflow: "hidden" }}>
+              <div style={{
+                width: `${Math.max(8, automaticCaptionProgress)}%`,
+                height: "100%",
+                background: "#a855f7",
+                transition: "width 0.2s ease"
+              }} />
+            </div>
+          )}
+        </div>
+
         <p className="tool-helper-copy">{t("captionCanvasHint")}</p>
         <label className="switch-row">
           <input type="checkbox" checked={captionsEnabled} onChange={(event) => setCaptionsEnabled(event.target.checked)} />
@@ -1295,6 +1409,33 @@ export function ToolPanel(props) {
   if (activeTool === "smart") {
     const aiCopy = AI_MUSIC_COPY.en;
 
+    if (smartMode === "ai-assistant") {
+      return (
+        <div className="tool-panel">
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", padding: "12px 16px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)", background: "rgba(0,0,0,0.15)" }}>
+            <button
+              type="button"
+              onClick={() => setSmartMode("auto-edit")}
+              style={{ background: "transparent", border: "none", color: "#a1a1aa", cursor: "pointer", display: "flex", alignItems: "center", padding: "4px", font: "inherit", fontSize: "12px", gap: "4px" }}
+            >
+              <CaretLeft size={16} />
+              <span>Back to Smart Hub</span>
+            </button>
+          </div>
+          <div className="mobile-panel-scroll-body" style={{ maxHeight: "calc(100vh - 120px)", overflowY: "auto" }}>
+            <AiAssistantPanel
+              project={project}
+              candidate={Array.isArray(project?.candidates) ? project.candidates[0] : null}
+              visualSegments={props.visualSegments}
+              captionSegments={props.captionSegments}
+              notify={props.notify}
+              t={t}
+            />
+          </div>
+        </div>
+      );
+    }
+
     if (smartMode === "ai-shorts") {
       return (
         <div className="tool-panel">
@@ -1315,6 +1456,7 @@ export function ToolPanel(props) {
               onApplyCaptions={props.onApplyCaptions}
               captionStyle={props.captionStyle}
               hasCaptions={Array.isArray(props.captionSegments) && props.captionSegments.length > 0}
+              onOpenContentMap={props.onOpenContentMap}
             />
           </div>
         </div>
@@ -1325,15 +1467,12 @@ export function ToolPanel(props) {
       <div className="tool-panel smart-hub-panel">
         <div className="smart-hub-grid" role="tablist" aria-label={t("smartTools")}>
           {[
-            ["ai-shorts", Sparkles, "AI Shorts Generator", "Automatically transcribe, detect moments, crop 9:16 and add captions"],
-            ["auto-edit", Scissors, t("smartAutoEdit"), t("smartAutoEditHint")],
+            ["ai-shorts", Sparkles, "AI Shorts Generator", "Analyze full video, detect moments, rank virality & add captions"],
+            ["ai-assistant", MagicWand, "AI Editor Assistant", "Quick actions: remove silence, refine hook, optimize pacing & custom prompt"],
             ["ai-music", MusicNote, aiCopy.title, aiCopy.hint],
-            ["smart-frame", FrameCorners, t("smartFrame"), t("smartFrameHint")],
-            ["avatar", PersonSimpleRun, t("smartAvatar"), t("smartAvatarHint")],
           ].map(([id, Icon, title, hint]) => (
             <button className={smartMode === id ? "is-active" : ""} type="button" role="tab" aria-selected={smartMode === id} key={id} onClick={() => {
               setSmartMode(id);
-              if (id === "avatar") openAvatarPanel();
               if (id === "ai-music" && window.matchMedia?.("(max-width: 760px)").matches) openMobileInspector?.();
             }}>
               <Icon size={24} weight="duotone" /><strong>{title}</strong><span>{hint}</span>

@@ -44,5 +44,40 @@ router.get("/:candidateId/capcut", controller.exportCapcutDraft);
 */
 router.get("/:candidateId/download", controller.downloadCandidateClip);
 
+/*
+    @route PUT /api/candidates/:candidateId/review-status
+    @desc Update candidate human review state (approved, rejected, etc)
+    @access Private
+*/
+router.put("/:candidateId/review-status", controller.updateReviewStatus);
+
+/*
+    @route POST /api/candidates/:candidateId/generate-hooks
+    @desc Generate 5 distinct hook options on demand
+    @access Private
+*/
+router.post("/:candidateId/generate-hooks", controller.generateHooks);
+
+/*
+    @route POST /api/candidates/:candidateId/generate-titles
+    @desc Generate style-specific title options on demand
+    @access Private
+*/
+router.post("/:candidateId/generate-titles", controller.generateTitles);
+
+/*
+    @route POST /api/candidates/:candidateId/generate-social
+    @desc Generate platform-specific social post copy
+    @access Private
+*/
+router.post("/:candidateId/generate-social", controller.generateSocial);
+
+/*
+    @route POST /api/candidates/:candidateId/edit-plan
+    @desc Generate structured AI edit plan
+    @access Private
+*/
+router.post("/:candidateId/edit-plan", controller.generateEditPlan);
+
 // exporting the router
 export default router;

@@ -94,8 +94,19 @@ const userSchema = new mongoose.Schema({
     mistralKeys: {
         type: [String],
         default: []
-    }
+    },
 
+    brandKit: {
+        logoUrl: { type: String, default: null },
+        primaryColor: { type: String, default: "#6366f1" },
+        secondaryColor: { type: String, default: "#a855f7" },
+        font: { type: String, default: "Inter" },
+        captionStyle: { type: String, default: "modern-box" },
+        captionHighlightColor: { type: String, default: "#facc15" },
+        watermarkEnabled: { type: Boolean, default: false },
+        watermarkText: { type: String, default: "" },
+        watermarkPosition: { type: String, default: "bottom-right" }
+    }
 
 }, {
     timestamps: true

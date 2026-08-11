@@ -1,4 +1,4 @@
-﻿// Importing module
+// Importing module
 import mongoose from "mongoose";
 
 // defining the schema for the project model
@@ -37,7 +37,7 @@ const projectSchema = new mongoose.Schema({
     },
 
     captionStyle: {
-        type: String,
+        type: mongoose.Schema.Types.Mixed,
         default: "modern-box"
     },
 
@@ -104,6 +104,16 @@ const projectSchema = new mongoose.Schema({
 
     pipelineLogs: {
         type: [String],
+        default: []
+    },
+
+    activeOperations: {
+        type: Array,
+        default: []
+    },
+
+    operationHistory: {
+        type: Array,
         default: []
     }
 

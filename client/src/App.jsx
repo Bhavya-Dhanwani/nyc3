@@ -20,6 +20,10 @@ import { FirstVisualGuide } from "./components/FirstVisualGuide.jsx";
 import { MiganRepairDialog } from "./components/MiganRepairDialog.jsx";
 import { NanoVsrRestorationDialog } from "./components/NanoVsrRestorationDialog.jsx";
 import { RemoveSilenceModal } from "./components/RemoveSilenceModal.jsx";
+import { useEditorLayout } from "./hooks/useEditorLayout.js";
+import { PanelGroup, Panel, EditorResizeSeparator } from "./components/ResizablePanels.jsx";
+import { ContentMap } from "./components/ContentMap.jsx";
+import { useRealtimePipeline } from "./hooks/useRealtimePipeline.js";
 import {
   canShowFirstVisualGuide,
   FIRST_VISUAL_GUIDE_MOBILE_QUERY,
@@ -112,7 +116,15 @@ export function App() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isSavingToBackend, setIsSavingToBackend] = useState(false);
   const [removeSilenceOpen, setRemoveSilenceOpen] = useState(false);
+  const [showContentMap, setShowContentMap] = useState(false);
 
+  const effectiveProjectId = projectId || currentProject?._id || currentProject?.id;
+  const realtimePipeline = useRealtimePipeline({
+    projectId: effectiveProjectId,
+    active: Boolean(effectiveProjectId),
+  });
+
+  const editorLayout = useEditorLayout();
   const [driveFiles, setDriveFiles] = useState([]);
 
   // Check user session on initial load
@@ -1046,7 +1058,7 @@ export function App() {
     notify, script, seekTo, setActiveTool, setCaptionSegments, captionStyle,
     setCaptionsEnabled, setProgress, setScript, setSelectedSegmentId,
     setSelectedTrack, setStatus, setStatusText, setTrackVisibility, sourceAudioBlob,
-    sourceAudioStart, status, t, trackLocks, uiLanguage,
+    sourceAudioStart, status, t, trackLocks, uiLanguage, visualSegments, currentProject, projectId, imageSrc,
   });
 
   const handleFiles = useFileUpload({
@@ -1205,6 +1217,7 @@ export function App() {
     linkedSourceAudioSegments, sourceAudioDuration, sourceAudioLinked, sourceAudioStart, stickerSegments, timelineClipDrag,
     timelineDuration, visualSegments,
   });
+  const hasExportVisual = Boolean(imageSrc || renderedVisualSegments.some((segment) => segment.src));
   const exportContentDuration = useMemo(() => getExportContentDuration({
     visualDuration: imageDuration,
     voiceDuration: voiceTrackDuration,
@@ -1221,7 +1234,7 @@ export function App() {
     audioSegments, captionDuration, captionPlacement, captionPosition, captionSegments, captionTargetDuration,
     captionSize, captionStyle, captionsEnabled, exporting, exportAbortControllerRef, exportStartRef, fitMode,
     imageDuration, imageSrc, musicBlob, musicDuration, musicSegments, musicStart, musicTimelineEnd, musicVolume, notify,
-    previewFrameSize, ratio, renderedVisualSegments, script, selectedFilter,
+    previewFrameSize, ratio, renderedVisualSegments, visualSegments, script, selectedFilter,
     selectedSticker, selectedTransitionId, setExporting, setExportPhase,
     setExportProgress, setStatus, setStatusText, sourceAudioBlob, sourceAudioDuration,
     linkedSourceAudioSegments, sourceAudioLinked, sourceAudioStart, sourceAudioTimelineEnd, sourceAudioVolume, stickerDuration, stickerSegments,
@@ -1248,18 +1261,28 @@ export function App() {
     let isMounted = true;
     async function loadProjectDetails() {
       try {
-        const [timelineRes, driveTimelineRes] = await Promise.all([
+        const [timelineRes, driveTimelineRes, projectRes] = await Promise.all([
           api.get(`/api/projects/${pId}/timeline`),
           api.get(`/api/projects/${pId}/drive-timeline`).catch(() => null),
+          api.get(`/api/projects/${pId}`).catch(() => null),
         ]);
 
         let captionsLoaded = false;
+        if (isMounted && projectRes?.data?.data) {
+          const detail = projectRes.data.data;
+          setCurrentProject({
+            ...detail.project,
+            candidates: detail.candidates || [],
+            clips: detail.clips || []
+          });
+        }
+
         if (isMounted && timelineRes.data?.data) {
           const { project, timeline: defaultTimeline } = timelineRes.data.data;
           const timeline = driveTimelineRes?.data?.data?.timeline || defaultTimeline;
           if (project?.sourcePath) {
             const fileName = project.sourcePath.split(/[\\/]/).pop();
-            const sourceUrl = `/uploads/projects/${pId}/${fileName}`;
+            const sourceUrl = `/uploads/projects/${pId}/source_video.mp4`;
             const duration = Number(project.sourceDuration) || 60;
             replaceVisualTimeline({
               id: `project-${pId}`,
@@ -1276,7 +1299,15 @@ export function App() {
             if (timeline.ratioId) setRatioId(timeline.ratioId);
             if (Number.isFinite(Number(timeline.currentTime))) setCurrentTime(Math.max(0, Number(timeline.currentTime)));
             if (Number.isFinite(Number(timeline.duration)) && Number(timeline.duration) > 0) setTimelineHorizon(Number(timeline.duration));
-            if (Array.isArray(timeline.visualSegments) && timeline.visualSegments.length > 0) setVisualSegments(timeline.visualSegments);
+            if (Array.isArray(timeline.visualSegments) && timeline.visualSegments.length > 0) {
+              setVisualSegments(timeline.visualSegments);
+              setImageDuration(getVisualSegmentsTotal(timeline.visualSegments));
+              const firstVisual = timeline.visualSegments.find((segment) => segment.src);
+              if (firstVisual?.src) {
+                setImageSrc(firstVisual.src);
+                setVisualType(firstVisual.type || "video");
+              }
+            }
             if (Array.isArray(timeline.audioSegments)) setAudioSegments(timeline.audioSegments);
             if (Array.isArray(timeline.musicSegments)) setMusicSegments(timeline.musicSegments);
             if (Array.isArray(timeline.stickerSegments)) setStickerSegments(timeline.stickerSegments);
@@ -1494,7 +1525,7 @@ export function App() {
     currentProject, projectId, timelineDuration, currentTime, ratioId, visualSegments,
     audioSegments, captionSegments, musicSegments, stickerSegments,
   ]);
-  const handleLoadMomentIntoTimeline = async ({ start, end, title, aspectRatio, rank }) => {
+  const handleLoadMomentIntoTimeline = async ({ start, end, title, aspectRatio, rank, candidateId, layout, focusX, focusY, zoomFactor, smartFrame }) => {
     // 1. Set 9:16 vertical ratio for Shorts
     if (aspectRatio === "vertical") {
       setRatioId("9:16");
@@ -1503,7 +1534,14 @@ export function App() {
     }
 
     // 2. Trim the visual timeline to show ONLY this clip segment
-    const clipDuration = end - start;
+    const clipDuration = Math.max(0.1, end - start);
+    const baseVisual = visualSegments?.[0];
+    if (baseVisual?.src) {
+      setImageSrc(baseVisual.src);
+      setVisualType(baseVisual.type || "video");
+    }
+    setImageDuration(clipDuration);
+    setTimelineHorizon((current) => Math.max(current, clipDuration));
     setVisualSegments((prev) => {
       if (!prev || prev.length === 0) return prev;
       // Take the first visual segment (source video) and trim it to the clip range
@@ -1515,7 +1553,13 @@ export function App() {
         sourceStart: start,
         sourceEnd: end,
         trimStart: start,
-        trimEnd: end
+        trimEnd: end,
+        layout: layout || base.layout,
+        focusX: focusX ?? base.focusX,
+        focusY: focusY ?? base.focusY,
+        zoomFactor: zoomFactor ?? base.zoomFactor,
+        smartFrame: smartFrame || base.smartFrame,
+        generatedCandidateId: candidateId || base.generatedCandidateId
       }];
     });
 
@@ -1850,6 +1894,7 @@ export function App() {
         isPlaying={isPlaying}
         handlePlayToggle={handlePlayToggle}
         imageSrc={imageSrc}
+        canExportVideo={hasExportVisual}
         exporting={exporting}
         handleExportVideo={handleExportVideo}
         showExportMenu={showExportMenu}
@@ -1880,43 +1925,95 @@ export function App() {
         isSavingToBackend={isSavingToBackend}
         onOpenSettingsModal={() => setIsSettingsModalOpen(true)}
         onOpenTutorial={() => setShowFirstVisualGuide(true)}
+        showContentMap={showContentMap}
+        onToggleContentMap={() => setShowContentMap((v) => !v)}
+        editorLayout={editorLayout}
+        activeOperations={realtimePipeline.activeOperations}
+        operationHistory={realtimePipeline.operationHistory}
+        onCancelOperation={realtimePipeline.cancelOperation}
       />
 
-      <section className={`editor-grid ${compactRail ? "is-compact-rail" : ""}`}>
-        <EditorSidebar model={{
-          driveFiles,
-          currentProject,
-          onLoadMomentIntoTimeline: handleLoadMomentIntoTimeline,
-          onApplyCaptions: handleApplyCaptionsFromTranscript,
-          activeLanguage, activeTool, analyzeCurrentVisual, analyzeEffectVisual, audioBlob, audioDuration,
-          builtInAssets, captionPosition, captionSegments, captionSize, captionStyle,
-          captionTargetDuration, captionsEnabled, clearMusicTrack, clearSourceAudioTrack,
-          compactRail, currentSegmentIndex, deleteCaptionSegment,
-          deleteUserAsset, downloadBlob, draggedAssetId,
-          estimatedDuration, fileInputRef, generateCaptionsFromSourceAudio, handleAssetClick,
-          handleAssetPointerDown, handleCaptionPositionChange, handleFiles, handleStickerClick, confirmStickerSelection,
-          imageSrc, isDragging, mediaTab, musicBlob, musicDuration, musicName, musicVolume,
-          libraryType, libraryQuery, setLibraryQuery, selectLibraryType, libraryStatus, libraryError, libraryProvider,
-          assetDownloadStates, prefetchLibraryAsset,
-          notify, openAvatarPanel, previewVisionAnalysis, previewVisionKey, smartMode, setSmartMode,
-          previewVisionOptions, previewVisualSrc, previewVisualType, progress, script,
-          seekTo, segments, selectTool, selectedCaptionSegment, selectedFilterId,
-          selectedLibraryAssetId, selectedSegmentId, selectedStickerId, selectedTransitionId,
-          selectedVoice: selectedVoiceProfile ? { ...selectedVoice, name: selectedVoiceProfile.name } : selectedVoice,
-          setCaptionSegments, setCaptionSize, setCaptionStyle, setCaptionsEnabled, setIsDragging,
-          setMediaTab, setMusicVolume, setSelectedAudioSegmentId, setSelectedFilterId, setSelectedSegmentId,
-          setSelectedStickerId, setSelectedTrack, setSelectedTransitionId, setSourceAudioVolume, setVoiceTab,
-          sourceAudioBlob, sourceAudioDuration, sourceAudioLinked, sourceAudioName, sourceAudioVolume, status, t,
-          selectedAudioToolTarget, separateSelectedAudioVocals, separateSourceVocals, vocalSeparationJob,
-          toggleCaptionSegmentHidden, trOption, updateCaptionSegmentText,
-          updateScript, userAssets, visionJob, aiMusic, smartFrame,
-          selectedVisualSegment, selectedEffectSegment, effectAnalysis, effectRunning, effectProgress, effectPhase,
-          effectsPanelMode, setEffectsPanelMode, cinematicDepth, photoParallaxDepth,
-          visualLocalTime, updateSelectedVisualEffects, updateSelectedSubjectEffect, removeSelectedSubjectEffect, miganRepair, hdRestoration,
-          mobilePanel, setMobilePanel: changeMobilePanel, applyAssetToTrack, handleGeneratedVector,
-        }} />
+      <div className="editor-workspace-root">
+        <PanelGroup
+          orientation="vertical"
+          id="katetor-editor-vertical"
+          className="editor-group-vertical"
+          groupRef={editorLayout.verticalGroupRef}
+          defaultLayout={editorLayout.verticalDefaultLayout}
+          onLayoutChanged={editorLayout.onVerticalLayoutChanged}
+        >
+          {/* Main Upper Workspace */}
+          <Panel
+            id="main-workspace-panel"
+            minSize="30%"
+            defaultSize="68%"
+            className="editor-panel-workspace"
+          >
+            <PanelGroup
+              orientation="horizontal"
+              id="katetor-editor-horizontal"
+              className="editor-group-horizontal"
+              groupRef={editorLayout.horizontalGroupRef}
+              defaultLayout={editorLayout.horizontalDefaultLayout}
+              onLayoutChanged={editorLayout.onHorizontalLayoutChanged}
+            >
+              {/* Left Panel: Sidebar Island */}
+              <Panel
+                id="left-tools-panel"
+                minSize="14%"
+                defaultSize="22%"
+                maxSize="38%"
+                collapsible
+                panelRef={editorLayout.leftPanelRef}
+                className="editor-panel-left"
+              >
+                <div className="editor-sidebar-island">
+                  <EditorSidebar model={{
+                    driveFiles,
+                    currentProject,
+                    onLoadMomentIntoTimeline: handleLoadMomentIntoTimeline,
+                    onApplyCaptions: handleApplyCaptionsFromTranscript,
+                    onOpenContentMap: () => setShowContentMap(true),
+                    activeLanguage, activeTool, analyzeCurrentVisual, analyzeEffectVisual, audioBlob, audioDuration,
+                    builtInAssets, captionPosition, captionSegments, captionSize, captionStyle,
+                    captionTargetDuration, captionsEnabled, clearMusicTrack, clearSourceAudioTrack,
+                    compactRail, currentSegmentIndex, deleteCaptionSegment,
+                    deleteUserAsset, downloadBlob, draggedAssetId,
+                    estimatedDuration, fileInputRef, generateCaptionsFromSourceAudio, handleAssetClick,
+                    handleAssetPointerDown, handleCaptionPositionChange, handleFiles, handleStickerClick, confirmStickerSelection,
+                    imageSrc, isDragging, mediaTab, musicBlob, musicDuration, musicName, musicVolume,
+                    libraryType, libraryQuery, setLibraryQuery, selectLibraryType, libraryStatus, libraryError, libraryProvider,
+                    assetDownloadStates, prefetchLibraryAsset,
+                    notify, openAvatarPanel, previewVisionAnalysis, previewVisionKey, smartMode, setSmartMode,
+                    previewVisionOptions, previewVisualSrc, previewVisualType, progress, script,
+                    seekTo, segments, selectTool, selectedCaptionSegment, selectedFilterId,
+                    selectedLibraryAssetId, selectedSegmentId, selectedStickerId, selectedTransitionId,
+                    selectedVoice: selectedVoiceProfile ? { ...selectedVoice, name: selectedVoiceProfile.name } : selectedVoice,
+                    setCaptionSegments, setCaptionSize, setCaptionStyle, setCaptionsEnabled, setIsDragging,
+                    setMediaTab, setMusicVolume, setSelectedAudioSegmentId, setSelectedFilterId, setSelectedSegmentId,
+                    setSelectedStickerId, setSelectedTrack, setSelectedTransitionId, setSourceAudioVolume, setVoiceTab,
+                    sourceAudioBlob, sourceAudioDuration, sourceAudioLinked, sourceAudioName, sourceAudioVolume, status, t,
+                    selectedAudioToolTarget, separateSelectedAudioVocals, separateSourceVocals, vocalSeparationJob,
+                    toggleCaptionSegmentHidden, trOption, updateCaptionSegmentText,
+                    updateScript, userAssets, visionJob, aiMusic, smartFrame,
+                    selectedVisualSegment, selectedEffectSegment, effectAnalysis, effectRunning, effectProgress, effectPhase,
+                    effectsPanelMode, setEffectsPanelMode, cinematicDepth, photoParallaxDepth,
+                    visualLocalTime, updateSelectedVisualEffects, updateSelectedSubjectEffect, removeSelectedSubjectEffect, miganRepair, hdRestoration,
+                    mobilePanel, setMobilePanel: changeMobilePanel, applyAssetToTrack, handleGeneratedVector,
+                  }} />
+                </div>
+              </Panel>
 
-        <PreviewStage
+              <EditorResizeSeparator orientation="vertical" />
+
+              {/* Center Panel: Primary Preview Stage */}
+              <Panel
+                id="center-preview-panel"
+                minSize="25%"
+                className="editor-panel-center"
+              >
+                <div className="editor-preview-island">
+                  <PreviewStage
           t={t}
           previewShellRef={previewShellRef}
           previewCanvasRef={previewCanvasRef}
@@ -2022,7 +2119,22 @@ export function App() {
             return ordered.map((item, layer) => ({ ...item, layer: layer + 1 }));
           })}
         />
+      </div>
+    </Panel>
 
+    <EditorResizeSeparator orientation="vertical" />
+
+    {/* Right Panel: Voice / Inspector Island */}
+    <Panel
+      id="right-inspector-panel"
+      minSize="15%"
+      defaultSize="26%"
+      maxSize="42%"
+      collapsible
+      panelRef={editorLayout.rightPanelRef}
+      className="editor-panel-right"
+    >
+      <div className="editor-inspector-island">
         <VoicePanel
           t={t}
           activeTool={activeTool}
@@ -2163,9 +2275,37 @@ export function App() {
           removeSelectedSubjectEffect={removeSelectedSubjectEffect}
           onOpticalFlowAssetReady={handleOpticalFlowAssetReady}
         />
-      </section>
+      </div>
+    </Panel>
+  </PanelGroup>
+</Panel>
 
-      <Timeline
+<EditorResizeSeparator orientation="horizontal" />
+
+{/* Bottom Panel: Timeline Island */}
+<Panel
+  id="bottom-timeline-panel"
+  minSize="15%"
+  defaultSize="32%"
+  maxSize="65%"
+  collapsible
+  panelRef={editorLayout.timelinePanelRef}
+  className="editor-panel-timeline"
+>
+  <div className="editor-timeline-island">
+    {showContentMap && (
+      <ContentMap
+        candidates={currentProject?.candidates || []}
+        totalDuration={currentProject?.sourceDuration || estimatedDuration || 60}
+        onSeekTo={seekTo}
+        onLoadMomentIntoTimeline={handleLoadMomentIntoTimeline}
+        onClose={() => setShowContentMap(false)}
+        activeOperations={realtimePipeline.activeOperations}
+        onCancelOperation={realtimePipeline.cancelOperation}
+      />
+    )}
+
+    <Timeline
         t={t}
         trOption={trOption}
         notify={notify}
@@ -2292,6 +2432,10 @@ export function App() {
         musicDuration={musicDuration}
         startMusicMove={startMusicMove}
       />
+    </div>
+  </Panel>
+</PanelGroup>
+</div>
 
       {mobilePanel && !(mobilePanel === "inspector" && isMobileViewport && mobileInspectorSection) ? (
         <header className="mobile-sheet-nav">

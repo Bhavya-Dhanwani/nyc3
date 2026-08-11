@@ -17,7 +17,7 @@ const env = {
 
     LLM_MODEL: process.env.LLM_MODEL || "",
 
-    LLM_FALLBACK_PROVIDERS: process.env.LLM_FALLBACK_PROVIDERS || "groq,openrouter,ollama,deepseek,openai,gemini,claude",
+    LLM_FALLBACK_PROVIDERS: process.env.LLM_FALLBACK_PROVIDERS || "groq,openrouter,deepseek,openai,gemini,claude",
 
     OLLAMA_HOST: process.env.OLLAMA_HOST || "http://host.docker.internal:11434",
 

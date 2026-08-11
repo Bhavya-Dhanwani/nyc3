@@ -215,7 +215,32 @@ class MediaService {
         layoutOptions: any = {}
     ): Promise<string> {
         return new Promise(async (resolve, reject) => {
-            let tempCutPath: string | null = null;
+            let tempAssPath: string | null = null;
+            let resolved = false;
+
+            const timeoutId = setTimeout(() => {
+                if (resolved) return;
+                resolved = true;
+                logger.error(`FFmpeg render TIMEOUT for segment ${startSec}s to ${endSec}s.`);
+                if (tempAssPath && fs.existsSync(tempAssPath)) {
+                    try { fs.unlinkSync(tempAssPath); } catch {}
+                }
+                reject(new Error("FFmpeg render timed out after 30 seconds"));
+            }, 30000);
+
+            const safeResolve = (val: string) => {
+                if (resolved) return;
+                resolved = true;
+                clearTimeout(timeoutId);
+                resolve(val);
+            };
+
+            const safeReject = (err: any) => {
+                if (resolved) return;
+                resolved = true;
+                clearTimeout(timeoutId);
+                reject(err);
+            };
 
             try {
                 const parentDir = path.dirname(outputPath);
@@ -224,121 +249,46 @@ class MediaService {
                 const tempDir = path.resolve("./uploads/temp");
                 fs.mkdirSync(tempDir, { recursive: true });
 
-                const tempCutFilename = `temp-cut-${Date.now()}-${Math.random().toString(36).substring(2, 11)}.mp4`;
-                tempCutPath = path.join(tempDir, tempCutFilename);
+                const isVertical = layoutOptions?.aspectRatio === "vertical";
+                const assContent = generateAssFileContent(subwords, startSec, endSec, stylePreset, isVertical);
 
-                logger.info(`Pre-cutting source segment from ${startSec} to ${endSec}...`);
-                await this.extractVideoSegment(sourcePath, startSec, endSec, tempCutPath);
+                const tempAssFilename = `temp-sub-${Date.now()}-${Math.random().toString(36).substring(2, 11)}.ass`;
+                tempAssPath = path.join(tempDir, tempAssFilename);
+                fs.writeFileSync(tempAssPath, assContent);
 
-                const { bundle } = await import("@remotion/bundler");
-                const { selectComposition, renderMedia } = await import("@remotion/renderer");
+                logger.info(`Generated ASS subtitles at ${tempAssPath}`);
 
-                // dynamically resolve Remotion Root.tsx across dev (src) and production (dist)
-                let rootPath = path.resolve("./src/shared/remotion/Root.tsx");
-                if (!fs.existsSync(rootPath)) {
-                    const fallbackRoot = path.resolve("./dist/src/shared/remotion/Root.tsx");
-                    if (fs.existsSync(fallbackRoot)) {
-                        rootPath = fallbackRoot;
-                    } else {
-                        const altRoot = path.resolve("./server/src/shared/remotion/Root.tsx");
-                        if (fs.existsSync(altRoot)) rootPath = altRoot;
+                const escapedSrtPath = escapeSubtitlePath(tempAssPath);
+                
+                let filterGraph = "";
+                if (isVertical) {
+                    filterGraph = `crop=ih*9/16:ih:(in_w-out_w)/2:0,scale=1080:1920,subtitles='${escapedSrtPath}'`;
+                } else {
+                    filterGraph = `scale=1920:1080,subtitles='${escapedSrtPath}'`;
+                }
+
+                const cmd = `ffmpeg -y -ss ${startSec} -to ${endSec} -i "${sourcePath}" -vf "${filterGraph}" -c:v libx264 -crf 23 -preset superfast -c:a aac -b:a 192k "${outputPath}"`;
+                logger.info(`Executing FFmpeg render: ${cmd}`);
+
+                exec(cmd, (error, stdout, stderr) => {
+                    // Cleanup temp ASS file
+                    try {
+                        if (tempAssPath && fs.existsSync(tempAssPath)) {
+                            fs.unlinkSync(tempAssPath);
+                        }
+                    } catch {}
+
+                    if (error) {
+                        logger.error(`FFmpeg render failed: ${stderr || error.message}`);
+                        return safeReject(new Error(stderr || error.message));
                     }
-                }
 
-                logger.info(`Bundling Remotion composition from ${rootPath}...`);
-
-                const bundleLocation = await bundle({
-                    entryPoint: rootPath
+                    logger.info(`FFmpeg render completed successfully. Output saved to ${outputPath}`);
+                    safeResolve(outputPath);
                 });
-
-                const durationFrames = Math.max(1, Math.ceil((endSec - startSec) * 30));
-                const port = process.env.PORT || 5000;
-                const videoUrl = `http://localhost:${port}/uploads/temp/${tempCutFilename}`;
-
-                const aspectRatio = layoutOptions?.aspectRatio || "vertical";
-                const isHorizontal = aspectRatio === "horizontal";
-                const isSquare = aspectRatio === "square";
-                const width = isHorizontal ? 1920 : 1080;
-                const height = isHorizontal ? 1080 : isSquare ? 1080 : 1920;
-
-                // Compute smart framing focus positioning
-                let focusX = layoutOptions?.focusX !== undefined ? Number(layoutOptions.focusX) : 50;
-                let focusY = layoutOptions?.focusY !== undefined ? Number(layoutOptions.focusY) : 50;
-                let zoomFactor = layoutOptions?.zoomFactor !== undefined ? Number(layoutOptions.zoomFactor) : 1.0;
-
-                const inputProps = {
-                    videoUrl,
-                    startSec,
-                    endSec,
-                    subwords,
-                    stylePreset,
-                    isPreCut: true,
-                    layout: layoutOptions?.layout || "standard",
-                    zoomFactor,
-                    focusX,
-                    focusY,
-                    aspectRatio
-                };
-
-                // Find Chromium binary across various Linux distributions and environment variables
-                let chromiumPath: string | undefined = undefined;
-                if (process.env.CHROMIUM_PATH && fs.existsSync(process.env.CHROMIUM_PATH)) {
-                    chromiumPath = process.env.CHROMIUM_PATH;
-                } else if (process.env.PUPPETEER_EXECUTABLE_PATH && fs.existsSync(process.env.PUPPETEER_EXECUTABLE_PATH)) {
-                    chromiumPath = process.env.PUPPETEER_EXECUTABLE_PATH;
-                } else if (fs.existsSync("/usr/bin/chromium")) {
-                    chromiumPath = "/usr/bin/chromium";
-                } else if (fs.existsSync("/usr/bin/chromium-browser")) {
-                    chromiumPath = "/usr/bin/chromium-browser";
-                } else if (fs.existsSync("/usr/bin/google-chrome")) {
-                    chromiumPath = "/usr/bin/google-chrome";
-                }
-
-                const comp = await selectComposition({
-                    serveUrl: bundleLocation,
-                    id: "VideoClip",
-                    inputProps,
-                    browserExecutable: chromiumPath
-                });
-
-                comp.durationInFrames = durationFrames;
-                comp.width = width;
-                comp.height = height;
-
-                logger.info(`Rendering Remotion clip (${durationFrames} frames, ${width}x${height}) to ${outputPath}...`);
-
-                await renderMedia({
-                    composition: comp,
-                    serveUrl: bundleLocation,
-                    outputLocation: outputPath,
-                    inputProps,
-                    codec: "h264",
-                    browserExecutable: chromiumPath,
-                    chromiumOptions: {
-                        args: [
-                            "--no-sandbox",
-                            "--disable-setuid-sandbox",
-                            "--disable-dev-shm-usage",
-                            "--disable-gpu"
-                        ]
-                    } as any
-                });
-
-                logger.info(`Remotion clip render completed successfully`);
-
-                if (tempCutPath && fs.existsSync(tempCutPath)) {
-                    try { fs.unlinkSync(tempCutPath); } catch {}
-                }
-
-                resolve(outputPath);
             } catch (err: any) {
-                logger.error(`Remotion clip render failed: ${err.message}`);
-
-                if (tempCutPath && fs.existsSync(tempCutPath)) {
-                    try { fs.unlinkSync(tempCutPath); } catch {}
-                }
-
-                reject(err);
+                logger.error(`FFmpeg render execution error: ${err.message}`);
+                safeReject(err);
             }
         });
     }
@@ -346,6 +296,144 @@ class MediaService {
 }
 
 export default MediaService;
+
+function hexToAssColor(hex: string, opacity = 1): string {
+    let clean = hex.replace("#", "");
+    if (clean.length === 3) {
+        clean = clean[0] + clean[0] + clean[1] + clean[1] + clean[2] + clean[2];
+    }
+    const r = clean.substring(0, 2);
+    const g = clean.substring(2, 4);
+    const b = clean.substring(4, 6);
+    
+    const alphaVal = Math.round((1 - opacity) * 255);
+    const a = alphaVal.toString(16).padStart(2, "0").toUpperCase();
+    
+    return `&H${a}${b}${g}${r}`;
+}
+
+function generateAssFileContent(
+    words: any[],
+    startSec: number,
+    endSec: number,
+    captionStyle: any,
+    isVertical = true
+): string {
+    let fontName = "Arial";
+    let fontSize = isVertical ? 44 : 32;
+    let textColor = "&H00FFFFFF"; // White
+    let backColor = "&H80000000"; // Semi-transparent black
+    let outlineColor = "&H00000000"; // Black outline
+    let borderWidth = 2;
+    let shadowWidth = 1;
+    let borderStyle = 1; 
+
+    if (typeof captionStyle === "string") {
+        switch (captionStyle) {
+            case "classic-outline":
+                textColor = "&H0000FFFF"; // Yellow
+                borderWidth = 3;
+                shadowWidth = 0;
+                break;
+            case "minimal-shadow":
+                textColor = "&H00FFFFFF";
+                borderWidth = 0;
+                shadowWidth = 2;
+                break;
+            case "vibrant-cyan":
+                textColor = "&H00FFFF00"; // Cyan
+                borderWidth = 0;
+                shadowWidth = 2;
+                break;
+            case "vibrant-yellow-box":
+                textColor = "&H00000000"; // Black
+                backColor = "&H2000FFFF"; // Yellow box
+                borderStyle = 3;
+                break;
+            case "vibrant-green":
+                textColor = "&H0000FF00"; // Green
+                borderWidth = 2;
+                shadowWidth = 2;
+                break;
+            case "vibrant-red":
+                textColor = "&H000000FF"; // Red
+                borderWidth = 2;
+                shadowWidth = 2;
+                break;
+            case "modern-box":
+            default:
+                textColor = "&H00FFFFFF";
+                backColor = "&HB0000000";
+                borderStyle = 3;
+                break;
+        }
+    } else if (captionStyle && typeof captionStyle === "object") {
+        if (captionStyle.fontId && captionStyle.fontId !== "default") {
+            fontName = captionStyle.fontId;
+        }
+        textColor = hexToAssColor(captionStyle.textColor || "#ffffff", 1);
+        backColor = hexToAssColor(captionStyle.backgroundColor || "#000000", captionStyle.backgroundOpacity ?? 0.6);
+        outlineColor = hexToAssColor(captionStyle.borderColor || "#000000", 1);
+        borderWidth = captionStyle.borderWidth !== undefined ? Number(captionStyle.borderWidth) : 2;
+        shadowWidth = captionStyle.shadowOpacity ? 2 : 0;
+        
+        if (captionStyle.backgroundColor && (captionStyle.backgroundOpacity ?? 0) > 0.05) {
+            borderStyle = 3;
+        }
+    }
+
+    const playX = isVertical ? 1080 : 1920;
+    const playY = isVertical ? 1920 : 1080;
+    const marginV = Math.round(playY * 0.25);
+
+    let ass = `[Script Info]
+ScriptType: v4.00+
+PlayResX: ${playX}
+PlayResY: ${playY}
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,${fontName},${fontSize},${textColor},${textColor},${outlineColor},${backColor},-1,0,0,0,100,100,0,0,${borderStyle},${borderWidth},${shadowWidth},2,10,10,${marginV},1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+`;
+
+    const candidateWords = words.filter(w => w.end > startSec && w.start < endSec);
+    
+    const formatAssTime = (secs: number): string => {
+        const h = Math.floor(secs / 3600);
+        const m = Math.floor((secs % 3600) / 60);
+        const s = Math.floor(secs % 60);
+        const cs = Math.floor((secs % 1) * 100);
+        const pad = (n: number, size: number) => n.toString().padStart(size, "0");
+        return `${h}:${pad(m, 2)}:${pad(s, 2)}.${pad(cs, 2)}`;
+    };
+
+    for (let i = 0; i < candidateWords.length; i += 2) {
+        const chunk = candidateWords.slice(i, i + 2);
+        if (chunk.length === 0) continue;
+        const first = chunk[0];
+        const last = chunk[chunk.length - 1];
+
+        const startRel = Math.max(first.start - startSec, 0.0);
+        const endRel = Math.max(Math.min(last.end - startSec, endSec - startSec), 0.0);
+        if (endRel <= startRel) continue;
+
+        const text = chunk.map(w => w.text.toUpperCase().replace(/[^A-Z0-9 !?]/g, "")).join(" ");
+        
+        ass += `Dialogue: 0,${formatAssTime(startRel)},${formatAssTime(endRel)},Default,,0,0,0,,${text}\n`;
+    }
+
+    return ass;
+}
+
+function escapeSubtitlePath(filePath: string): string {
+    let resolved = path.resolve(filePath);
+    resolved = resolved.replace(/\\/g, "/");
+    resolved = resolved.replace(/^([a-zA-Z]):/, "$1\\:");
+    return resolved;
+}
 
 
 
