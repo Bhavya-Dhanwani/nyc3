@@ -351,6 +351,9 @@ GOOGLE_REDIRECT_URI=http://localhost:5000/api/auth/google/callback
 GDRIVE_SERVICE_ACCOUNT_KEY=your_google_service_account_json_content
 GDRIVE_CENTRAL_FOLDER_ID=your_shared_gdrive_folder_id
 
+> [!IMPORTANT]
+> **Google Drive OAuth in Production:** If the application is not prompting users for Google Drive permissions in production (requesting only basic profile and email info), please check the [Google Drive OAuth Permission Troubleshooting Guide](docs/gdrive_auth_troubleshooting.md) to ensure correct Google Cloud Console scope, API, and verification configuration.
+
 # Mail SMTP Credentials (Optional)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
